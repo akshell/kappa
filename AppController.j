@@ -6,7 +6,7 @@
 
 @implementation AppController : CPObject
 {
-    @outlet CPWindow theWindow;
+    @outlet CPWindow mainWindow;
 }
 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification
