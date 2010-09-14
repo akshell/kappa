@@ -1,10 +1,4 @@
-/*
- * AppController.j
- * kappa
- *
- * Created by You on September 13, 2010.
- * Copyright 2010, Your Company All rights reserved.
- */
+// (c) 2010 by Anton Korenyushkin
 
 @import <Foundation/Foundation.j>
 @import <AppKit/AppKit.j>

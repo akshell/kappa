@@ -1,7 +1,5 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import <AppKit/CPWindowController.j>
-
 
 @implementation AboutPanelController : CPWindowController
 {
