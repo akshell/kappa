@@ -3,10 +3,13 @@
 @import <Foundation/Foundation.j>
 @import <AppKit/AppKit.j>
 
+@import "AboutPanelController.j"
+
 
 @implementation AppController : CPObject
 {
     @outlet CPWindow mainWindow;
+    CPPanel aboutPanel;
 }
 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification
@@ -16,8 +19,7 @@
         [mainMenu removeItemAtIndex:0];
 
     var akshellSubmenu = [[CPMenu alloc] init];
-    [akshellSubmenu
-        addItemWithTitle:'About Akshell' action:nil keyEquivalent:nil];
+    [akshellSubmenu addItemWithTitle:'About Akshell' action:@selector(orderFrontAboutPanel:) keyEquivalent:nil];
     [akshellSubmenu addItem:[CPMenuItem separatorItem]];
     [akshellSubmenu
         addItemWithTitle:'RSA Key' action:nil keyEquivalent:nil];
@@ -96,6 +98,15 @@
 
 - (void)awakeFromCib
 {
+}
+
+- (void)orderFrontAboutPanel:(id)sender
+{
+    if (!aboutPanel) {
+        aboutPanel = [[[AboutPanelController alloc] initWithWindowCibName:'AboutPanel'] window];
+        [aboutPanel center];
+    }
+    [aboutPanel orderFront:self];
 }
 
 @end
