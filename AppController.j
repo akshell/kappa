@@ -1,12 +1,14 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "AboutPanelController.j"
+@import "KeyPanelController.j"
 
 
 @implementation AppController : CPObject
 {
     @outlet CPWindow mainWindow;
     CPPanel aboutPanel;
+    CPPanel keyPanel;
 }
 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification
@@ -18,7 +20,7 @@
     var akshellSubmenu = [[CPMenu alloc] init];
     [akshellSubmenu addItemWithTitle:'About Akshell' action:@selector(orderFrontAboutPanel:) keyEquivalent:nil];
     [akshellSubmenu addItem:[CPMenuItem separatorItem]];
-    [akshellSubmenu addItemWithTitle:'RSA Key' action:nil keyEquivalent:nil];
+    [akshellSubmenu addItemWithTitle:'SSH Public Key' action:@selector(orderFrontKeyPanel:) keyEquivalent:nil];
     [akshellSubmenu addItemWithTitle:'Change Password...' action:nil keyEquivalent:nil];
     [akshellSubmenu addItemWithTitle:'Log Out' action:nil keyEquivalent:nil];
     [[mainMenu addItemWithTitle:'Akshell' action:nil keyEquivalent:nil] setSubmenu:akshellSubmenu];
@@ -72,6 +74,15 @@
         [aboutPanel center];
     }
     [aboutPanel orderFront:self];
+}
+
+- (void)orderFrontKeyPanel:(id)sender
+{
+    if (!keyPanel) {
+        keyPanel = [[[KeyPanelController alloc] initWithWindowCibName:'KeyPanel'] window];
+        [keyPanel center];
+    }
+    [keyPanel orderFront:self];
 }
 
 @end
