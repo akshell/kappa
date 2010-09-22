@@ -4,7 +4,7 @@
 @import <AppKit/AppKit.j>
 
 @import "AppController.j"
-
+@import "CPPanel.j"
 
 function main(args, namedArgs)
 {

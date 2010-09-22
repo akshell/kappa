@@ -2,87 +2,133 @@
 
 @import "AboutPanelController.j"
 @import "KeyPanelController.j"
-
+@import "SignupPanelController.j"
+@import "LoginPanelController.j"
+@import "HTTPRequest.j"
 
 @implementation AppController : CPObject
 {
     @outlet CPWindow mainWindow;
-    CPPanel aboutPanel;
-    CPPanel keyPanel;
+    JSObject panels;
+}
+
+- (void)setUsername:(CPString)username
+{
+    if ([panels.key isKindOfClass:CPPanel]) {
+        [panels.key close];
+        panels.key = KeyPanelController;
+    }
+    var mainMenu = [CPApp mainMenu];
+    for (var index = [mainMenu numberOfItems]; ![[mainMenu itemAtIndex:--index] isSeparatorItem];)
+        [mainMenu removeItemAtIndex:index];
+    if (username) {
+        [mainMenu addItemWithTitle:"Log Out (" + username + ")" action:@selector(logOut) keyEquivalent:nil];
+    } else {
+        [mainMenu addItemWithTitle:"Sign Up" action:@selector(orderFrontSignupPanel) keyEquivalent:nil];
+        [mainMenu addItemWithTitle:"Log In" action:@selector(orderFrontLoginPanel) keyEquivalent:nil];
+    }
 }
 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification
 {
+    panels = {
+        about: AboutPanelController,
+        key: KeyPanelController,
+        signup: SignupPanelController,
+        login: LoginPanelController
+    };
+
     var mainMenu = [CPApp mainMenu];
     while ([mainMenu numberOfItems])
         [mainMenu removeItemAtIndex:0];
 
-    var akshellSubmenu = [[CPMenu alloc] init];
-    [akshellSubmenu addItemWithTitle:'About Akshell' action:@selector(orderFrontAboutPanel:) keyEquivalent:nil];
+    var akshellSubmenu = [CPMenu new];
+    [akshellSubmenu addItemWithTitle:"About Akshell" action:@selector(orderFrontAboutPanel) keyEquivalent:nil];
     [akshellSubmenu addItem:[CPMenuItem separatorItem]];
-    [akshellSubmenu addItemWithTitle:'SSH Public Key' action:@selector(orderFrontKeyPanel:) keyEquivalent:nil];
-    [akshellSubmenu addItemWithTitle:'Change Password...' action:nil keyEquivalent:nil];
-    [akshellSubmenu addItemWithTitle:'Log Out' action:nil keyEquivalent:nil];
-    [[mainMenu addItemWithTitle:'Akshell' action:nil keyEquivalent:nil] setSubmenu:akshellSubmenu];
+    [akshellSubmenu addItemWithTitle:"SSH Public Key" action:@selector(orderFrontKeyPanel) keyEquivalent:nil];
+    [akshellSubmenu addItemWithTitle:"Change Password..." action:nil keyEquivalent:nil];
+    [[mainMenu addItemWithTitle:"Akshell" action:nil keyEquivalent:nil] setSubmenu:akshellSubmenu];
 
-    var fileSubmenu = [[CPMenu alloc] init];
-    [fileSubmenu addItemWithTitle:'New App...' action:nil keyEquivalent:nil];
-    [fileSubmenu addItemWithTitle:'New File' action:nil keyEquivalent:nil];
-    [fileSubmenu addItemWithTitle:'New Folder' action:nil keyEquivalent:nil];
-    var openAppSubmenu = [[CPMenu alloc] init];
-    [[fileSubmenu addItemWithTitle:'Open App' action:nil keyEquivalent:nil] setSubmenu:openAppSubmenu];
+    var fileSubmenu = [CPMenu new];
+    [fileSubmenu addItemWithTitle:"New App..." action:nil keyEquivalent:nil];
+    [fileSubmenu addItemWithTitle:"New File" action:nil keyEquivalent:nil];
+    [fileSubmenu addItemWithTitle:"New Folder" action:nil keyEquivalent:nil];
+    var openAppSubmenu = [CPMenu new];
+    [[fileSubmenu addItemWithTitle:"Open App" action:nil keyEquivalent:nil] setSubmenu:openAppSubmenu];
     [fileSubmenu addItem:[CPMenuItem separatorItem]];
-    [fileSubmenu addItemWithTitle:'Close File "xxx"' action:nil keyEquivalent:nil];
-    [fileSubmenu addItemWithTitle:'Save' action:nil keyEquivalent:nil];
-    [fileSubmenu addItemWithTitle:'Save All' action:nil keyEquivalent:nil];
-    var actionsSubmenu = [[CPMenu alloc] init];
-    [actionsSubmenu addItemWithTitle:'Delete...' action:nil keyEquivalent:nil];
-    [actionsSubmenu addItemWithTitle:'Move...' action:nil keyEquivalent:nil];
-    [actionsSubmenu addItemWithTitle:'Duplicate' action:nil keyEquivalent:nil];
-    [actionsSubmenu addItemWithTitle:'Rename' action:nil keyEquivalent:nil];
-    [[fileSubmenu addItemWithTitle:'Actions' action:nil keyEquivalent:nil] setSubmenu:actionsSubmenu];
-    [[mainMenu addItemWithTitle:'File' action:nil keyEquivalent:nil] setSubmenu:fileSubmenu];
+    [fileSubmenu addItemWithTitle:"Close File \"xxx\"" action:nil keyEquivalent:nil];
+    [fileSubmenu addItemWithTitle:"Save" action:nil keyEquivalent:nil];
+    [fileSubmenu addItemWithTitle:"Save All" action:nil keyEquivalent:nil];
+    var actionsSubmenu = [CPMenu new];
+    [actionsSubmenu addItemWithTitle:"Delete..." action:nil keyEquivalent:nil];
+    [actionsSubmenu addItemWithTitle:"Move..." action:nil keyEquivalent:nil];
+    [actionsSubmenu addItemWithTitle:"Duplicate" action:nil keyEquivalent:nil];
+    [actionsSubmenu addItemWithTitle:"Rename" action:nil keyEquivalent:nil];
+    [[fileSubmenu addItemWithTitle:"Actions" action:nil keyEquivalent:nil] setSubmenu:actionsSubmenu];
+    [[mainMenu addItemWithTitle:"File" action:nil keyEquivalent:nil] setSubmenu:fileSubmenu];
 
-    var appSubmenu = [[CPMenu alloc] init];
-    [appSubmenu addItemWithTitle:'New Environment' action:nil keyEquivalent:nil];
-    [appSubmenu addItemWithTitle:'Use Library...' action:nil keyEquivalent:nil];
+    var appSubmenu = [CPMenu new];
+    [appSubmenu addItemWithTitle:"New Environment" action:nil keyEquivalent:nil];
+    [appSubmenu addItemWithTitle:"Use Library..." action:nil keyEquivalent:nil];
     [appSubmenu addItem:[CPMenuItem separatorItem]];
-    [appSubmenu addItemWithTitle:'Manage Domains...' action:nil keyEquivalent:nil];
-    [appSubmenu addItemWithTitle:'Publish App...' action:nil keyEquivalent:nil];
-    [appSubmenu addItemWithTitle:'Delete App...' action:nil keyEquivalent:nil];
-    [[mainMenu addItemWithTitle:'App' action:nil keyEquivalent:nil] setSubmenu:appSubmenu];
+    [appSubmenu addItemWithTitle:"Manage Domains..." action:nil keyEquivalent:nil];
+    [appSubmenu addItemWithTitle:"Publish App..." action:nil keyEquivalent:nil];
+    [appSubmenu addItemWithTitle:"Delete App..." action:nil keyEquivalent:nil];
+    [[mainMenu addItemWithTitle:"App" action:nil keyEquivalent:nil] setSubmenu:appSubmenu];
 
-    var helpSubmenu = [[CPMenu alloc] init];
-    [helpSubmenu addItemWithTitle:'Getting Started' action:nil keyEquivalent:nil];
-    [helpSubmenu addItemWithTitle:'User Guide' action:nil keyEquivalent:nil];
-    [helpSubmenu addItemWithTitle:'Reference' action:nil keyEquivalent:nil];
+    var helpSubmenu = [CPMenu new];
+    [helpSubmenu addItemWithTitle:"Getting Started" action:nil keyEquivalent:nil];
+    [helpSubmenu addItemWithTitle:"User Guide" action:nil keyEquivalent:nil];
+    [helpSubmenu addItemWithTitle:"Reference" action:nil keyEquivalent:nil];
     [helpSubmenu addItem:[CPMenuItem separatorItem]];
-    [helpSubmenu addItemWithTitle:'Contact...' action:nil keyEquivalent:nil];
-    [helpSubmenu addItemWithTitle:'Blog' action:nil keyEquivalent:nil];
-    [helpSubmenu addItemWithTitle:'Twitter' action:nil keyEquivalent:nil];
-    [[mainMenu addItemWithTitle:'Help' action:nil keyEquivalent:nil] setSubmenu:helpSubmenu];
+    [helpSubmenu addItemWithTitle:"Contact..." action:nil keyEquivalent:nil];
+    [helpSubmenu addItemWithTitle:"Blog" action:nil keyEquivalent:nil];
+    [helpSubmenu addItemWithTitle:"Twitter" action:nil keyEquivalent:nil];
+    [[mainMenu addItemWithTitle:"Help" action:nil keyEquivalent:nil] setSubmenu:helpSubmenu];
+
+    [mainMenu addItem:[CPMenuItem separatorItem]];
+
+    [self setUsername:USERNAME];
 }
 
-- (void)awakeFromCib
+- (void)orderFrontPanel:(CPString)name
 {
-}
-
-- (void)orderFrontAboutPanel:(id)sender
-{
-    if (!aboutPanel) {
-        aboutPanel = [[[AboutPanelController alloc] initWithWindowCibName:'AboutPanel'] window];
-        [aboutPanel center];
+    if (![panels[name] isKindOfClass:CPPanel]) {
+        panels[name] = [[panels[name] new] window];
+        [panels[name] center];
     }
-    [aboutPanel orderFront:self];
+    [panels[name] orderFront:nil];
+    [panels[name] makeKeyWindow];
 }
 
-- (void)orderFrontKeyPanel:(id)sender
+- (void)orderFrontAboutPanel
 {
-    if (!keyPanel) {
-        keyPanel = [[[KeyPanelController alloc] initWithWindowCibName:'KeyPanel'] window];
-        [keyPanel center];
-    }
-    [keyPanel orderFront:self];
+    [self orderFrontPanel:"about"];
+}
+
+- (void)orderFrontKeyPanel
+{
+    [self orderFrontPanel:"key"];
+}
+
+- (void)orderFrontSignupPanel
+{
+    [self orderFrontPanel:"signup"];
+}
+
+- (void)orderFrontLoginPanel
+{
+    [self orderFrontPanel:"login"];
+}
+
+- (void)logOut
+{
+    [[[HTTPRequest alloc] initWithMethod:"POST" URL:"/logout" target:self action:@selector(didLogOut)] send];
+}
+
+- (void)didLogOut
+{
+    [self setUsername:nil];
 }
 
 @end

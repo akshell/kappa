@@ -1,19 +1,24 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "TextView.j"
+@import "RequestPanelController.j"
 
-
-@implementation KeyPanelController : CPWindowController
+@implementation KeyPanelController : RequestPanelController
 {
     @outlet TextView textView;
 }
 
-- (void)awakeFromCib
+- (id)init
 {
-    [CPURLConnection connectionWithRequest:[CPURLRequest requestWithURL:'/rsa.pub'] delegate:self];
+    return [super initWithWindowCibName:"KeyPanel"];
 }
 
-- (void)connection:(CPURLConnection)connection didReceiveData:(CPString)data
+- (void)awakeFromCib
+{
+    [self requestWithMethod:"GET" URL:"/rsa.pub"];
+}
+
+- (void)didReceiveResponse:(CPString)data
 {
     [textView setStringValue:data];
 }
