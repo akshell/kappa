@@ -43,7 +43,6 @@
 
 - (void)didReceiveResponse:(JSObject)data
 {
-    [[self window] close];
     [[CPApp delegate] setUsername:[nameField stringValue]];
 }
 

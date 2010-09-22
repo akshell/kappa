@@ -56,11 +56,11 @@
         [[[ErrorPanelController alloc] initWithMessage:"The passwords don't match."
                                                comment:"Please retype the password twice."
                                                 target:self
-                                                action:@selector(didEndPasswordErrorSheet)]
+                                                action:@selector(didEndMatchErrorSheet)]
             displaySheetForWindow:[self window]];
 }
 
-- (void)didEndPasswordErrorSheet
+- (void)didEndMatchErrorSheet
 {
     [passwordField setStringValue:""];
     [confirmField setStringValue:""];
@@ -75,7 +75,6 @@
 
 - (void)didReceiveResponse:(JSObject)data
 {
-    [[self window] close];
     [[CPApp delegate] setUsername:[nameField stringValue]];
 }
 
