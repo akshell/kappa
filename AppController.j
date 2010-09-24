@@ -1,5 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
+@import "TreeController.j"
 @import "AboutPanelController.j"
 @import "KeyPanelController.j"
 @import "SignupPanelController.j"
@@ -11,6 +12,7 @@
 @implementation AppController : CPObject
 {
     @outlet CPWindow mainWindow;
+    @outlet TreeController treeController;
     CPPanel aboutPanel;
     CPPanel keyPanel;
     CPPanel signupPanel;
