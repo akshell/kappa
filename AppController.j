@@ -94,7 +94,15 @@
     [mainMenu addItem:[CPMenuItem separatorItem]];
 
     [self setUsername:USERNAME];
+
+    var toolbar = [CPToolbar new];
+    [toolbar setDelegate:self];
+    [mainWindow setToolbar:toolbar];
 }
+
+@end
+
+@implementation AppController (MenuTarget)
 
 - (void)displayPanel:(CPString)name
 {
@@ -146,6 +154,34 @@
 - (void)didLogOut
 {
     [self setUsername:nil];
+}
+
+@end
+
+@implementation AppController (ToolbarDelegate)
+
+- (CPArray)toolbarAllowedItemIdentifiers:(CPToolbar)toolbar
+{
+    return [CPToolbarSpaceItemIdentifier, "New", "Save", "Save All", "Preview", "Eval", "Git", "Diff", "Commit"];
+}
+
+- (CPArray)toolbarDefaultItemIdentifiers:(CPToolbar)toolbar
+{
+    return [
+        "New", "Save", "Save All", CPToolbarSpaceItemIdentifier,
+        "Preview", "Eval", "Git", CPToolbarSpaceItemIdentifier,
+        "Diff", "Commit"
+    ];
+}
+
+- (CPToolbarItem)toolbar:(CPToolbar)toolbar itemForItemIdentifier:(CPString)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
+{
+    var toolbarItem = [[CPToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+    [toolbarItem setLabel:itemIdentifier];
+    var image = [[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:itemIdentifier + ".png"]];
+    [toolbarItem setImage:image];
+    [toolbarItem setMinSize:CGSizeMake(32, 32)];
+    return toolbarItem;
 }
 
 @end
