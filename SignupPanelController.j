@@ -39,12 +39,6 @@
                               [confirmField stringValue])];
 }
 
-- (@action)logIn:(id)sender
-{
-    [[self window] close];
-    [[CPApp delegate] orderFrontLoginPanel];
-}
-
 - (@action)submit:(id)sender
 {
     var password = [passwordField stringValue];

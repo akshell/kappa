@@ -35,7 +35,7 @@ var MAX_LABEL_WIDTH = 190;
     }
     var okButtonY = MAX(CGRectGetMaxY([commentLabel || messageLabel frame]), 64) + 8;
     var okButton = [[CPButton alloc] initWithFrame:CGRectMake(labelMaxX - 60, okButtonY, 60, 24)];
-    [okButton setTitle:'OK'];
+    [okButton setTitle:"OK"];
     [okButton setTarget:self];
     [okButton setAction:selector];
     [okButton setKeyEquivalent:CPCarriageReturnCharacter];
@@ -43,7 +43,7 @@ var MAX_LABEL_WIDTH = 190;
                                             styleMask:styleMask];
     var contentView = [window contentView];
     var imageView = [[CPImageView alloc] initWithFrame:CGRectMake(16, 16, 48, 48)];
-    [imageView setImage:[[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:'Error.png']]];
+    [imageView setImage:[[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:"Error.png"]]];
     [contentView addSubview:imageView];
     [contentView addSubview:messageLabel];
     if (commentLabel)
@@ -73,11 +73,11 @@ var MAX_LABEL_WIDTH = 190;
 
 - (void)displayAlert
 {
-    [self createWindowWithStyleMask:CPTitledWindowMask selector:@selector(stopModal:)];
+    [self createWindowWithStyleMask:CPTitledWindowMask selector:@selector(stopModal)];
     [CPApp runModalForWindow:[self window]];
 }
 
-- (void)stopModal:(id)sender
+- (void)stopModal
 {
     [CPApp stopModal];
     [[self window] close];
@@ -85,11 +85,11 @@ var MAX_LABEL_WIDTH = 190;
 
 - (void)displaySheetForWindow:(CPWindow)window
 {
-    [self createWindowWithStyleMask:CPDocModalWindowMask selector:@selector(endSheet:)];
+    [self createWindowWithStyleMask:CPDocModalWindowMask selector:@selector(endSheet)];
     [CPApp beginSheet:[self window] modalForWindow:window modalDelegate:nil didEndSelector:nil contextInfo:nil];
 }
 
-- (void)endSheet:(id)sender
+- (void)endSheet
 {
     [CPApp endSheet:[self window]];
 }

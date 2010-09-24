@@ -1,6 +1,7 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "RequestPanelController.j"
+@import "Link.j"
 
 @implementation LoginPanelController : RequestPanelController
 {
@@ -8,6 +9,7 @@
     @outlet CPTextField nameField;
     @outlet CPTextField passwordLabel;
     @outlet CPTextField passwordField;
+    @outlet Link resetPasswordLink;
     @outlet CPButton loginButton;
 }
 
@@ -23,17 +25,13 @@
     [passwordField setSecure:YES];
     [loginButton setEnabled:NO];
     [loginButton setKeyEquivalent:CPCarriageReturnCharacter];
+    [resetPasswordLink setFont:[CPFont systemFontOfSize:11]];
+    [resetPasswordLink sizeToFit];
 }
 
 - (void)controlTextDidChange:(id)sender
 {
     [loginButton setEnabled:[nameField stringValue] && [passwordField stringValue]];
-}
-
-- (@action)signUp:(id)sender
-{
-    [[self window] close];
-    [[CPApp delegate] orderFrontSignupPanel];
 }
 
 - (@action)submit:(id)sender
@@ -44,6 +42,12 @@
 - (void)didReceiveResponse:(JSObject)data
 {
     [[CPApp delegate] setUsername:[nameField stringValue]];
+}
+
+- (@action)resetPassword:(id)sender
+{
+    [[self window] close];
+    [[CPApp delegate] orderFrontPasswordPanel];
 }
 
 @end

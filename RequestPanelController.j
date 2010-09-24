@@ -25,7 +25,7 @@
         return;
     }
     var message, comment;
-    if (typeof(data) == 'string') {
+    if (typeof(data) == "string") {
         message = data;
     } else {
         message = data.message;

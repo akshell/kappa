@@ -3,6 +3,8 @@
 @import "TextView.j"
 @import "RequestPanelController.j"
 
+var keyValue;
+
 @implementation KeyPanelController : RequestPanelController
 {
     @outlet TextView textView;
@@ -15,12 +17,21 @@
 
 - (void)awakeFromCib
 {
-    [self requestWithMethod:"GET" URL:"/rsa.pub"];
+    if (keyValue)
+        [textView setStringValue:keyValue];
+    else
+        [self requestWithMethod:"GET" URL:"/rsa.pub"];
 }
 
 - (void)didReceiveResponse:(CPString)data
 {
-    [textView setStringValue:data];
+    keyValue = data;
+    [textView setStringValue:keyValue];
+}
+
++ (void)resetKeyValue
+{
+    keyValue = nil;
 }
 
 @end

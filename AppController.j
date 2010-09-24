@@ -5,6 +5,7 @@
 @import "SignupPanelController.j"
 @import "LoginPanelController.j"
 @import "ChangePasswordPanelController.j"
+@import "ResetPasswordPanelController.j"
 @import "HTTPRequest.j"
 
 @implementation AppController : CPObject
@@ -14,22 +15,17 @@
     CPPanel keyPanel;
     CPPanel signupPanel;
     CPPanel loginPanel;
-    CPPanel changePasswordPanel;
-    CPMenuItem changePasswordMenuItem;
+    CPPanel passwordPanel;
+    CPMenuItem passwordMenuItem;
 }
 
 - (void)setUsername:(CPString)username
 {
-    [keyPanel close];
-    keyPanel = nil;
-
-    [loginPanel close];
-    [signupPanel close];
-    [changePasswordPanel close];
-
-    [[changePasswordMenuItem _menuItemView] highlight:NO];
-    [changePasswordMenuItem setEnabled:username];
-
+    USERNAME = username;
+    [keyPanel, signupPanel, loginPanel, passwordPanel].forEach(
+        function (panel) { [panel close]; });
+    [KeyPanelController resetKeyValue];
+    [passwordMenuItem setTitle:username ? "Change Password..." : "Reset Password..."];
     var mainMenu = [CPApp mainMenu];
     for (var index = [mainMenu numberOfItems]; ![[mainMenu itemAtIndex:--index] isSeparatorItem];)
         [mainMenu removeItemAtIndex:index];
@@ -37,8 +33,8 @@
     if (username) {
         [mainMenu addItemWithTitle:"Log Out (" + username + ")" action:@selector(logOut) keyEquivalent:nil];
     } else {
-        [mainMenu addItemWithTitle:"Sign Up" action:@selector(orderFrontSignupPanel) keyEquivalent:nil];
-        [mainMenu addItemWithTitle:"Log In" action:@selector(orderFrontLoginPanel) keyEquivalent:nil];
+        [mainMenu addItemWithTitle:"Sign Up" action:@selector(displaySignupPanel) keyEquivalent:nil];
+        [mainMenu addItemWithTitle:"Log In" action:@selector(displayLoginPanel) keyEquivalent:nil];
     }
 }
 
@@ -49,11 +45,10 @@
         [mainMenu removeItemAtIndex:0];
 
     var akshellSubmenu = [CPMenu new];
-    [akshellSubmenu addItemWithTitle:"About Akshell" action:@selector(orderFrontAboutPanel) keyEquivalent:nil];
+    [akshellSubmenu addItemWithTitle:"About Akshell" action:@selector(displayAboutPanel) keyEquivalent:nil];
     [akshellSubmenu addItem:[CPMenuItem separatorItem]];
-    [akshellSubmenu addItemWithTitle:"SSH Public Key" action:@selector(orderFrontKeyPanel) keyEquivalent:nil];
-    changePasswordMenuItem =
-        [akshellSubmenu addItemWithTitle:"Change Password..." action:@selector(orderFrontChangePasswordPanel) keyEquivalent:nil];
+    [akshellSubmenu addItemWithTitle:"SSH Public Key" action:@selector(displayKeyPanel) keyEquivalent:nil];
+    passwordMenuItem = [akshellSubmenu addItemWithTitle:"" action:@selector(displayPasswordPanel) keyEquivalent:nil];
     [[mainMenu addItemWithTitle:"Akshell" action:nil keyEquivalent:nil] setSubmenu:akshellSubmenu];
 
     var fileSubmenu = [CPMenu new];
@@ -101,46 +96,46 @@
     [self setUsername:USERNAME];
 }
 
-- (void)orderFrontPanel:(CPString)name
+- (void)displayPanel:(CPString)name
 {
-    if (!self[name]) {
-        var controllerClass = {
-            aboutPanel: AboutPanelController,
-            keyPanel: KeyPanelController,
-            signupPanel: SignupPanelController,
-            loginPanel: LoginPanelController,
-            changePasswordPanel: ChangePasswordPanelController
-        }[name];
-        self[name] = [[controllerClass new] window];
-        [self[name] center];
-    }
+    if ([self[name] isVisible])
+        return;
+    var controllerClass = {
+        aboutPanel: AboutPanelController,
+        keyPanel: KeyPanelController,
+        signupPanel: SignupPanelController,
+        loginPanel: LoginPanelController,
+        passwordPanel: USERNAME ? ChangePasswordPanelController : ResetPasswordPanelController
+    }[name];
+    self[name] = [[controllerClass new] window];
+    [self[name] center];
     [self[name] orderFront:nil];
     [self[name] makeKeyWindow];
 }
 
-- (void)orderFrontAboutPanel
+- (void)displayAboutPanel
 {
-    [self orderFrontPanel:"aboutPanel"];
+    [self displayPanel:"aboutPanel"];
 }
 
-- (void)orderFrontKeyPanel
+- (void)displayKeyPanel
 {
-    [self orderFrontPanel:"keyPanel"];
+    [self displayPanel:"keyPanel"];
 }
 
-- (void)orderFrontSignupPanel
+- (void)displaySignupPanel
 {
-    [self orderFrontPanel:"signupPanel"];
+    [self displayPanel:"signupPanel"];
 }
 
-- (void)orderFrontLoginPanel
+- (void)displayLoginPanel
 {
-    [self orderFrontPanel:"loginPanel"];
+    [self displayPanel:"loginPanel"];
 }
 
-- (void)orderFrontChangePasswordPanel
+- (void)displayPasswordPanel
 {
-    [self orderFrontPanel:"changePasswordPanel"];
+    [self displayPanel:"passwordPanel"];
 }
 
 - (void)logOut
