@@ -47,7 +47,7 @@
 - (@action)resetPassword:(id)sender
 {
     [[self window] close];
-    [[CPApp delegate] orderFrontPasswordPanel];
+    [[CPApp delegate] displayPasswordPanel];
 }
 
 @end
