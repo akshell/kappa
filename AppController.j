@@ -25,7 +25,7 @@
     [keyPanel, signupPanel, loginPanel, passwordPanel].forEach(
         function (panel) { [panel close]; });
     [KeyPanelController resetKeyValue];
-    [passwordMenuItem setTitle:username ? "Change Password..." : "Reset Password..."];
+    [passwordMenuItem setTitle:username ? "Change Password…" : "Reset Password…"];
     var mainMenu = [CPApp mainMenu];
     for (var index = [mainMenu numberOfItems]; ![[mainMenu itemAtIndex:--index] isSeparatorItem];)
         [mainMenu removeItemAtIndex:index];
@@ -52,7 +52,7 @@
     [[mainMenu addItemWithTitle:"Akshell" action:nil keyEquivalent:nil] setSubmenu:akshellSubmenu];
 
     var fileSubmenu = [CPMenu new];
-    [fileSubmenu addItemWithTitle:"New App..." action:nil keyEquivalent:nil];
+    [fileSubmenu addItemWithTitle:"New App…" action:nil keyEquivalent:nil];
     [fileSubmenu addItemWithTitle:"New File" action:nil keyEquivalent:nil];
     [fileSubmenu addItemWithTitle:"New Folder" action:nil keyEquivalent:nil];
     var openAppSubmenu = [CPMenu new];
@@ -62,8 +62,8 @@
     [fileSubmenu addItemWithTitle:"Save" action:nil keyEquivalent:nil];
     [fileSubmenu addItemWithTitle:"Save All" action:nil keyEquivalent:nil];
     var actionsSubmenu = [CPMenu new];
-    [actionsSubmenu addItemWithTitle:"Delete..." action:nil keyEquivalent:nil];
-    [actionsSubmenu addItemWithTitle:"Move..." action:nil keyEquivalent:nil];
+    [actionsSubmenu addItemWithTitle:"Delete…" action:nil keyEquivalent:nil];
+    [actionsSubmenu addItemWithTitle:"Move…" action:nil keyEquivalent:nil];
     [actionsSubmenu addItemWithTitle:"Duplicate" action:nil keyEquivalent:nil];
     [actionsSubmenu addItemWithTitle:"Rename" action:nil keyEquivalent:nil];
     [[fileSubmenu addItemWithTitle:"Actions" action:nil keyEquivalent:nil] setSubmenu:actionsSubmenu];
@@ -71,11 +71,11 @@
 
     var appSubmenu = [CPMenu new];
     [appSubmenu addItemWithTitle:"New Environment" action:nil keyEquivalent:nil];
-    [appSubmenu addItemWithTitle:"Use Library..." action:nil keyEquivalent:nil];
+    [appSubmenu addItemWithTitle:"Use Library…" action:nil keyEquivalent:nil];
     [appSubmenu addItem:[CPMenuItem separatorItem]];
-    [appSubmenu addItemWithTitle:"Manage Domains..." action:nil keyEquivalent:nil];
-    [appSubmenu addItemWithTitle:"Publish App..." action:nil keyEquivalent:nil];
-    [appSubmenu addItemWithTitle:"Delete App..." action:nil keyEquivalent:nil];
+    [appSubmenu addItemWithTitle:"Manage Domains…" action:nil keyEquivalent:nil];
+    [appSubmenu addItemWithTitle:"Publish App…" action:nil keyEquivalent:nil];
+    [appSubmenu addItemWithTitle:"Delete App…" action:nil keyEquivalent:nil];
     [[mainMenu addItemWithTitle:"App" action:nil keyEquivalent:nil] setSubmenu:appSubmenu];
 
     var helpSubmenu = [CPMenu new];
@@ -83,7 +83,7 @@
     [helpSubmenu addItemWithTitle:"User Guide" action:nil keyEquivalent:nil];
     [helpSubmenu addItemWithTitle:"Reference" action:nil keyEquivalent:nil];
     [helpSubmenu addItem:[CPMenuItem separatorItem]];
-    [helpSubmenu addItemWithTitle:"Contact..." action:nil keyEquivalent:nil];
+    [helpSubmenu addItemWithTitle:"Contact…" action:nil keyEquivalent:nil];
     [helpSubmenu addItemWithTitle:"Blog" action:nil keyEquivalent:nil];
     [helpSubmenu addItemWithTitle:"Twitter" action:nil keyEquivalent:nil];
     [[mainMenu addItemWithTitle:"Help" action:nil keyEquivalent:nil] setSubmenu:helpSubmenu];
