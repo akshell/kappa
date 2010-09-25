@@ -19,6 +19,7 @@
     CPPanel loginPanel;
     CPPanel passwordPanel;
     CPMenuItem passwordMenuItem;
+    CPPopUpButton appPopUpButton;
 }
 
 - (void)setUsername:(CPString)username
@@ -164,26 +165,48 @@
 
 - (CPArray)toolbarAllowedItemIdentifiers:(CPToolbar)toolbar
 {
-    return [CPToolbarSpaceItemIdentifier, "New", "Save", "Save All", "Preview", "Eval", "Git", "Diff", "Commit"];
+    return [CPToolbarSpaceItemIdentifier, "App", "New", "Save", "Save All", "Eval", "Preview", "Git", "Diff", "Commit"];
 }
 
 - (CPArray)toolbarDefaultItemIdentifiers:(CPToolbar)toolbar
 {
     return [
+        "App", CPToolbarSpaceItemIdentifier,
         "New", "Save", "Save All", CPToolbarSpaceItemIdentifier,
-        "Preview", "Eval", "Git", CPToolbarSpaceItemIdentifier,
+        "Eval", "Preview", "Git", CPToolbarSpaceItemIdentifier,
         "Diff", "Commit"
     ];
 }
 
 - (CPToolbarItem)toolbar:(CPToolbar)toolbar itemForItemIdentifier:(CPString)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
 {
-    var toolbarItem = [[CPToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
-    [toolbarItem setLabel:itemIdentifier];
-    var image = [[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:itemIdentifier + ".png"]];
-    [toolbarItem setImage:image];
-    [toolbarItem setMinSize:CGSizeMake(32, 32)];
-    return toolbarItem;
+    var item = [[CPToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+    [item setLabel:itemIdentifier];
+    if (itemIdentifier == "App") {
+        appPopUpButton = [[CPPopUpButton alloc] initWithFrame:CGRectMake(4, 8, 202, 24) pullsDown:YES];
+        [appPopUpButton addItemWithTitle:"hello-world"];
+        [appPopUpButton setAutoresizingMask:CPViewWidthSizable];
+        var itemView = [[CPView alloc] initWithFrame:CGRectMake(0, 0, 206, 32)];
+        [itemView addSubview:appPopUpButton];
+        [item setView:itemView];
+        [item setMinSize:[itemView frameSize]];
+    } else {
+        var image = [[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:itemIdentifier + ".png"]];
+        [item setImage:image];
+        [item setMinSize:CGSizeMake(32, 32)];
+    }
+    return item;
+}
+
+@end
+
+@implementation AppController (SplitViewDelegate)
+
+- (unsigned)splitView:(CPSplitView)splitView constrainSplitPosition:(unsigned)position ofSubviewAt:(unsigned)index
+{
+    position = MIN(MAX(position, 150), [splitView frameSize].width - 500);
+    [[[mainWindow toolbar] items][0] setMinSize:CGSizeMake(position - 35, 32)];
+    return position;
 }
 
 @end
