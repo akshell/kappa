@@ -13,6 +13,8 @@
     var actionMenu = [actionPopupButton menu];
     [actionMenu addItemWithTitle:"New File" action:nil keyEquivalent:nil];
     [actionMenu addItemWithTitle:"New Folder" action:nil keyEquivalent:nil];
+    [actionMenu addItemWithTitle:"New Environment" action:nil keyEquivalent:nil];
+    [actionMenu addItemWithTitle:"Use Library…" action:nil keyEquivalent:nil];
     [actionMenu addItem:[CPMenuItem separatorItem]];
     [actionMenu addItemWithTitle:"Delete…" action:nil keyEquivalent:nil];
     [actionMenu addItemWithTitle:"Move…" action:nil keyEquivalent:nil];

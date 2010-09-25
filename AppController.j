@@ -58,8 +58,7 @@
     [fileSubmenu addItemWithTitle:"New App…" action:nil keyEquivalent:nil];
     [fileSubmenu addItemWithTitle:"New File" action:nil keyEquivalent:nil];
     [fileSubmenu addItemWithTitle:"New Folder" action:nil keyEquivalent:nil];
-    var openAppSubmenu = [CPMenu new];
-    [[fileSubmenu addItemWithTitle:"Open App" action:nil keyEquivalent:nil] setSubmenu:openAppSubmenu];
+    [[fileSubmenu addItemWithTitle:"Open App" action:nil keyEquivalent:nil] setSubmenu:[CPMenu new]];
     [fileSubmenu addItem:[CPMenuItem separatorItem]];
     [fileSubmenu addItemWithTitle:"Close File \"xxx\"" action:nil keyEquivalent:nil];
     [fileSubmenu addItemWithTitle:"Save" action:nil keyEquivalent:nil];
@@ -76,10 +75,19 @@
     [appSubmenu addItemWithTitle:"New Environment" action:nil keyEquivalent:nil];
     [appSubmenu addItemWithTitle:"Use Library…" action:nil keyEquivalent:nil];
     [appSubmenu addItem:[CPMenuItem separatorItem]];
+    [appSubmenu addItemWithTitle:"Diff…" action:nil keyEquivalent:nil];
+    [appSubmenu addItemWithTitle:"Commit…" action:nil keyEquivalent:nil];
+    [appSubmenu addItem:[CPMenuItem separatorItem]];
     [appSubmenu addItemWithTitle:"Manage Domains…" action:nil keyEquivalent:nil];
     [appSubmenu addItemWithTitle:"Publish App…" action:nil keyEquivalent:nil];
     [appSubmenu addItemWithTitle:"Delete App…" action:nil keyEquivalent:nil];
     [[mainMenu addItemWithTitle:"App" action:nil keyEquivalent:nil] setSubmenu:appSubmenu];
+
+    var viewSubmenu = [CPMenu new];
+    [[viewSubmenu addItemWithTitle:"Eval" action:nil keyEquivalent:nil] setSubmenu:[CPMenu new]];
+    [[viewSubmenu addItemWithTitle:"Preview" action:nil keyEquivalent:nil] setSubmenu:[CPMenu new]];
+    [viewSubmenu addItemWithTitle:"Git" action:nil keyEquivalent:nil];
+    [[mainMenu addItemWithTitle:"View" action:nil keyEquivalent:nil] setSubmenu:viewSubmenu];
 
     var helpSubmenu = [CPMenu new];
     [helpSubmenu addItemWithTitle:"Getting Started" action:nil keyEquivalent:nil];
