@@ -1,7 +1,7 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "HTTPRequest.j"
-@import "ErrorPanelController.j"
+@import "Alert.j"
 
 @implementation RequestPanelController : CPWindowController
 {
@@ -31,11 +31,11 @@
         message = data.message;
         comment = data.comment;
     }
-    [[[ErrorPanelController alloc] initWithMessage:message comment:comment target:self action:@selector(didEndRequestErrorSheet:)]
+    [[[Alert alloc] initWithMessage:message comment:comment target:self action:@selector(didEndRequestErrorSheet:)]
         displaySheetForWindow:[self window]];
 }
 
-- (void)didEndRequestErrorSheet:(ErrorPanelController)sender
+- (void)didEndRequestErrorSheet:(Alert)sender
 {
 }
 

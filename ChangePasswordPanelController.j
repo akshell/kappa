@@ -41,14 +41,14 @@
                             URL:"/password"
                            data:{"old": [oldPasswordField stringValue], "new": newPassword}];
     else
-        [[[ErrorPanelController alloc] initWithMessage:"The new password and its confirmation don't match."
-                                               comment:"Please retype the new password twice."
-                                                target:self
-                                                action:@selector(didEndMatchErrorSheet)]
+        [[[Alert alloc] initWithMessage:"The new password and its confirmation don't match."
+                                comment:"Please retype the new password twice."
+                                 target:self
+                                 action:@selector(didEndMatchErrorSheet)]
             displaySheetForWindow:[self window]];
 }
 
-- (void)didEndRequestErrorSheet:(ErrorPanelController)sender
+- (void)didEndRequestErrorSheet:(Alert)sender
 {
     [oldPasswordField setStringValue:""];
     [changeButton setEnabled:NO];

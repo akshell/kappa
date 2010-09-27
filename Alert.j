@@ -2,10 +2,11 @@
 
 var MAX_LABEL_WIDTH = 190;
 
-@implementation ErrorPanelController : CPWindowController
+@implementation Alert : CPObject
 {
     CPString message @accessors(readonly);
     CPString comment @accessors(readonly);
+    CPPanel panel;
     CPInvocation invocation;
 }
 
@@ -24,13 +25,13 @@ var MAX_LABEL_WIDTH = 190;
     return label;
 }
 
-- (void)createWindowWithStyleMask:(unsigned)styleMask selector:(SEL)selector
+- (void)createPanelWithStyleMask:(unsigned)styleMask selector:(SEL)selector
 {
-    var messageLabel = [ErrorPanelController createLabelWithText:message y:16 isBold:YES];
+    var messageLabel = [Alert createLabelWithText:message y:16 isBold:YES];
     var labelMaxX = CGRectGetMaxX([messageLabel frame]);
     var commentLabel;
     if (comment) {
-        commentLabel = [ErrorPanelController createLabelWithText:comment y:CGRectGetMaxY([messageLabel frame]) + 8 isBold:NO];
+        commentLabel = [Alert createLabelWithText:comment y:CGRectGetMaxY([messageLabel frame]) + 8 isBold:NO];
         labelMaxX = MAX(labelMaxX, CGRectGetMaxX([commentLabel frame]));
     }
     var okButtonY = MAX(CGRectGetMaxY([commentLabel || messageLabel frame]), 64) + 8;
@@ -39,9 +40,9 @@ var MAX_LABEL_WIDTH = 190;
     [okButton setTarget:self];
     [okButton setAction:selector];
     [okButton setKeyEquivalent:CPCarriageReturnCharacter];
-    var window = [[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, labelMaxX + 16, okButtonY + 24 + 16)
-                                            styleMask:styleMask];
-    var contentView = [window contentView];
+    panel = [[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, labelMaxX + 16, okButtonY + 24 + 16)
+                                       styleMask:styleMask];
+    var contentView = [panel contentView];
     var imageView = [[CPImageView alloc] initWithFrame:CGRectMake(16, 16, 48, 48)];
     [imageView setImage:[[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:"Error.png"]]];
     [contentView addSubview:imageView];
@@ -49,8 +50,7 @@ var MAX_LABEL_WIDTH = 190;
     if (commentLabel)
         [contentView addSubview:commentLabel];
     [contentView addSubview:okButton];
-    [self setWindow:window];
-    [window setDelegate:self];
+    [panel setDelegate:self];
 }
 
 - (void)initWithMessage:(CPString)aMessage comment:(CPString)aComment target:(id)target action:(SEL)action
@@ -73,25 +73,25 @@ var MAX_LABEL_WIDTH = 190;
 
 - (void)displayAlert
 {
-    [self createWindowWithStyleMask:CPTitledWindowMask selector:@selector(stopModal)];
-    [CPApp runModalForWindow:[self window]];
+    [self createPanelWithStyleMask:CPTitledWindowMask selector:@selector(stopModal)];
+    [CPApp runModalForWindow:panel];
 }
 
 - (void)stopModal
 {
     [CPApp stopModal];
-    [[self window] close];
+    [panel close];
 }
 
 - (void)displaySheetForWindow:(CPWindow)window
 {
-    [self createWindowWithStyleMask:CPDocModalWindowMask selector:@selector(endSheet)];
-    [CPApp beginSheet:[self window] modalForWindow:window modalDelegate:nil didEndSelector:nil contextInfo:nil];
+    [self createPanelWithStyleMask:CPDocModalWindowMask selector:@selector(endSheet)];
+    [CPApp beginSheet:panel modalForWindow:window modalDelegate:nil didEndSelector:nil contextInfo:nil];
 }
 
 - (void)endSheet
 {
-    [CPApp endSheet:[self window]];
+    [CPApp endSheet:panel];
 }
 
 - (void)windowWillClose:(id)sender

@@ -1,6 +1,5 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "ErrorPanelController.j"
 @import "RequestPanelController.j"
 
 @implementation SignupPanelController : RequestPanelController
@@ -47,10 +46,10 @@
                             URL:"/signup"
                            data:{name: [nameField stringValue], email: [emailField stringValue], password: password}];
     else
-        [[[ErrorPanelController alloc] initWithMessage:"The passwords don't match."
-                                               comment:"Please retype the password twice."
-                                                target:self
-                                                action:@selector(didEndMatchErrorSheet)]
+        [[[Alert alloc] initWithMessage:"The passwords don't match."
+                                comment:"Please retype the password twice."
+                                 target:self
+                                 action:@selector(didEndMatchErrorSheet)]
             displaySheetForWindow:[self window]];
 }
 
@@ -62,7 +61,7 @@
     [[self window] makeFirstResponder:passwordField];
 }
 
-- (void)didEndRequestErrorSheet:(ErrorPanelController)sender
+- (void)didEndRequestErrorSheet:(Alert)sender
 {
     [[self window] makeFirstResponder:[sender message].indexOf("email") == -1 ? nameField : emailField];
 }
