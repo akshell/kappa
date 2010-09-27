@@ -1,5 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
+@import "Data.j"
 @import "TreeController.j"
 @import "AboutPanelController.j"
 @import "KeyPanelController.j"
@@ -7,6 +8,8 @@
 @import "LoginPanelController.j"
 @import "ChangePasswordPanelController.j"
 @import "ResetPasswordPanelController.j"
+
+DATA = nil;
 
 @implementation AppController : CPObject
 {
@@ -24,6 +27,8 @@
 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification
 {
+    DATA = [Data new];
+
     aboutPanelController = [AboutPanelController new];
     keyPanelController = [KeyPanelController new];
     changePasswordPanelController = [ChangePasswordPanelController new];
@@ -36,9 +41,11 @@
         [mainMenu removeItemAtIndex:0];
 
     var akshellSubmenu = [CPMenu new];
-    [[akshellSubmenu addItemWithTitle:"About Akshell" action:@selector(showWindow:) keyEquivalent:nil] setTarget:aboutPanelController];
+    [[akshellSubmenu addItemWithTitle:"About Akshell" action:@selector(showWindow:) keyEquivalent:nil]
+        setTarget:aboutPanelController];
     [akshellSubmenu addItem:[CPMenuItem separatorItem]];
-    [[akshellSubmenu addItemWithTitle:"SSH Public Key" action:@selector(showWindow:) keyEquivalent:nil] setTarget:keyPanelController];
+    [[akshellSubmenu addItemWithTitle:"SSH Public Key" action:@selector(showWindow:) keyEquivalent:nil]
+        setTarget:keyPanelController];
     passwordMenuItem = [akshellSubmenu addItemWithTitle:"" action:@selector(showWindow:) keyEquivalent:nil];
     [[mainMenu addItemWithTitle:"Akshell" action:nil keyEquivalent:nil] setSubmenu:akshellSubmenu];
 
@@ -92,36 +99,36 @@
 
     [mainMenu addItem:[CPMenuItem separatorItem]];
 
-    var user = [User sharedUser];
-    [self alterMenuForUserWithName:[user name]];
-    [user addObserver:self forKeyPath:"name" options:CPKeyValueObservingOptionNew context:nil];
+    [DATA addObserver:self
+           forKeyPath:"username"
+              options:CPKeyValueObservingOptionNew | CPKeyValueObservingOptionInitial
+              context:nil];
 
     var toolbar = [CPToolbar new];
     [toolbar setDelegate:self];
     [mainWindow setToolbar:toolbar];
 }
 
-- (void)alterMenuForUserWithName:(CPString)username
-{
-    var mainMenu = [CPApp mainMenu];
-    for (var index = [mainMenu numberOfItems]; ![[mainMenu itemAtIndex:--index] isSeparatorItem];)
-        [mainMenu removeItemAtIndex:index];
-    if (username) {
-        [passwordMenuItem setTitle:"Change Password…"];
-        [passwordMenuItem setTarget:changePasswordPanelController];
-        [mainMenu addItemWithTitle:"Log Out (" + username + ")" action:@selector(logOut) keyEquivalent:nil];
-    } else {
-        [passwordMenuItem setTitle:"Reset Password…"];
-        [passwordMenuItem setTarget:resetPasswordPanelController];
-        [[mainMenu addItemWithTitle:"Sign Up" action:@selector(showWindow:) keyEquivalent:nil] setTarget:signupPanelController];
-        [[mainMenu addItemWithTitle:"Log In" action:@selector(showWindow:) keyEquivalent:nil] setTarget:loginPanelController];
-    }
-}
-
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
 {
-    if (object === [User sharedUser])
-        [self alterMenuForUserWithName:[change valueForKey:CPKeyValueChangeNewKey]];
+    if (keyPath == "username") {
+        var username = [change valueForKey:CPKeyValueChangeNewKey];
+        var mainMenu = [CPApp mainMenu];
+        for (var index = [mainMenu numberOfItems]; ![[mainMenu itemAtIndex:--index] isSeparatorItem];)
+            [mainMenu removeItemAtIndex:index];
+        if (username) {
+            [passwordMenuItem setTitle:"Change Password…"];
+            [passwordMenuItem setTarget:changePasswordPanelController];
+            [mainMenu addItemWithTitle:"Log Out (" + username + ")" action:@selector(logOut) keyEquivalent:nil];
+        } else {
+            [passwordMenuItem setTitle:"Reset Password…"];
+            [passwordMenuItem setTarget:resetPasswordPanelController];
+            [[mainMenu addItemWithTitle:"Sign Up" action:@selector(showWindow:) keyEquivalent:nil]
+                setTarget:signupPanelController];
+            [[mainMenu addItemWithTitle:"Log In" action:@selector(showWindow:) keyEquivalent:nil]
+                setTarget:loginPanelController];
+        }
+    }
 }
 
 - (void)logOut
@@ -131,7 +138,7 @@
 
 - (void)didLogOut
 {
-    [[User sharedUser] setName:""];
+    [DATA setUsername:""];
 }
 
 - (CPArray)toolbarAllowedItemIdentifiers:(CPToolbar)toolbar

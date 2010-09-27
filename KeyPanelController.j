@@ -33,7 +33,7 @@
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
 {
-    if (object === [User sharedUser])
+    if (keyPath == "username")
         keyValue = nil;
     [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
 }

@@ -1,7 +1,5 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "User.j"
-
 @implementation PanelController : CPWindowController
 {
 }
@@ -9,13 +7,13 @@
 - (id)initWithWindow:(CPWindow)window
 {
     if (self = [super initWithWindow:window])
-        [[User sharedUser] addObserver:self forKeyPath:"name" options:nil context:nil];
+        [DATA addObserver:self forKeyPath:"username" options:nil context:nil];
     return self;
 }
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
 {
-    if (object === [User sharedUser])
+    if (keyPath == "username")
         [self close];
 }
 

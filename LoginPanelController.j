@@ -45,7 +45,7 @@
 
 - (void)didReceiveResponse:(JSObject)data
 {
-    [[User sharedUser] setName:[nameField stringValue]];
+    [DATA setUsername:[nameField stringValue]];
 }
 
 - (@action)resetPassword:(id)sender

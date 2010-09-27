@@ -68,7 +68,7 @@
 
 - (void)didReceiveResponse:(JSObject)data
 {
-    [[User sharedUser] setName:[nameField stringValue]];
+    [DATA setUsername:[nameField stringValue]];
 }
 
 @end
