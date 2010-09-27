@@ -3,11 +3,10 @@
 @import "TextView.j"
 @import "RequestPanelController.j"
 
-var keyValue;
-
 @implementation KeyPanelController : RequestPanelController
 {
     @outlet TextView textView;
+    CPString keyValue;
 }
 
 - (id)init
@@ -15,12 +14,15 @@ var keyValue;
     return [super initWithWindowCibName:"KeyPanel"];
 }
 
-- (void)awakeFromCib
+- (void)showWindow:(id)sender
 {
-    if (keyValue)
+    [super showWindow:sender];
+    if (keyValue) {
         [textView setStringValue:keyValue];
-    else
+    } else {
+        [textView setStringValue:""];
         [self requestWithMethod:"GET" URL:"/rsa.pub"];
+    }
 }
 
 - (void)didReceiveResponse:(CPString)data
@@ -29,9 +31,11 @@ var keyValue;
     [textView setStringValue:keyValue];
 }
 
-+ (void)resetKeyValue
+- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
 {
-    keyValue = nil;
+    if (object === [User sharedUser])
+        keyValue = nil;
+    [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
 }
 
 @end

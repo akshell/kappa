@@ -68,7 +68,7 @@
 
 - (void)didReceiveResponse:(JSObject)data
 {
-    [[CPApp delegate] setUsername:[nameField stringValue]];
+    [[User sharedUser] setName:[nameField stringValue]];
 }
 
 @end

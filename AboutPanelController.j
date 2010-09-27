@@ -1,6 +1,8 @@
 // (c) 2010 by Anton Korenyushkin
 
-@implementation AboutPanelController : CPWindowController
+@import "PanelController.j"
+
+@implementation AboutPanelController : PanelController
 {
     @outlet CPTextField akshellLabel;
     @outlet CPTextField versionLabel;

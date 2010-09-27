@@ -1,9 +1,10 @@
 // (c) 2010 by Anton Korenyushkin
 
+@import "PanelController.j"
 @import "HTTPRequest.j"
 @import "Alert.j"
 
-@implementation RequestPanelController : CPWindowController
+@implementation RequestPanelController : PanelController
 {
 }
 

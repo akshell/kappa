@@ -1,6 +1,7 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "RequestPanelController.j"
+@import "ResetPasswordPanelController.j"
 @import "Link.j"
 
 @implementation LoginPanelController : RequestPanelController
@@ -11,11 +12,14 @@
     @outlet CPTextField passwordField;
     @outlet Link resetPasswordLink;
     @outlet CPButton loginButton;
+    ResetPasswordPanelController resetPasswordPanelController;
 }
 
-- (id)init
+- (id)initWithResetPasswordPanelController:(ResetPasswordPanelController)aResetPasswordPanelController
 {
-    return [super initWithWindowCibName:"LoginPanel"];
+    if (self = [super initWithWindowCibName:"LoginPanel"])
+        resetPasswordPanelController = aResetPasswordPanelController;
+    return self;
 }
 
 - (void)awakeFromCib
@@ -41,13 +45,13 @@
 
 - (void)didReceiveResponse:(JSObject)data
 {
-    [[CPApp delegate] setUsername:[nameField stringValue]];
+    [[User sharedUser] setName:[nameField stringValue]];
 }
 
 - (@action)resetPassword:(id)sender
 {
-    [[self window] close];
-    [[CPApp delegate] displayPasswordPanel];
+    [self close];
+    [resetPasswordPanelController showWindow:nil];
 }
 
 @end

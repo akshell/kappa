@@ -7,51 +7,39 @@
 @import "LoginPanelController.j"
 @import "ChangePasswordPanelController.j"
 @import "ResetPasswordPanelController.j"
-@import "HTTPRequest.j"
 
 @implementation AppController : CPObject
 {
     @outlet CPWindow mainWindow;
     @outlet TreeController treeController;
-    CPPanel aboutPanel;
-    CPPanel keyPanel;
-    CPPanel signupPanel;
-    CPPanel loginPanel;
-    CPPanel passwordPanel;
+    AboutPanelController aboutPanelController;
+    KeyPanelController keyPanelController;
+    ChangePasswordPanelController changePasswordPanelController;
+    ResetPasswordPanelController resetPasswordPanelController;
+    SignupPanelController signupPanelController;
+    LoginPanelController loginPanelController;
     CPMenuItem passwordMenuItem;
     CPPopUpButton appPopUpButton;
 }
 
-- (void)setUsername:(CPString)username
-{
-    USERNAME = username;
-    [keyPanel, signupPanel, loginPanel, passwordPanel].forEach(
-        function (panel) { [panel close]; });
-    [KeyPanelController resetKeyValue];
-    [passwordMenuItem setTitle:username ? "Change Password…" : "Reset Password…"];
-    var mainMenu = [CPApp mainMenu];
-    for (var index = [mainMenu numberOfItems]; ![[mainMenu itemAtIndex:--index] isSeparatorItem];)
-        [mainMenu removeItemAtIndex:index];
-
-    if (username) {
-        [mainMenu addItemWithTitle:"Log Out (" + username + ")" action:@selector(logOut) keyEquivalent:nil];
-    } else {
-        [mainMenu addItemWithTitle:"Sign Up" action:@selector(displaySignupPanel) keyEquivalent:nil];
-        [mainMenu addItemWithTitle:"Log In" action:@selector(displayLoginPanel) keyEquivalent:nil];
-    }
-}
-
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification
 {
+    aboutPanelController = [AboutPanelController new];
+    keyPanelController = [KeyPanelController new];
+    changePasswordPanelController = [ChangePasswordPanelController new];
+    resetPasswordPanelController = [ResetPasswordPanelController new];
+    signupPanelController = [SignupPanelController new];
+    loginPanelController = [[LoginPanelController alloc] initWithResetPasswordPanelController:resetPasswordPanelController];
+
     var mainMenu = [CPApp mainMenu];
     while ([mainMenu numberOfItems])
         [mainMenu removeItemAtIndex:0];
 
     var akshellSubmenu = [CPMenu new];
-    [akshellSubmenu addItemWithTitle:"About Akshell" action:@selector(displayAboutPanel) keyEquivalent:nil];
+    [[akshellSubmenu addItemWithTitle:"About Akshell" action:@selector(showWindow:) keyEquivalent:nil] setTarget:aboutPanelController];
     [akshellSubmenu addItem:[CPMenuItem separatorItem]];
-    [akshellSubmenu addItemWithTitle:"SSH Public Key" action:@selector(displayKeyPanel) keyEquivalent:nil];
-    passwordMenuItem = [akshellSubmenu addItemWithTitle:"" action:@selector(displayPasswordPanel) keyEquivalent:nil];
+    [[akshellSubmenu addItemWithTitle:"SSH Public Key" action:@selector(showWindow:) keyEquivalent:nil] setTarget:keyPanelController];
+    passwordMenuItem = [akshellSubmenu addItemWithTitle:"" action:@selector(showWindow:) keyEquivalent:nil];
     [[mainMenu addItemWithTitle:"Akshell" action:nil keyEquivalent:nil] setSubmenu:akshellSubmenu];
 
     var fileSubmenu = [CPMenu new];
@@ -104,57 +92,36 @@
 
     [mainMenu addItem:[CPMenuItem separatorItem]];
 
-    [self setUsername:USERNAME];
+    var user = [User sharedUser];
+    [self alterMenuForUserWithName:[user name]];
+    [user addObserver:self forKeyPath:"name" options:CPKeyValueObservingOptionNew context:nil];
 
     var toolbar = [CPToolbar new];
     [toolbar setDelegate:self];
     [mainWindow setToolbar:toolbar];
 }
 
-@end
-
-@implementation AppController (MenuTarget)
-
-- (void)displayPanel:(CPString)name
+- (void)alterMenuForUserWithName:(CPString)username
 {
-    if ([self[name] isVisible])
-        return;
-    var controllerClass = {
-        aboutPanel: AboutPanelController,
-        keyPanel: KeyPanelController,
-        signupPanel: SignupPanelController,
-        loginPanel: LoginPanelController,
-        passwordPanel: USERNAME ? ChangePasswordPanelController : ResetPasswordPanelController
-    }[name];
-    self[name] = [[controllerClass new] window];
-    [self[name] center];
-    [self[name] orderFront:nil];
-    [self[name] makeKeyWindow];
+    var mainMenu = [CPApp mainMenu];
+    for (var index = [mainMenu numberOfItems]; ![[mainMenu itemAtIndex:--index] isSeparatorItem];)
+        [mainMenu removeItemAtIndex:index];
+    if (username) {
+        [passwordMenuItem setTitle:"Change Password…"];
+        [passwordMenuItem setTarget:changePasswordPanelController];
+        [mainMenu addItemWithTitle:"Log Out (" + username + ")" action:@selector(logOut) keyEquivalent:nil];
+    } else {
+        [passwordMenuItem setTitle:"Reset Password…"];
+        [passwordMenuItem setTarget:resetPasswordPanelController];
+        [[mainMenu addItemWithTitle:"Sign Up" action:@selector(showWindow:) keyEquivalent:nil] setTarget:signupPanelController];
+        [[mainMenu addItemWithTitle:"Log In" action:@selector(showWindow:) keyEquivalent:nil] setTarget:loginPanelController];
+    }
 }
 
-- (void)displayAboutPanel
+- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
 {
-    [self displayPanel:"aboutPanel"];
-}
-
-- (void)displayKeyPanel
-{
-    [self displayPanel:"keyPanel"];
-}
-
-- (void)displaySignupPanel
-{
-    [self displayPanel:"signupPanel"];
-}
-
-- (void)displayLoginPanel
-{
-    [self displayPanel:"loginPanel"];
-}
-
-- (void)displayPasswordPanel
-{
-    [self displayPanel:"passwordPanel"];
+    if (object === [User sharedUser])
+        [self alterMenuForUserWithName:[change valueForKey:CPKeyValueChangeNewKey]];
 }
 
 - (void)logOut
@@ -164,12 +131,8 @@
 
 - (void)didLogOut
 {
-    [self setUsername:nil];
+    [[User sharedUser] setName:""];
 }
-
-@end
-
-@implementation AppController (ToolbarDelegate)
 
 - (CPArray)toolbarAllowedItemIdentifiers:(CPToolbar)toolbar
 {
@@ -205,10 +168,6 @@
     }
     return item;
 }
-
-@end
-
-@implementation AppController (SplitViewDelegate)
 
 - (unsigned)splitView:(CPSplitView)splitView constrainSplitPosition:(unsigned)position ofSubviewAt:(unsigned)index
 {
