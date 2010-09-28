@@ -22,7 +22,7 @@ DATA = nil
     if (self = [super init]) {
         username = USERNAME;
         apps = APPS.map(function (name) { return [[App alloc] initWithName:name]; });
-        [self setAppIndex:CONFIG.appIndex || 0];
+        [self setAppIndex:CONFIG.appIndex && apps.length ? MIN(CONFIG.appIndex, apps.length - 1) : 0];
         window.onbeforeunload = function () {
             var request = new XMLHttpRequest();
             request.open("PUT", "/config", false);
