@@ -2,6 +2,8 @@
 
 @import "App.j"
 
+DATA = nil
+
 @implementation Data : CPObject
 {
     CPString username @accessors;
@@ -10,12 +12,24 @@
     App app @accessors(readonly);
 }
 
++ (void)setup
+{
+    DATA = [Data new];
+}
+
 - (id)init
 {
     if (self = [super init]) {
         username = USERNAME;
         apps = APPS.map(function (name) { return [[App alloc] initWithName:name]; });
         [self setAppIndex:CONFIG.appIndex || 0];
+        window.onbeforeunload = function () {
+            var request = new XMLHttpRequest();
+            request.open("PUT", "/config", false);
+            request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+            request.setRequestHeader("Content-Type", "application/json");
+            request.send(JSON.stringify({appIndex: appIndex}));
+        };
     }
     return self;
 }

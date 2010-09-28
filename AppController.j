@@ -11,8 +11,6 @@
 @import "NewAppPanelController.j"
 @import "Confirm.j"
 
-DATA = nil;
-
 @implementation AppController : CPObject
 {
     @outlet CPWindow mainWindow;
@@ -31,7 +29,7 @@ DATA = nil;
 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification
 {
-    DATA = [Data new];
+    [Data setup];
 
     aboutPanelController = [AboutPanelController new];
     keyPanelController = [KeyPanelController new];
