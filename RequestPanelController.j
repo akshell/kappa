@@ -33,7 +33,7 @@
         comment = data.comment;
     }
     [[[Alert alloc] initWithMessage:message comment:comment target:self action:@selector(didEndRequestErrorSheet:)]
-        displaySheetForWindow:[self window]];
+        showSheetForWindow:[self window]];
 }
 
 - (void)didEndRequestErrorSheet:(Alert)sender

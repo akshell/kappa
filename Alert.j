@@ -71,7 +71,7 @@ var MAX_LABEL_WIDTH = 190;
     [self initWithMessage:aMessage comment:aComment target:nil action:nil];
 }
 
-- (void)displayAlert
+- (void)showPanel
 {
     [self createPanelWithStyleMask:CPTitledWindowMask selector:@selector(stopModal)];
     [CPApp runModalForWindow:panel];
@@ -83,7 +83,7 @@ var MAX_LABEL_WIDTH = 190;
     [panel close];
 }
 
-- (void)displaySheetForWindow:(CPWindow)window
+- (void)showSheetForWindow:(CPWindow)window
 {
     [self createPanelWithStyleMask:CPDocModalWindowMask selector:@selector(endSheet)];
     [CPApp beginSheet:panel modalForWindow:window modalDelegate:nil didEndSelector:nil contextInfo:nil];

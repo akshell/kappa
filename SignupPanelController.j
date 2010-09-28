@@ -50,7 +50,7 @@
                                 comment:"Please retype the password twice."
                                  target:self
                                  action:@selector(didEndMatchErrorSheet)]
-            displaySheetForWindow:[self window]];
+                     showSheetForWindow:[self window]];
 }
 
 - (void)didEndMatchErrorSheet
