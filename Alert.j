@@ -1,7 +1,5 @@
 // (c) 2010 by Anton Korenyushkin
 
-var MAX_LABEL_WIDTH = 190;
-
 @implementation Alert : CPObject
 {
     CPString message @accessors(readonly);
@@ -13,38 +11,36 @@ var MAX_LABEL_WIDTH = 190;
 + (CPTextField)createLabelWithText:(CPString)text y:y isBold:isBold
 {
     var font = isBold ? [CPFont boldSystemFontOfSize:12] : [CPFont systemFontOfSize:12];
-    var size = [text sizeWithFont:font];
-    if (size.width > MAX_LABEL_WIDTH)
-        size = [text sizeWithFont:font inWidth:MAX_LABEL_WIDTH];
-    else
-        size.width += 4;
-    var label = [[CPTextField alloc] initWithFrame:CGRectMake(80, y, size.width, size.height + 3)];
+    var size = [text sizeWithFont:font inWidth:190];
+    var label = [[CPTextField alloc] initWithFrame:CGRectMake(80, y, size.width, size.height + 4)];
     [label setFont:font];
     [label setLineBreakMode:CPLineBreakByWordWrapping];
     [label setStringValue:text];
     return label;
 }
 
-- (void)createPanelWithStyleMask:(unsigned)styleMask selector:(SEL)selector
+- (CPString)imagePath
+{
+    return "Error.png";
+}
+
+- (void)createPanelWithStyleMask:(unsigned)styleMask
 {
     var messageLabel = [Alert createLabelWithText:message y:16 isBold:YES];
-    var labelMaxX = CGRectGetMaxX([messageLabel frame]);
     var commentLabel;
-    if (comment) {
+    if (comment)
         commentLabel = [Alert createLabelWithText:comment y:CGRectGetMaxY([messageLabel frame]) + 8 isBold:NO];
-        labelMaxX = MAX(labelMaxX, CGRectGetMaxX([commentLabel frame]));
-    }
-    var okButtonY = MAX(CGRectGetMaxY([commentLabel || messageLabel frame]), 64) + 8;
-    var okButton = [[CPButton alloc] initWithFrame:CGRectMake(labelMaxX - 60, okButtonY, 60, 24)];
+    var okButtonY = MAX(CGRectGetMaxY([commentLabel || messageLabel frame]), 64) + 16;
+    var okButton = [[CPButton alloc] initWithFrame:CGRectMake(210, okButtonY, 60, 24)];
     [okButton setTitle:"OK"];
     [okButton setTarget:self];
-    [okButton setAction:selector];
+    [okButton setAction:@selector(close)];
     [okButton setKeyEquivalent:CPCarriageReturnCharacter];
-    panel = [[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, labelMaxX + 16, okButtonY + 24 + 16)
-                                       styleMask:styleMask];
+    panel = [[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, 286, okButtonY + 24 + 16) styleMask:styleMask];
     var contentView = [panel contentView];
+    console.log([contentView boundsSize]);
     var imageView = [[CPImageView alloc] initWithFrame:CGRectMake(16, 16, 48, 48)];
-    [imageView setImage:[[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:"Error.png"]]];
+    [imageView setImage:[[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:[self imagePath]]]];
     [contentView addSubview:imageView];
     [contentView addSubview:messageLabel];
     if (commentLabel)
@@ -66,35 +62,35 @@ var MAX_LABEL_WIDTH = 190;
     return self;
 }
 
-- (void)initWithMessage:(CPString)aMessage comment:(CPString)aComment
+- (id)initWithMessage:(CPString)aMessage comment:(CPString)aComment
 {
-    [self initWithMessage:aMessage comment:aComment target:nil action:nil];
+    return [self initWithMessage:aMessage comment:aComment target:nil action:nil];
 }
 
 - (void)showPanel
 {
-    [self createPanelWithStyleMask:CPTitledWindowMask selector:@selector(stopModal)];
+    [self createPanelWithStyleMask:CPTitledWindowMask];
     [CPApp runModalForWindow:panel];
-}
-
-- (void)stopModal
-{
-    [CPApp stopModal];
-    [panel close];
 }
 
 - (void)showSheetForWindow:(CPWindow)window
 {
-    [self createPanelWithStyleMask:CPDocModalWindowMask selector:@selector(endSheet)];
-    [CPApp beginSheet:panel modalForWindow:window modalDelegate:nil didEndSelector:nil contextInfo:nil];
+    [self createPanelWithStyleMask:CPDocModalWindowMask];
+    [CPApp beginSheet:panel modalForWindow:window modalDelegate:self didEndSelector:@selector(didEndSheet) contextInfo:nil];
 }
 
-- (void)endSheet
+- (void)close
 {
-    [CPApp endSheet:panel];
+    if ([panel isSheet]) {
+        [CPApp endSheet:panel];
+    } else {
+        [CPApp stopModal];
+        [panel close];
+        [invocation invoke];
+    }
 }
 
-- (void)windowWillClose:(id)sender
+- (void)didEndSheet
 {
     [invocation invoke];
 }
