@@ -8,6 +8,7 @@
 @import "LoginPanelController.j"
 @import "ChangePasswordPanelController.j"
 @import "ResetPasswordPanelController.j"
+@import "NewAppPanelController.j"
 
 DATA = nil;
 
@@ -21,7 +22,9 @@ DATA = nil;
     ResetPasswordPanelController resetPasswordPanelController;
     SignupPanelController signupPanelController;
     LoginPanelController loginPanelController;
+    NewAppPanelController newAppPanelController;
     CPMenuItem passwordMenuItem;
+    CPMenu appsMenu;
     CPPopUpButton appPopUpButton;
 }
 
@@ -35,6 +38,7 @@ DATA = nil;
     resetPasswordPanelController = [ResetPasswordPanelController new];
     signupPanelController = [SignupPanelController new];
     loginPanelController = [[LoginPanelController alloc] initWithResetPasswordPanelController:resetPasswordPanelController];
+    newAppPanelController = [[NewAppPanelController alloc] initWithTarget:self action:@selector(didCreateAppWithName:)];
 
     var mainMenu = [CPApp mainMenu];
     while ([mainMenu numberOfItems])
@@ -50,10 +54,15 @@ DATA = nil;
     [[mainMenu addItemWithTitle:"Akshell" action:nil keyEquivalent:nil] setSubmenu:akshellSubmenu];
 
     var fileSubmenu = [CPMenu new];
-    [fileSubmenu addItemWithTitle:"New App…" action:nil keyEquivalent:nil];
+    [[fileSubmenu addItemWithTitle:"New App…" action:@selector(showWindow:) keyEquivalent:nil]
+        setTarget:newAppPanelController];
     [fileSubmenu addItemWithTitle:"New File" action:nil keyEquivalent:nil];
     [fileSubmenu addItemWithTitle:"New Folder" action:nil keyEquivalent:nil];
-    [[fileSubmenu addItemWithTitle:"Open App" action:nil keyEquivalent:nil] setSubmenu:[CPMenu new]];
+    appsMenu = [CPMenu new];
+    [DATA apps].forEach(
+        function (app) { [appsMenu addItemWithTitle:[app name] action:@selector(switchApp:) keyEquivalent:nil]; });
+    [[appsMenu itemAtIndex:[DATA appIndex]] setState:CPOnState];
+    [[fileSubmenu addItemWithTitle:"Open App" action:nil keyEquivalent:nil] setSubmenu:appsMenu];
     [fileSubmenu addItem:[CPMenuItem separatorItem]];
     [fileSubmenu addItemWithTitle:"Close File \"xxx\"" action:nil keyEquivalent:nil];
     [fileSubmenu addItemWithTitle:"Save" action:nil keyEquivalent:nil];
@@ -131,6 +140,10 @@ DATA = nil;
     }
 }
 
+@end
+
+@implementation AppController (MenuDelegate)
+
 - (void)logOut
 {
     [[[HTTPRequest alloc] initWithMethod:"POST" URL:"/logout" target:self action:@selector(didLogOut)] send];
@@ -140,6 +153,48 @@ DATA = nil;
 {
     [DATA setUsername:""];
 }
+
+- (CPPopUpButton)appPopUpButton
+{
+    return [[[[mainWindow toolbar] items][0] view] subviews][0];
+}
+
+- (void)switchApp:(CPMenuItem)sender
+{
+    if ([sender title] == [[DATA app] name])
+        return;
+    [[appsMenu itemAtIndex:[DATA appIndex]] setState:CPOffState];
+    var index = [[sender menu] indexOfItem:sender];
+    [[appsMenu itemAtIndex:index] setState:CPOnState];
+    [[self appPopUpButton] selectItemAtIndex:index];
+    [DATA setAppIndex:index];
+}
+
+- (void)didCreateAppWithName:(CPString)appName
+{
+    var appNameLower = appName.toLowerCase();
+    for (var index = 0; index < DATA.apps.length; ++index)
+        if ([DATA.apps[index] name].toLowerCase() > appNameLower)
+            break;
+    var item = [[CPMenuItem alloc] initWithTitle:appName action:@selector(switchApp:) keyEquivalent:nil];
+    [item setState:CPOnState];
+    var appPopUpButton = [self appPopUpButton];
+    [[appPopUpButton menu] insertItem:item atIndex:index];
+    var oldIndex = [DATA appIndex];
+    if (index == oldIndex)
+        [[appPopUpButton itemAtIndex:index + 1] setState:CPOffState];
+    else
+        [appPopUpButton selectItemAtIndex:index];
+    item = [item copy];
+    [[appsMenu itemAtIndex:oldIndex] setState:CPOffState];
+    [appsMenu insertItem:item atIndex:index];
+    DATA.apps.splice(index, 0, [[App alloc] initWithName:appName]);
+    [DATA setAppIndex:index];
+}
+
+@end
+
+@implementation AppController (ToolbarDelegate)
 
 - (CPArray)toolbarAllowedItemIdentifiers:(CPToolbar)toolbar
 {
@@ -161,11 +216,12 @@ DATA = nil;
     var item = [[CPToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
     [item setLabel:itemIdentifier];
     if (itemIdentifier == "App") {
-        appPopUpButton = [[CPPopUpButton alloc] initWithFrame:CGRectMake(4, 8, 202, 24) pullsDown:YES];
-        [appPopUpButton addItemWithTitle:"hello-world"];
-        [appPopUpButton setAutoresizingMask:CPViewWidthSizable];
+        var popUpButton = [[CPPopUpButton alloc] initWithFrame:CGRectMake(4, 8, 202, 24)];
+        [popUpButton setAutoresizingMask:CPViewWidthSizable];
+        [popUpButton setMenu:[appsMenu copy]];
+        [popUpButton selectItemAtIndex:[DATA appIndex]];
         var itemView = [[CPView alloc] initWithFrame:CGRectMake(0, 0, 206, 32)];
-        [itemView addSubview:appPopUpButton];
+        [itemView addSubview:popUpButton];
         [item setView:itemView];
         [item setMinSize:[itemView frameSize]];
     } else {
@@ -175,6 +231,10 @@ DATA = nil;
     }
     return item;
 }
+
+@end
+
+@implementation AppController (SplitViewDelegate)
 
 - (unsigned)splitView:(CPSplitView)splitView constrainSplitPosition:(unsigned)position ofSubviewAt:(unsigned)index
 {
