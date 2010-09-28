@@ -5,7 +5,7 @@
 
 @implementation KeyPanelController : RequestPanelController
 {
-    @outlet TextView textView;
+    @outlet TextView keyTextView;
     CPString keyValue;
 }
 
@@ -18,9 +18,9 @@
 {
     [super showWindow:sender];
     if (keyValue) {
-        [textView setStringValue:keyValue];
+        [keyTextView setStringValue:keyValue];
     } else {
-        [textView setStringValue:""];
+        [keyTextView setStringValue:""];
         [self requestWithMethod:"GET" URL:"/rsa.pub"];
     }
 }
@@ -28,7 +28,7 @@
 - (void)didReceiveResponse:(CPString)data
 {
     keyValue = data;
-    [textView setStringValue:keyValue];
+    [keyTextView setStringValue:keyValue];
 }
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
