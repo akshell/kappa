@@ -1,7 +1,7 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "Data.j"
-@import "TreeController.j"
+@import "SidebarController.j"
 @import "AboutPanelController.j"
 @import "KeyPanelController.j"
 @import "SignupPanelController.j"
@@ -15,7 +15,7 @@
 @implementation AppController : CPObject
 {
     @outlet CPWindow mainWindow;
-    @outlet TreeController treeController;
+    @outlet SidebarController sidebarController;
     AboutPanelController aboutPanelController;
     KeyPanelController keyPanelController;
     ChangePasswordPanelController changePasswordPanelController;

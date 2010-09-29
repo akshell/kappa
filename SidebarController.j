@@ -1,6 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
-@implementation TreeController : CPObject
+@implementation SidebarController : CPObject
 {
     @outlet CPButtonBar buttonBar;
 }
