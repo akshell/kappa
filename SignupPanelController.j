@@ -69,6 +69,7 @@
 - (void)didReceiveResponse:(JSObject)data
 {
     [DATA setUsername:[nameField stringValue]];
+    [DATA setEmail:[emailField stringValue]];
 }
 
 @end

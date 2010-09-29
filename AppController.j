@@ -9,6 +9,7 @@
 @import "ChangePasswordPanelController.j"
 @import "ResetPasswordPanelController.j"
 @import "NewAppPanelController.j"
+@import "ContactPanelController.j"
 @import "Confirm.j"
 
 @implementation AppController : CPObject
@@ -21,6 +22,7 @@
     ResetPasswordPanelController resetPasswordPanelController;
     SignupPanelController signupPanelController;
     LoginPanelController loginPanelController;
+    ContactPanelController contactPanelController;
     NewAppPanelController newAppPanelController;
     CPMenuItem passwordMenuItem;
     CPMenu appsMenu;
@@ -37,6 +39,7 @@
     resetPasswordPanelController = [ResetPasswordPanelController new];
     signupPanelController = [SignupPanelController new];
     loginPanelController = [[LoginPanelController alloc] initWithResetPasswordPanelController:resetPasswordPanelController];
+    contactPanelController = [ContactPanelController new];
     newAppPanelController = [[NewAppPanelController alloc] initWithTarget:self action:@selector(didCreateAppWithName:)];
 
     var mainMenu = [CPApp mainMenu];
@@ -98,7 +101,8 @@
     [helpSubmenu addItemWithTitle:"User Guide" action:nil keyEquivalent:nil];
     [helpSubmenu addItemWithTitle:"Reference" action:nil keyEquivalent:nil];
     [helpSubmenu addItem:[CPMenuItem separatorItem]];
-    [helpSubmenu addItemWithTitle:"Contact…" action:nil keyEquivalent:nil];
+    [[helpSubmenu addItemWithTitle:"Contact…" action:@selector(showWindow:) keyEquivalent:nil]
+        setTarget:contactPanelController];
     [helpSubmenu addItemWithTitle:"Blog" action:nil keyEquivalent:nil];
     [helpSubmenu addItemWithTitle:"Twitter" action:nil keyEquivalent:nil];
     [[mainMenu addItemWithTitle:"Help" action:nil keyEquivalent:nil] setSubmenu:helpSubmenu];
@@ -167,6 +171,7 @@
 - (void)didLogOut
 {
     [DATA setUsername:""];
+    [DATA setEmail:""];
 }
 
 - (CPPopUpButton)appPopUpButton

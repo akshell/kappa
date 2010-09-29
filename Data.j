@@ -7,6 +7,7 @@ DATA = nil
 @implementation Data : CPObject
 {
     CPString username @accessors;
+    CPString email @accessors;
     CPArray apps @accessors(readonly);
     unsigned appIndex @accessors(readonly);
     App app @accessors(readonly);
@@ -21,6 +22,7 @@ DATA = nil
 {
     if (self = [super init]) {
         username = USERNAME;
+        email = EMAIL;
         apps = APPS.map(function (name) { return [[App alloc] initWithName:name]; });
         [self setAppIndex:CONFIG.appIndex && apps.length ? MIN(CONFIG.appIndex, apps.length - 1) : 0];
         window.onbeforeunload = function () {

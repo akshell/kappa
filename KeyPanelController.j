@@ -14,6 +14,11 @@
     return [super initWithWindowCibName:"KeyPanel"];
 }
 
+- (void)awakeFromCib
+{
+    [keyTextView setEditable:NO];
+}
+
 - (void)showWindow:(id)sender
 {
     [super showWindow:sender];
