@@ -38,7 +38,6 @@
     [okButton setKeyEquivalent:CPCarriageReturnCharacter];
     panel = [[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, 286, okButtonY + 24 + 16) styleMask:styleMask];
     var contentView = [panel contentView];
-    console.log([contentView boundsSize]);
     var imageView = [[CPImageView alloc] initWithFrame:CGRectMake(16, 16, 48, 48)];
     [imageView setImage:[[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:[self imagePath]]]];
     [contentView addSubview:imageView];

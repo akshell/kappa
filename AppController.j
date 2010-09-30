@@ -165,7 +165,7 @@
 
 - (void)logOut
 {
-    [[[HTTPRequest alloc] initWithMethod:"POST" URL:"/logout" target:self action:@selector(didLogOut)] send];
+    [[[HTTPRequest alloc] initWithMethod:"POST" URL:"/logout" target:self successAction:@selector(didLogOut)] send];
 }
 
 - (void)didLogOut
@@ -219,7 +219,6 @@
 - (void)deleteApp
 {
     [[[Confirm alloc] initWithMessage:"Are you sure want to delete the app \"" + [[DATA app] name] + "\"?"
-                              // comment:"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam at turpis diam, id dictum tortor. Cras non orci sed quam hendrerit viverra. Mauris eget mauris sem. Vivamus adipiscing, enim et venenatis accumsan, purus mauris aliquam nulla, id mollis lectus purus at metus. Vestibulum venenatis ligula vel lorem sollicitudin eget porttitor libero mollis. Pellentesque et dui nunc, id scelerisque mauris. Maecenas tristique lacinia pharetra. Donec convallis dapibus viverra. Nullam facilisis, diam vel mollis congue, ante turpis ullamcorper sem, luctus tempor elit est id felis. Pellentesque congue interdum ipsum vel venenatis."
                               comment:"You cannot undo this action."
                                target:self
                                action:@selector(doDeleteApp)]
@@ -228,11 +227,7 @@
 
 - (void)doDeleteApp
 {
-    [[[HTTPRequest alloc] initWithMethod:"DELETE"
-                                     URL:"/apps/" + [[DATA app] name] + "/"
-                                  target:self
-                                  action:@selector(didReceiveDeleteAppResponseWithStatus:)]
-        send];
+    [[[HTTPRequest alloc] initWithMethod:"DELETE" URL:"/apps/" + [[DATA app] name] + "/"] send];
     var index = [DATA appIndex];
     [appsMenu removeItemAtIndex:index];
     var appPopUpButton = [self appPopUpButton];
@@ -249,12 +244,6 @@
     } else {
         [self setAppItemsEnabled:NO];
     }
-}
-
-- (void)didReceiveDeleteAppResponseWithStatus:(unsigned)status
-{
-    if (status != 200)
-        [[[Alert alloc] initWithMessage:"Failed to delete the app." comment:"Please refresh the page."] showPanel];
 }
 
 @end
