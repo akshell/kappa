@@ -4,7 +4,11 @@
 @import <AppKit/AppKit.j>
 
 @import "AppController.j"
+@import "Data.j";
 @import "CPPanel.j"
+@import "CPMenu.j"
+
+DATA = [Data new];
 
 function main(args, namedArgs)
 {

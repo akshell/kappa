@@ -1,21 +1,14 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "App.j"
-
-DATA = nil
-
 @implementation Data : CPObject
 {
+    BOOL isDirty;
     CPString username @accessors;
     CPString email @accessors;
-    CPArray apps @accessors(readonly);
-    unsigned appIndex @accessors(readonly);
-    App app @accessors(readonly);
-}
-
-+ (void)setup
-{
-    DATA = [Data new];
+    CPArray apps;
+    unsigned appIndex;
+    JSObject app;
+    JSObject libs;
 }
 
 - (id)init
@@ -23,9 +16,12 @@ DATA = nil
     if (self = [super init]) {
         username = USERNAME;
         email = EMAIL;
-        apps = APPS.map(function (name) { return [[App alloc] initWithName:name]; });
-        [self setAppIndex:CONFIG.appIndex && apps.length ? MIN(CONFIG.appIndex, apps.length - 1) : 0];
+        [self setAppNames:APP_NAMES config:CONFIG];
+        libs = {};
+        isDirty = NO;
         window.onbeforeunload = function () {
+            if (!isDirty)
+                return;
             var request = new XMLHttpRequest();
             request.open("PUT", "/config", false);
             request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
@@ -36,12 +32,21 @@ DATA = nil
     return self;
 }
 
-- (void)setAppIndex:(unsigned)value
+- (void)setAppNames:(CPArray)appNames config:(JSObject)config
 {
-    appIndex = value;
+    [self willChangeValueForKey:"apps"];
+    apps = appNames.map(function (name) { return {name: name}; });
+    [self setAppIndex:config.appIndex && apps.length ? MIN(config.appIndex, apps.length - 1) : 0];
+    [self didChangeValueForKey:"apps"];
+}
+
+- (void)setAppIndex:(unsigned)anAppIndex
+{
+    isDirty = YES;
+    appIndex = anAppIndex;
     if (app !== apps[appIndex]) {
         [self willChangeValueForKey:"app"];
-        app = apps[appIndex];
+        app = apps[appIndex] || nil;
         [self didChangeValueForKey:"app"];
     }
 }

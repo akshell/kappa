@@ -18,8 +18,8 @@
 {
     [messageTextView setDelegate:self];
     [sendButton setEnabled:NO];
-    if ([DATA email]) {
-        [emailField setStringValue:[DATA email]];
+    if (DATA.email) {
+        [emailField setStringValue:DATA.email];
         [[self window] makeFirstResponder:messageTextView];
     }
 }

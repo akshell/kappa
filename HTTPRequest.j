@@ -5,16 +5,16 @@
 @implementation HTTPRequest : CPObject
 {
     JSObject request;
-    CPWindow window;
+    BOOL showsAlert @accessors;
+    SEL errorAction @accessors;
+    JSObject context @accessors;
+    CPWindow window @accessors;
 }
 
-- (void)initWithMethod:(CPString)method
-                   URL:(CPString)url
-                target:(id)target
-         successAction:(SEL)successAction
-           errorAction:(SEL)errorAction
+- (id)initWithMethod:(CPString)method URL:(CPString)url target:(id)target action:(SEL)action
 {
     if (self = [super init]) {
+        showsAlert = YES;
         request = new XMLHttpRequest();
         request.open(method, url);
         request.onreadystatechange = function () {
@@ -23,8 +23,14 @@
             var isJSON = request.getResponseHeader("Content-Type") == "application/json; charset=utf-8";
             var data = isJSON ? JSON.parse(request.responseText) : request.responseText;
             if (request.status == 200 || request.status == 201) {
-                if (successAction)
-                    objj_msgSend(target, successAction, data);
+                if (action)
+                    objj_msgSend(target, action, data, context);
+                return;
+            }
+            if (!errorAction)
+                target = nil;
+            if (!showsAlert) {
+                objj_msgSend(target, errorAction, data, context);
                 return;
             }
             var message, comment;
@@ -34,8 +40,6 @@
             } else {
                 message = data;
             }
-            if (!errorAction)
-                target = nil;
             var alert = [[Alert alloc] initWithMessage:message comment:comment target:target action:errorAction];
             if (window)
                 [alert showSheetForWindow:window];
@@ -47,19 +51,9 @@
     return self;
 }
 
-- (void)initWithMethod:(CPString)method URL:(CPString)url target:(id)target successAction:(SEL)successAction
+- (id)initWithMethod:(CPString)method URL:(CPString)url
 {
-    return [self initWithMethod:method URL:url target:target successAction:successAction errorAction:nil];
-}
-
-- (void)initWithMethod:(CPString)method URL:(CPString)url
-{
-    return [self initWithMethod:method URL:url target:nil successAction:nil errorAction:nil];
-}
-
-- (void)setWindow:(CPWindow)aWindow
-{
-    window = aWindow;
+    return [self initWithMethod:method URL:url target:nil action:nil];
 }
 
 - (void)setValue:(CPString)value forHeader:(CPString)header

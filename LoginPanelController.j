@@ -46,6 +46,8 @@
 - (void)didReceiveResponse:(JSObject)data
 {
     [DATA setUsername:[nameField stringValue]];
+    [DATA setEmail:data.email];
+    [DATA setAppNames:data.appNames config:data.config];
 }
 
 - (@action)resetPassword:(id)sender

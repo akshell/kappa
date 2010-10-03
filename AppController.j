@@ -31,8 +31,6 @@
 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification
 {
-    [Data setup];
-
     aboutPanelController = [AboutPanelController new];
     keyPanelController = [KeyPanelController new];
     changePasswordPanelController = [ChangePasswordPanelController new];
@@ -43,8 +41,7 @@
     newAppPanelController = [[NewAppPanelController alloc] initWithTarget:self action:@selector(didCreateAppWithName:)];
 
     var mainMenu = [CPApp mainMenu];
-    while ([mainMenu numberOfItems])
-        [mainMenu removeItemAtIndex:0];
+    [mainMenu removeAllItems];
 
     var akshellSubmenu = [CPMenu new];
     [[akshellSubmenu addItemWithTitle:"About Akshell" action:@selector(showWindow:) keyEquivalent:nil]
@@ -61,10 +58,6 @@
     [fileSubmenu addItemWithTitle:"New File" action:nil keyEquivalent:nil];
     [fileSubmenu addItemWithTitle:"New Folder" action:nil keyEquivalent:nil];
     appsMenu = [CPMenu new];
-    [DATA apps].forEach(
-        function (app) { [appsMenu addItemWithTitle:[app name] action:@selector(switchApp:) keyEquivalent:nil]; });
-    if ([DATA apps].length)
-        [[appsMenu itemAtIndex:[DATA appIndex]] setState:CPOnState];
     [[fileSubmenu addItemWithTitle:"Open App" action:nil keyEquivalent:nil] setSubmenu:appsMenu];
     [fileSubmenu addItem:[CPMenuItem separatorItem]];
     [fileSubmenu addItemWithTitle:"Close File \"xxx\"" action:nil keyEquivalent:nil];
@@ -111,39 +104,72 @@
         function (submenu) { [submenu setAutoenablesItems:NO]; });
 
     [mainMenu addItem:[CPMenuItem separatorItem]];
-
-    [DATA addObserver:self
-           forKeyPath:"username"
-              options:CPKeyValueObservingOptionNew | CPKeyValueObservingOptionInitial
-              context:nil];
+    [self addUserMenus];
 
     var toolbar = [CPToolbar new];
     [toolbar setDelegate:self];
     [mainWindow setToolbar:toolbar];
+    [self fillAppMenus];
 
-    if (![DATA apps].length)
-        [self setAppItemsEnabled:NO];
+    [DATA addObserver:self forKeyPath:"username" options:CPKeyValueObservingOptionNew context:nil];
+    [DATA addObserver:self forKeyPath:"apps" options:CPKeyValueObservingOptionNew context:nil];
+}
+
+- (CPPopUpButton)appPopUpButton
+{
+    return [[[[mainWindow toolbar] items][0] view] subviews][0];
+}
+
+- (void)addUserMenus
+{
+    var mainMenu = [CPApp mainMenu];
+    if (DATA.username) {
+        [passwordMenuItem setTitle:"Change Password…"];
+        [passwordMenuItem setTarget:changePasswordPanelController];
+        [mainMenu addItemWithTitle:"Log Out (" + DATA.username + ")" action:@selector(logOut) keyEquivalent:nil];
+    } else {
+        [passwordMenuItem setTitle:"Reset Password…"];
+        [passwordMenuItem setTarget:resetPasswordPanelController];
+        [[mainMenu addItemWithTitle:"Sign Up" action:@selector(showWindow:) keyEquivalent:nil]
+                setTarget:signupPanelController];
+        [[mainMenu addItemWithTitle:"Log In" action:@selector(showWindow:) keyEquivalent:nil]
+                setTarget:loginPanelController];
+    }
+}
+
+- (void)fillAppMenus
+{
+    var appPopUpButton = [self appPopUpButton];
+    DATA.apps.forEach(
+        function (app) {
+            var item = [[CPMenuItem alloc] initWithTitle:app.name action:@selector(switchApp:) keyEquivalent:nil];
+            [appsMenu addItem:[item copy]];
+            [appPopUpButton addItem:item];
+        });
+    if (DATA.apps.length) {
+        [[appsMenu itemAtIndex:DATA.appIndex] setState:CPOnState];
+        if (DATA.appIndex)
+            [appPopUpButton selectItemAtIndex:DATA.appIndex];
+        else
+            [[appPopUpButton itemAtIndex:0] setState:CPOnState];
+    }
+    [self setAppItemsEnabled:DATA.apps.length];
 }
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
 {
-    if (keyPath == "username") {
-        var username = [change valueForKey:CPKeyValueChangeNewKey];
+    switch (keyPath) {
+    case "username":
         var mainMenu = [CPApp mainMenu];
         for (var index = [mainMenu numberOfItems]; ![[mainMenu itemAtIndex:--index] isSeparatorItem];)
             [mainMenu removeItemAtIndex:index];
-        if (username) {
-            [passwordMenuItem setTitle:"Change Password…"];
-            [passwordMenuItem setTarget:changePasswordPanelController];
-            [mainMenu addItemWithTitle:"Log Out (" + username + ")" action:@selector(logOut) keyEquivalent:nil];
-        } else {
-            [passwordMenuItem setTitle:"Reset Password…"];
-            [passwordMenuItem setTarget:resetPasswordPanelController];
-            [[mainMenu addItemWithTitle:"Sign Up" action:@selector(showWindow:) keyEquivalent:nil]
-                setTarget:signupPanelController];
-            [[mainMenu addItemWithTitle:"Log In" action:@selector(showWindow:) keyEquivalent:nil]
-                setTarget:loginPanelController];
-        }
+        [self addUserMenus];
+        break;
+    case "apps":
+        [appsMenu removeAllItems];
+        [[self appPopUpButton] removeAllItems];
+        [self fillAppMenus];
+        break
     }
 }
 
@@ -165,25 +191,21 @@
 
 - (void)logOut
 {
-    [[[HTTPRequest alloc] initWithMethod:"POST" URL:"/logout" target:self successAction:@selector(didLogOut)] send];
+    [[[HTTPRequest alloc] initWithMethod:"POST" URL:"/logout" target:self action:@selector(didLogOut)] send];
 }
 
 - (void)didLogOut
 {
     [DATA setUsername:""];
     [DATA setEmail:""];
-}
-
-- (CPPopUpButton)appPopUpButton
-{
-    return [[[[mainWindow toolbar] items][0] view] subviews][0];
+    [DATA setAppNames:["hello-world"] config:{}];
 }
 
 - (void)switchApp:(CPMenuItem)sender
 {
-    if ([sender title] == [[DATA app] name])
+    if ([sender title] == DATA.app.name)
         return;
-    [[appsMenu itemAtIndex:[DATA appIndex]] setState:CPOffState];
+    [[appsMenu itemAtIndex:DATA.appIndex] setState:CPOffState];
     var index = [[sender menu] indexOfItem:sender];
     [[appsMenu itemAtIndex:index] setState:CPOnState];
     [[self appPopUpButton] selectItemAtIndex:index];
@@ -193,32 +215,30 @@
 - (void)didCreateAppWithName:(CPString)appName
 {
     var appNameLower = appName.toLowerCase();
-    var apps = [DATA apps]
-    for (var index = 0; index < apps.length; ++index)
-        if ([apps[index] name].toLowerCase() > appNameLower)
+    for (var index = 0; index < DATA.apps.length; ++index)
+        if (DATA.apps[index].name.toLowerCase() > appNameLower)
             break;
     var item = [[CPMenuItem alloc] initWithTitle:appName action:@selector(switchApp:) keyEquivalent:nil];
     [item setState:CPOnState];
     var appPopUpButton = [self appPopUpButton];
     [[appPopUpButton menu] insertItem:item atIndex:index];
-    if (apps.length) {
-        var oldIndex = [DATA appIndex];
-        if (index == oldIndex)
+    if (DATA.apps.length) {
+        if (index == DATA.appIndex)
             [[appPopUpButton itemAtIndex:index + 1] setState:CPOffState];
         else
             [appPopUpButton selectItemAtIndex:index];
-        [[appsMenu itemAtIndex:oldIndex] setState:CPOffState];
+        [[appsMenu itemAtIndex:DATA.appIndex] setState:CPOffState];
     } else {
         [self setAppItemsEnabled:YES];
     }
     [appsMenu insertItem:[item copy] atIndex:index];
-    apps.splice(index, 0, [[App alloc] initWithName:appName]);
+    DATA.apps.splice(index, 0, {name: appName});
     [DATA setAppIndex:index];
 }
 
 - (void)deleteApp
 {
-    [[[Confirm alloc] initWithMessage:"Are you sure want to delete the app \"" + [[DATA app] name] + "\"?"
+    [[[Confirm alloc] initWithMessage:"Are you sure want to delete the app \"" + DATA.app.name + "\"?"
                               comment:"You cannot undo this action."
                                target:self
                                action:@selector(doDeleteApp)]
@@ -227,23 +247,21 @@
 
 - (void)doDeleteApp
 {
-    [[[HTTPRequest alloc] initWithMethod:"DELETE" URL:"/apps/" + [[DATA app] name] + "/"] send];
-    var index = [DATA appIndex];
-    [appsMenu removeItemAtIndex:index];
+    [[[HTTPRequest alloc] initWithMethod:"DELETE" URL:"/apps/" + DATA.app.name + "/"] send];
+    [appsMenu removeItemAtIndex:DATA.appIndex];
     var appPopUpButton = [self appPopUpButton];
-    [appPopUpButton removeItemAtIndex:index];
-    var apps = [DATA apps];
-    apps.splice(index, 1);
-    [DATA setAppIndex:0];
-    if (apps.length) {
+    [appPopUpButton removeItemAtIndex:DATA.appIndex];
+    DATA.apps.splice(DATA.appIndex, 1);
+    if (DATA.apps.length) {
         [[appsMenu itemAtIndex:0] setState:CPOnState];
-        if (index)
+        if (DATA.appIndex)
             [appPopUpButton selectItemAtIndex:0];
         else
             [[appPopUpButton itemAtIndex:0] setState:CPOnState];
     } else {
         [self setAppItemsEnabled:NO];
     }
+    [DATA setAppIndex:0];
 }
 
 @end
@@ -273,8 +291,8 @@
         var popUpButton = [[CPPopUpButton alloc] initWithFrame:CGRectMake(4, 8, 202, 24)];
         [popUpButton setAutoresizingMask:CPViewWidthSizable];
         [popUpButton setMenu:[appsMenu copy]];
-        if ([DATA apps].length)
-            [popUpButton selectItemAtIndex:[DATA appIndex]];
+        if (DATA.apps.length)
+            [popUpButton selectItemAtIndex:DATA.appIndex];
         var itemView = [[CPView alloc] initWithFrame:CGRectMake(0, 0, 206, 32)];
         [itemView addSubview:popUpButton];
         [item setView:itemView];
