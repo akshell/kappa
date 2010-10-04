@@ -7,13 +7,12 @@
 {
     @outlet CPButtonBar buttonBar;
     @outlet CPScrollView scrollView;
-    CPOutlineView outlineView;
     CPArray items;
 }
 
 - (void)awakeFromCib
 {
-    [self createOutlineView];
+    [self setOutlineView];
     [DATA addObserver:self forKeyPath:"app" options:CPKeyValueObservingOptionNew context:nil];
 
     var plusButton = [CPButtonBar plusButton];
@@ -32,9 +31,14 @@
     [buttonBar setButtons:[plusButton, minusButton, actionPopupButton]];
 }
 
-- (void)createOutlineView
+- (void)setOutlineView
 {
-    outlineView = [[CPOutlineView alloc] initWithFrame:[[scrollView contentView] bounds]];
+    if (DATA.app && DATA.app.cache.rootItems) {
+        items = DATA.app.cache.rootItems;
+        [scrollView setDocumentView:DATA.app.cache.outlineView];
+        return;
+    }
+    var outlineView = [[CPOutlineView alloc] initWithFrame:[[scrollView contentView] bounds]];
     [outlineView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
     [outlineView setHeaderView:nil];
     [outlineView setCornerView:nil];
@@ -43,14 +47,16 @@
     [column setDataView:[NodeView new]];
     [outlineView addTableColumn:column];
     [outlineView setOutlineTableColumn:column];
-    if (DATA.app)
-        items = [
-            [[CodeNodeItem alloc] initWithOutlineView:outlineView app:DATA.app],
-            [[EnvsNodeItem alloc] initWithOutlineView:outlineView app:DATA.app],
-            [[LibsNodeItem alloc] initWithOutlineView:outlineView app:DATA.app]
+    if (DATA.app) {
+        items = DATA.app.cache.rootItems = [
+            [[CodeItem alloc] initWithOutlineView:outlineView app:DATA.app],
+            [[EnvsItem alloc] initWithOutlineView:outlineView app:DATA.app],
+            [[LibsItem alloc] initWithOutlineView:outlineView app:DATA.app]
         ];
-    else
+        DATA.app.cache.outlineView = outlineView;
+    } else {
         items = [];
+    }
     [outlineView setDataSource:self];
     [outlineView expandItem:items[0]];
     [scrollView setDocumentView:outlineView];
@@ -59,25 +65,25 @@
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
 {
     if (keyPath == "app")
-        [self createOutlineView];
+        [self setOutlineView];
 }
 
-- (id)outlineView:(CPOutlineView)anOutlineview child:(int)index ofItem:(id)item
+- (id)outlineView:(CPOutlineView)outlineview child:(int)index ofItem:(id)item
 {
-    return (item ? [item children] : items)[index];
+    return item ? [item childAtIndex:index] : items[index];
 }
 
-- (BOOL)outlineView:(CPOutlineView)anOutlineview isItemExpandable:(id)item
+- (BOOL)outlineView:(CPOutlineView)outlineview isItemExpandable:(id)item
 {
-    return [item hasChildren]
+    return [item isExpandable]
 }
 
-- (int)outlineView:(CPOutlineView)anOutlineview numberOfChildrenOfItem:(id)item
+- (int)outlineView:(CPOutlineView)outlineview numberOfChildrenOfItem:(id)item
 {
-    return item ? [item children].length : items.length;
+    return item ? [item numberOfChildren] : items.length;
 }
 
-- (id)outlineView:(CPOutlineView)anOutlineview objectValueForTableColumn:(CPTableColumn)tableColumn byItem:(id)item
+- (id)outlineView:(CPOutlineView)outlineview objectValueForTableColumn:(CPTableColumn)tableColumn byItem:(id)item
 {
     return item;
 }

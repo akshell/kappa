@@ -1,5 +1,58 @@
 // (c) 2010 by Anton Korenyushkin
 
+@implementation Entry : CPObject
+{
+    CPString name @accessors(readonly);
+}
+
+- (id)initWithName:(CPString)aName
+{
+    if (self = [super init])
+        name = aName;
+    return self;
+}
+
+@end
+
+@implementation File : Entry
+@end
+
+@implementation Folder : Entry
+{
+    CPArray folders;
+    CPArray files;
+}
+
+- (id)initWithName:(CPString)aName folders:(CPArray)folders_ files:(CPArray)files_
+{
+    if (self = [super initWithName:aName]) {
+        folders = folders_;
+        files = files_;
+    }
+    return self;
+}
+
+@end
+
+@implementation Env : Entry
+@end
+
+@implementation App : Entry
+{
+    Folder code @accessors;
+    CPArray envs @accessors;
+    JSObject cache;
+}
+
+- (id)initWithName:(CPString)aName
+{
+    if (self = [super initWithName:aName])
+        cache = {};
+    return self;
+}
+
+@end
+
 @implementation Data : CPObject
 {
     BOOL isDirty;
@@ -7,7 +60,7 @@
     CPString email @accessors;
     CPArray apps;
     unsigned appIndex;
-    JSObject app;
+    App app;
     JSObject libs;
 }
 
@@ -35,7 +88,7 @@
 - (void)setAppNames:(CPArray)appNames config:(JSObject)config
 {
     [self willChangeValueForKey:"apps"];
-    apps = appNames.map(function (name) { return {name: name}; });
+    apps = appNames.map(function (name) { return [[App alloc] initWithName:name]; });
     [self setAppIndex:config.appIndex && apps.length ? MIN(config.appIndex, apps.length - 1) : 0];
     [self didChangeValueForKey:"apps"];
 }

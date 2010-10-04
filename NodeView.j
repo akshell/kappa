@@ -27,7 +27,7 @@ var makeImage = function (path) {
     isSpinner = [item imageName] == "Spinner";
     var path = isSpinner ? "WhiteSpinner.gif" : [item imageName] + ".png";
     [[self subviews][0] setImage:makeImage(path)];
-    [[self subviews][1] setStringValue:[item title]];
+    [[self subviews][1] setStringValue:[item name]];
 }
 
 - (BOOL)setThemeState:(CPThemeState)state

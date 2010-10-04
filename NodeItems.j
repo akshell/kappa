@@ -1,121 +1,136 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "HTTPRequest.j"
+@import "Data.j"
 
-@implementation NodeItem : CPObject
-{
-    CPString title @accessors(readonly);
-    CPString imageName @accessors(readonly);
-    CPArray children @accessors(readonly);
-}
-
-- (id)initWithTitle:(CPString)aTitle imageName:(CPString)anImageName children:(CPArray)items
-{
-    if (self = [super init]) {
-        title = aTitle;
-        imageName = anImageName;
-        children = items;
-    }
-    return self;
-}
-
-- (id)initWithTitle:(CPString)aTitle imageName:(CPString)anImageName
-{
-    return [self initWithTitle:aTitle imageName:anImageName children:nil];
-}
-
-- (BOOL)hasChildren
-{
-    return children;
-}
-
-@end
-
-@implementation DeferredNodeItem : NodeItem
+@implementation DeferredItem : CPObject
 {
     CPOutlineView outlineView;
     BOOL isLoading;
 }
 
-- (id)initWithTitle:(CPString)aTitle imageName:(CPString)anImageName outlineView:(CPOutlineView)anOutlineView
+- (id)initWithOutlineView:(CPOutlineView)anOutlineView
 {
-    if (self = [super initWithTitle:aTitle imageName:anImageName])
+    if (self = [super init])
         outlineView = anOutlineView;
     return self;
 }
 
-- (CPString)imageName
-{
-    return isLoading ? "Spinner" : imageName;
-}
-
-- (BOOL)hasChildren
+- (BOOL)isExpandable
 {
     return YES;
 }
 
-- (CPArray)children
+- (CPString)imageName
 {
-    if (children)
-        return children;
-    if (isLoading)
-        return [];
-    [self loadChildren];
-    if (children)
-        return children;
+    return isLoading ? "Spinner" : [self getImageName];
+}
+
+- (unsigned)numberOfChildren
+{
+    if ([self isReady])
+        return [self getNumberOfChildren];
     isLoading = YES;
     var request = [[HTTPRequest alloc] initWithMethod:"GET" URL:[self url] target:self action:@selector(didReceiveResponse:)];
     [request setErrorAction:@selector(didEndRequestErrorPanel)];
     [request send];
-    return [];
+    return 0;
 }
 
 - (void)didReceiveResponse:(JSObject)data
 {
     [self processData:data];
-    [self loadChildren];
     isLoading = NO;
     setTimeout(function () { [outlineView reloadItem:self reloadChildren:YES]; }, 0);
 }
 
 - (void)didEndRequestErrorPanel
 {
-    children = [];
     isLoading = NO;
-    setTimeout(function () { [outlineView reloadItem:self reloadChildren:NO]; }, 0);
+    setTimeout(function () { [outlineView collapseItem:self]; }, 0);
 }
 
 @end
 
-var traverse = function (tree) {
-    var folderNames = [];
-    var fileNames = [];
-    for (var name in tree)
-        (tree[name] ? folderNames : fileNames).push(name);
-    folderNames.sort();
-    fileNames.sort();
-    var items = [];
-    folderNames.forEach(
-        function (name) {
-            items.push([[NodeItem alloc] initWithTitle:name imageName:"Folder" children:traverse(tree[name])]);
-        });
-    fileNames.forEach(
-        function (name) {
-            items.push([[NodeItem alloc] initWithTitle:name imageName:"File"]);
-        });
-    return items;
-};
+@implementation File (NodeItem)
 
-@implementation CodeNodeItem : DeferredNodeItem
+- (BOOL)isExpandable
 {
-    JSObject app;
+    return NO;
 }
 
-- (id)initWithOutlineView:(CPOutlineView)anOutlineView app:(JSObject)anApp
+- (CPString)imageName
 {
-    if (self = [super initWithTitle:"Code" imageName:"Code" outlineView:anOutlineView])
+    return "File";
+}
+
+@end
+
+@implementation Folder (NodeItem)
+
+- (BOOL)isExpandable
+{
+    return YES;
+}
+
+- (CPString)imageName
+{
+    return "Folder";
+}
+
+- (unsigned)numberOfChildren
+{
+    return folders.length + files.length;
+}
+
+- (id)childAtIndex:(unsigned)index
+{
+    return index < folders.length ? folders[index] : files[index - folders.length];
+}
+
+@end
+
+var traverse = function (name, tree) {
+    var folderNames = [];
+    var fileNames = [];
+    for (var childName in tree)
+        (tree[childName] ? folderNames : fileNames).push(childName);
+    folderNames.sort();
+    fileNames.sort();
+    return [[Folder alloc] initWithName:name
+                                folders:folderNames.map(function (folderName) { return traverse(folderName, tree[folderName]); })
+                                  files:fileNames.map(function (fileName) { return [[File alloc] initWithName:fileName]; })];
+};
+
+@implementation AppDeferredItem : DeferredItem
+{
+    App app;
+}
+
+- (id)initWithOutlineView:(CPOutlineView)anOutlineView app:(App)anApp
+{
+    if (self = [super initWithOutlineView:anOutlineView])
         app = anApp;
     return self;
+}
+
+@end
+
+@implementation CodeItem : AppDeferredItem
+
+- (CPString)name
+{
+    return "Code";
+}
+
+- (CPString)getImageName
+{
+    return "Code";
+}
+
+- (BOOL)isReady
+{
+    return app.code;
 }
 
 - (CPString)url
@@ -123,29 +138,52 @@ var traverse = function (tree) {
     return "/apps/" + app.name + "/code/";
 }
 
-- (void)loadChildren
-{
-    if (app.tree)
-        children = traverse(app.tree);
-}
-
 - (void)processData:(JSObject)data
 {
-    app.tree = data;
+    [app setCode:traverse('', data)];
+}
+
+- (unsigned)getNumberOfChildren
+{
+    return [app.code numberOfChildren];
+}
+
+- (id)childAtIndex:(unsigned)index
+{
+    return [app.code childAtIndex:index];
 }
 
 @end
 
-@implementation EnvsNodeItem : DeferredNodeItem
+@implementation Env (NodeItem)
+
+- (BOOL)isExpandable
 {
-    JSObject app;
+    return NO;
 }
 
-- (id)initWithOutlineView:(CPOutlineView)anOutlineView app:(JSObject)anApp
+- (CPString)imageName
 {
-    if (self = [super initWithTitle:"Environments" imageName:"Envs" outlineView:anOutlineView])
-        app = anApp;
-    return self;
+    return "Env";
+}
+
+@end
+
+@implementation EnvsItem : AppDeferredItem
+
+- (CPString)name
+{
+    return "Environments";
+}
+
+- (CPString)getImageName
+{
+    return "Envs";
+}
+
+- (BOOL)isReady
+{
+    return app.envs;
 }
 
 - (CPString)url
@@ -153,77 +191,101 @@ var traverse = function (tree) {
     return "/apps/" + app.name + "/envs/";
 }
 
-- (void)loadChildren
-{
-    if (app.envs)
-        children = [[[NodeItem alloc] initWithTitle:"release" imageName:"Env"]].concat(
-            app.envs.map(function (name) { return [[NodeItem alloc] initWithTitle:name imageName:"Env"]; }));
-}
-
 - (void)processData:(CPArray)data
 {
-    app.envs = data;
+    [app setEnvs:[[[Env alloc] initWithName:"release"]].concat(
+            data.map(function (name) { return [[Env alloc] initWithName:name]; }))];
+}
+
+- (unsigned)getNumberOfChildren
+{
+    return app.envs.length;
+}
+
+- (id)childAtIndex:(unsigned)index
+{
+    return app.envs[index];
 }
 
 @end
 
-@implementation LibNodeItem : DeferredNodeItem
+@implementation LibItem : DeferredItem
 {
-    CPString id;
-    CPString author;
-    CPString name;
+    CPString name @accessors(readonly);
+    CPString identifier;
+    CPString authorName;
+    CPString appName;
     CPString version;
 }
 
-- (id)initWithTitle:(CPString)aTitle outlineView:(CPOutlineView)anOutlineView id:(CPString)anId
+- (id)initWithOutlineView:(CPOutlineView)anOutlineView name:(CPString)aName identifier:(CPString)anIdentifier
 {
-    if (self = [super initWithTitle:aTitle imageName:"Lib" outlineView:anOutlineView]) {
-        id = anId;
-        var slashIndex = id.indexOf("/");
-        var colonIndex = id.indexOf(":", slashIndex + 1);
+    if (self = [super initWithOutlineView:anOutlineView]) {
+        name = aName;
+        identifier = anIdentifier;
+        var slashIndex = identifier.indexOf("/");
+        var colonIndex = identifier.indexOf(":", slashIndex + 1);
         if (slashIndex != -1 && colonIndex != -1) {
-            author = id.substring(0, slashIndex);
-            name = id.substring(slashIndex + 1, colonIndex);
-            version = id.substring(colonIndex + 1);
-        };
+            authorName = identifier.substring(0, slashIndex);
+            appName = identifier.substring(slashIndex + 1, colonIndex);
+            version = identifier.substring(colonIndex + 1);
+        }
     }
     return self;
 }
 
-- (BOOL)hasChildren
+- (BOOL)isExpandable
 {
-    return author && name && version;
+    return authorName && appName && version;
+}
+
+- (CPString)imageName
+{
+    return "Lib";
+}
+
+- (BOOL)isReady
+{
+    return DATA.libs.hasOwnProperty(identifier);
 }
 
 - (CPString)url
 {
-    return "/libs/" + author + "/" + name + "/" + version + "/";
+    return "/libs/" + authorName + "/" + appName + "/" + version + "/";
 }
 
-- (void)loadChildren
+- (void)processData:(JSObject)data
 {
-    var tree = DATA.libs[id];
-    if (tree)
-        children = traverse(tree);
+    DATA.libs[identifier] = traverse('', data);
 }
 
-- (void)processData:(CPArray)data
+- (unsigned)getNumberOfChildren
 {
-    DATA.libs[id] = data;
+    return [DATA.libs[identifier] numberOfChildren];
+}
+
+- (id)childAtIndex:(unsigned)index
+{
+    return [DATA.libs[identifier] childAtIndex:index];
 }
 
 @end
 
-@implementation LibsNodeItem : DeferredNodeItem
+@implementation LibsItem : AppDeferredItem
+
+- (CPString)name
 {
-    JSObject app;
+    return "Libraries";
 }
 
-- (id)initWithOutlineView:(CPOutlineView)anOutlineView app:(JSObject)anApp
+- (CPString)getImageName
 {
-    if (self = [super initWithTitle:"Libraries" imageName:"Libs" outlineView:anOutlineView])
-        app = anApp;
-    return self;
+    return "Libs";
+}
+
+- (BOOL)isReady
+{
+    return app.cache.libItems;
 }
 
 - (CPString)url
@@ -231,18 +293,9 @@ var traverse = function (tree) {
     return "/apps/" + app.name + "/code/manifest.json";
 }
 
-- (void)loadChildren
+- (void)processData:(CPString)data
 {
-    if (app.libs) {
-        children = [];
-        for (var alias in app.libs)
-            children.push([[LibNodeItem alloc] initWithTitle:alias outlineView:outlineView id:app.libs[alias]]);
-    }
-}
-
-- (void)processData:(CPArray)data
-{
-    app.libs = {};
+    app.cache.libItems = [];
     try {
         data = JSON.parse(data);
     } catch (error) {
@@ -250,11 +303,21 @@ var traverse = function (tree) {
     }
     if (!data.libs || typeof(data.libs) != "object")
         return;
-    for (var alias in data.libs) {
-        var id = data.libs[alias];
-        if (typeof(id) == "string")
-            app.libs[alias] = id;
+    for (var name in data.libs) {
+        var identifier = data.libs[name];
+        if (typeof(identifier) == "string")
+            app.cache.libItems.push([[LibItem alloc] initWithOutlineView:outlineView name:name identifier:identifier]);
     }
+}
+
+- (unsigned)getNumberOfChildren
+{
+    return app.cache.libItems.length;
+}
+
+- (id)childAtIndex:(unsigned)index
+{
+    return app.cache.libItems[index];
 }
 
 @end
