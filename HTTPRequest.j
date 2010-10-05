@@ -5,8 +5,8 @@
 @implementation HTTPRequest : CPObject
 {
     JSObject request;
-    BOOL showsAlert @accessors;
     SEL errorAction @accessors;
+    SEL errorMessageAction @accessors;
     JSObject context @accessors;
     CPWindow window @accessors;
 }
@@ -27,12 +27,8 @@
                     objj_msgSend(target, action, data, context);
                 return;
             }
-            if (!errorAction)
-                target = nil;
-            if (!showsAlert) {
+            if (errorAction)
                 objj_msgSend(target, errorAction, data, context);
-                return;
-            }
             var message, comment;
             if (isJSON) {
                 message = data.message;
@@ -40,7 +36,7 @@
             } else {
                 message = data;
             }
-            var alert = [[Alert alloc] initWithMessage:message comment:comment target:target action:errorAction];
+            var alert = [[Alert alloc] initWithMessage:message comment:comment target:target action:errorMessageAction];
             if (window)
                 [alert showSheetForWindow:window];
             else

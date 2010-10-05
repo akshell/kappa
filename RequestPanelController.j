@@ -11,7 +11,7 @@
 - (void)requestWithMethod:(CPString)method URL:(CPString)url data:(JSObject)data
 {
     var request = [[HTTPRequest alloc] initWithMethod:method URL:url target:self action:@selector(didReceiveResponse:)];
-    [request setErrorAction:@selector(didEndRequestErrorSheet:)];
+    [request setErrorMessageAction:@selector(didEndRequestErrorSheet:)];
     [request setWindow:[self window]];
     [request send:data];
 }

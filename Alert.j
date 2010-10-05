@@ -66,6 +66,11 @@
     return [self initWithMessage:aMessage comment:aComment target:nil action:nil];
 }
 
+- (id)initWithMessage:(CPString)aMessage
+{
+    return [self initWithMessage:aMessage comment:nil target:nil action:nil];
+}
+
 - (void)showPanel
 {
     [self createPanelWithStyleMask:CPTitledWindowMask];

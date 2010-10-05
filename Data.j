@@ -32,6 +32,60 @@
     return self;
 }
 
+- (id)initWithName:(CPString)aName
+{
+    return [self initWithName:aName folders:[] files:[]];
+}
+
+- (BOOL)hasChildWithName:(CPString)aName
+{
+    for (var i = 0; i < folders.length; ++i)
+        if (folders[i].name == aName)
+            return YES;
+    for (var i = 0; i < files.length; ++i)
+        if (files[i].name == aName)
+            return YES;
+    return NO;
+}
+
+- (void)addFile:(File)file
+{
+    for (var i = 0; i < files.length; ++i)
+        if (files[i].name > file.name)
+            break;
+    files.splice(i, 0, file);
+}
+
+- (void)addFolder:(Folder)folder
+{
+    for (var i = 0; i < folders.length; ++i)
+        if (folders[i].name > folder.name)
+            break;
+    folders.splice(i, 0, folder);
+}
+
+- (void)removeFile:(File)file
+{
+    [files removeObject:file];
+}
+
+- (void)removeFolder:(Folder)folder
+{
+    [folders removeObject:folder];
+}
+
+- (CPString)uniqueChildNameWithPrefix:(CPString)prefix
+{
+    if (![self hasChildWithName:prefix])
+        return prefix;
+    prefix += " ";
+    for (var i = 2;; ++i) {
+        var childName = prefix + i;
+        if (![self hasChildWithName:childName])
+            return childName;
+    }
+}
+
 @end
 
 @implementation Env : Entry
@@ -41,14 +95,6 @@
 {
     Folder code @accessors;
     CPArray envs @accessors;
-    JSObject cache;
-}
-
-- (id)initWithName:(CPString)aName
-{
-    if (self = [super initWithName:aName])
-        cache = {};
-    return self;
 }
 
 @end

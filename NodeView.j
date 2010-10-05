@@ -27,7 +27,22 @@ var makeImage = function (path) {
     isSpinner = [item imageName] == "Spinner";
     var path = isSpinner ? "WhiteSpinner.gif" : [item imageName] + ".png";
     [[self subviews][0] setImage:makeImage(path)];
-    [[self subviews][1] setStringValue:[item name]];
+    if (![item isEditable]) {
+        [[self subviews][1] setStringValue:[item name]];
+        return;
+    }
+    // FIXME: There should be a better way of displaying fields in small space
+    var textField = [[CPTextField alloc] initWithFrame:CGRectMake(20, -3, MAX(20, [self boundsSize].width - 20), 28)];
+    [textField setDelegate:item];
+    [textField setTarget:item];
+    [textField setAction:@selector(submit:)];
+    [textField setBordered:YES];
+    [textField setBezeled:YES];
+    [textField setEditable:YES];
+    [textField setStringValue:[item name]];
+    [self addSubview:textField];
+    [textField selectAll:nil];
+    [[textField window] makeFirstResponder:textField];
 }
 
 - (BOOL)setThemeState:(CPThemeState)state

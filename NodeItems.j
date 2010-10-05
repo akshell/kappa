@@ -3,22 +3,17 @@
 @import "HTTPRequest.j"
 @import "Data.j"
 
-@implementation DeferredItem : CPObject
+@implementation SmartItem : CPObject
 {
-    CPOutlineView outlineView;
+    App app;
     BOOL isLoading;
 }
 
-- (id)initWithOutlineView:(CPOutlineView)anOutlineView
+- (id)initWithApp:(App)anApp
 {
     if (self = [super init])
-        outlineView = anOutlineView;
+        app = anApp
     return self;
-}
-
-- (BOOL)isExpandable
-{
-    return YES;
 }
 
 - (CPString)imageName
@@ -26,14 +21,53 @@
     return isLoading ? "Spinner" : [self getImageName];
 }
 
-- (unsigned)numberOfChildren
+@end
+
+@implementation DeferredItem : SmartItem
 {
-    if ([self isReady])
-        return [self getNumberOfChildren];
+    id target;
+    SEL action;
+    JSObject context;
+}
+
+- (BOOL)isExpandable
+{
+    return YES;
+}
+
+- (BOOL)isEditable
+{
+    return NO;
+}
+
+- (void)load
+{
+    if (isLoading)
+        return;
     isLoading = YES;
     var request = [[HTTPRequest alloc] initWithMethod:"GET" URL:[self url] target:self action:@selector(didReceiveResponse:)];
     [request setErrorAction:@selector(didEndRequestErrorPanel)];
     [request send];
+}
+
+- (void)loadWithTarget:(id)aTarget action:(SEL)anAction context:(JSObject)aContext
+{
+    if ([self isReady]) {
+        objj_msgSend(aTarget, anAction, aContext);
+        return;
+    }
+    target = aTarget;
+    action = anAction;
+    context = aContext;
+    [self load];
+    [app.outlineView reloadItem:self];
+}
+
+- (unsigned)numberOfChildren
+{
+    if ([self isReady])
+        return [self getNumberOfChildren];
+    [self load];
     return 0;
 }
 
@@ -41,13 +75,19 @@
 {
     [self processData:data];
     isLoading = NO;
-    setTimeout(function () { [outlineView reloadItem:self reloadChildren:YES]; }, 0);
+    setTimeout(
+        function () {
+            [app.outlineView reloadItem:self reloadChildren:YES];
+            objj_msgSend(target, action, context);
+            target = nil;
+        },
+        0);
 }
 
 - (void)didEndRequestErrorPanel
 {
     isLoading = NO;
-    setTimeout(function () { [outlineView collapseItem:self]; }, 0);
+    setTimeout(function () { [app.outlineView collapseItem:self]; }, 0);
 }
 
 @end
@@ -55,6 +95,11 @@
 @implementation File (NodeItem)
 
 - (BOOL)isExpandable
+{
+    return NO;
+}
+
+- (BOOL)isEditable
 {
     return NO;
 }
@@ -71,6 +116,11 @@
 - (BOOL)isExpandable
 {
     return YES;
+}
+
+- (BOOL)isEditable
+{
+    return NO;
 }
 
 - (CPString)imageName
@@ -102,21 +152,7 @@ var traverse = function (name, tree) {
                                   files:fileNames.map(function (fileName) { return [[File alloc] initWithName:fileName]; })];
 };
 
-@implementation AppDeferredItem : DeferredItem
-{
-    App app;
-}
-
-- (id)initWithOutlineView:(CPOutlineView)anOutlineView app:(App)anApp
-{
-    if (self = [super initWithOutlineView:anOutlineView])
-        app = anApp;
-    return self;
-}
-
-@end
-
-@implementation CodeItem : AppDeferredItem
+@implementation CodeItem : DeferredItem
 
 - (CPString)name
 {
@@ -169,7 +205,7 @@ var traverse = function (name, tree) {
 
 @end
 
-@implementation EnvsItem : AppDeferredItem
+@implementation EnvsItem : DeferredItem
 
 - (CPString)name
 {
@@ -218,9 +254,9 @@ var traverse = function (name, tree) {
     CPString version;
 }
 
-- (id)initWithOutlineView:(CPOutlineView)anOutlineView name:(CPString)aName identifier:(CPString)anIdentifier
+- (id)initWithApp:(App)anApp name:(CPString)aName identifier:(CPString)anIdentifier
 {
-    if (self = [super initWithOutlineView:anOutlineView]) {
+    if (self = [super initWithApp:anApp]) {
         name = aName;
         identifier = anIdentifier;
         var slashIndex = identifier.indexOf("/");
@@ -271,7 +307,7 @@ var traverse = function (name, tree) {
 
 @end
 
-@implementation LibsItem : AppDeferredItem
+@implementation LibsItem : DeferredItem
 
 - (CPString)name
 {
@@ -285,7 +321,7 @@ var traverse = function (name, tree) {
 
 - (BOOL)isReady
 {
-    return app.cache.libItems;
+    return app.libItems;
 }
 
 - (CPString)url
@@ -295,7 +331,7 @@ var traverse = function (name, tree) {
 
 - (void)processData:(CPString)data
 {
-    app.cache.libItems = [];
+    app.libItems = [];
     try {
         data = JSON.parse(data);
     } catch (error) {
@@ -306,18 +342,164 @@ var traverse = function (name, tree) {
     for (var name in data.libs) {
         var identifier = data.libs[name];
         if (typeof(identifier) == "string")
-            app.cache.libItems.push([[LibItem alloc] initWithOutlineView:outlineView name:name identifier:identifier]);
+            app.libItems.push([[LibItem alloc] initWithApp:app name:name identifier:identifier]);
     }
 }
 
 - (unsigned)getNumberOfChildren
 {
-    return app.cache.libItems.length;
+    return app.libItems.length;
 }
 
 - (id)childAtIndex:(unsigned)index
 {
-    return app.cache.libItems[index];
+    return app.libItems[index];
+}
+
+@end
+
+@implementation NewEntryItem : SmartItem
+{
+    CPString name @accessors(readonly);
+}
+
+- (id)initWithApp:(App)anApp name:(CPString)aName
+{
+    if (self = [super initWithApp:anApp])
+        name = aName;
+    return self;
+}
+
+- (BOOL)isExpandable
+{
+    return NO;
+}
+
+- (BOOL)isEditable
+{
+    return !isLoading;
+}
+
+- (void)controlTextDidBlur:(CPNotification)notification
+{
+    if (!isLoading)
+        [self submit:[notification object]];
+}
+
+- (id)parentItem
+{
+    return [app.outlineView parentForItem:self];
+}
+
+- (id)parentFolder
+{
+    var parentItem = [self parentItem];
+    return [parentItem isKindOfClass:Folder] ? parentItem : app.code;
+}
+
+- (void)submit:(CPTextField)sender
+{
+    isLoading = YES;
+    var newName = [sender stringValue];
+    if (newName) {
+        if (newName.indexOf("/") != -1) {
+            [[[Alert alloc] initWithMessage:"File name cannot contain slashes." comment:"Please choose another name."] showPanel];
+        } else {
+            var initialName = name;
+            name = "";
+            if ([[self parentFolder] hasChildWithName:newName]) {
+                [[[Alert alloc] initWithMessage:"The entry \"" + newName + "\" already exists."
+                                        comment:"Please choose another name."]
+                    showPanel];
+                name = initialName;
+            } else {
+                name = newName;
+            }
+        }
+    }
+    [sender removeFromSuperview];
+    [app.outlineView reloadItem:self reloadChildren:NO];
+    [self doSubmit];
+}
+
+- (void)removeSelf
+{
+    [[self parentFolder] removeFile:self];
+    [app.outlineView reloadItem:[self parentItem] reloadChildren:YES];
+}
+
+- (CPString)path
+{
+    var parts = [];
+    var item = self;
+    do {
+        parts.unshift(item.name);
+        item = [app.outlineView parentForItem:item];
+    } while ([item isKindOfClass:Folder]);
+    return parts.join("/");
+}
+
+@end
+
+@implementation NewFileItem : NewEntryItem
+
+- (CPString)getImageName
+{
+    return "File";
+}
+
+- (void)doSubmit
+{
+    var request = [[HTTPRequest alloc] initWithMethod:"PUT"
+                                                  URL:"/apps/" + app.name + "/code/" + [self path]
+                                               target:self
+                                               action:@selector(didReceiveResponse)];
+    [request setErrorAction:@selector(removeSelf)];
+    [request send:""];
+}
+
+- (void)didReceiveResponse
+{
+    var parentItem = [self parentItem];
+    var parentFolder = [self parentFolder];
+    [parentFolder removeFile:self];
+    var file = [[File alloc] initWithName:name];
+    [parentFolder addFile:file];
+    [app.outlineView reloadItem:parentItem reloadChildren:YES];
+    [app.outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:[app.outlineView rowForItem:file]]
+                 byExtendingSelection:NO];
+}
+
+@end
+
+@implementation NewFolderItem : NewEntryItem
+
+- (CPString)getImageName
+{
+    return "Folder";
+}
+
+- (void)doSubmit
+{
+    var request = [[HTTPRequest alloc] initWithMethod:"POST"
+                                                  URL:"/apps/" + app.name + "/code/"
+                                               target:self
+                                               action:@selector(didReceiveResponse)];
+    [request setErrorAction:@selector(removeSelf)];
+    [request send:{action: "mkdir", path: [self path]}];
+}
+
+- (void)didReceiveResponse
+{
+    var parentItem = [self parentItem];
+    var parentFolder = [self parentFolder];
+    [parentFolder removeFolder:self];
+    var folder = [[Folder alloc] initWithName:name];
+    [parentFolder addFolder:folder];
+    [app.outlineView reloadItem:parentItem reloadChildren:YES];
+    [app.outlineView expandItem:folder];
+    [app.outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:[app.outlineView rowForItem:folder]]
+                 byExtendingSelection:NO];
 }
 
 @end

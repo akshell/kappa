@@ -55,8 +55,10 @@
     var fileSubmenu = [CPMenu new];
     [[fileSubmenu addItemWithTitle:"New App…" action:@selector(showWindow:) keyEquivalent:nil]
         setTarget:newAppPanelController];
-    [fileSubmenu addItemWithTitle:"New File" action:nil keyEquivalent:nil];
-    [fileSubmenu addItemWithTitle:"New Folder" action:nil keyEquivalent:nil];
+    [[fileSubmenu addItemWithTitle:"New File" action:@selector(showNewFile) keyEquivalent:nil]
+        setTarget:sidebarController];
+    [[fileSubmenu addItemWithTitle:"New Folder" action:@selector(showNewFolder) keyEquivalent:nil]
+        setTarget:sidebarController];
     appsMenu = [CPMenu new];
     [[fileSubmenu addItemWithTitle:"Open App" action:nil keyEquivalent:nil] setSubmenu:appsMenu];
     [fileSubmenu addItem:[CPMenuItem separatorItem]];
@@ -301,6 +303,12 @@
         var image = [[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:itemIdentifier + ".png"]];
         [item setImage:image];
         [item setMinSize:CGSizeMake(32, 32)];
+        switch (itemIdentifier) {
+        case "New":
+            [item setTarget:sidebarController];
+            [item setAction:@selector(showNewFile)];
+            break;
+        }
     }
     return item;
 }
