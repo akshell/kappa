@@ -36,7 +36,11 @@
             } else {
                 message = data;
             }
-            var alert = [[Alert alloc] initWithMessage:message comment:comment target:target action:errorMessageAction];
+            var alert = [[Alert alloc] initWithMessage:message comment:comment];
+            if (errorMessageAction) {
+                [alert setTarget:target];
+                [alert setAction:errorMessageAction];
+            }
             if (window)
                 [alert showSheetForWindow:window];
             else

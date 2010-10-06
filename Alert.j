@@ -2,10 +2,11 @@
 
 @implementation Alert : CPObject
 {
-    CPString message @accessors(readonly);
-    CPString comment @accessors(readonly);
+    CPString message @accessors;
+    CPString comment @accessors;
+    id target @accessors;
+    SEL action @accessors;
     CPPanel panel;
-    CPInvocation invocation;
 }
 
 + (CPTextField)createLabelWithText:(CPString)text y:y isBold:isBold
@@ -48,15 +49,13 @@
     [panel setDelegate:self];
 }
 
-- (void)initWithMessage:(CPString)aMessage comment:(CPString)aComment target:(id)target action:(SEL)action
+- (void)initWithMessage:(CPString)aMessage comment:(CPString)aComment target:(id)aTarget action:(SEL)anAction
 {
     if (self = [super init]) {
         message = aMessage;
         comment = aComment;
-        invocation = [CPInvocation invocationWithMethodSignature:nil];
-        [invocation setTarget:target];
-        [invocation setSelector:action];
-        [invocation setArgument:self atIndex:2];
+        target = aTarget;
+        action = anAction;
     }
     return self;
 }
@@ -90,13 +89,13 @@
     } else {
         [CPApp stopModal];
         [panel close];
-        [invocation invoke];
+        objj_msgSend(target, action, self);
     }
 }
 
 - (void)didEndSheet
 {
-    [invocation invoke];
+    objj_msgSend(target, action, self);
 }
 
 @end

@@ -46,7 +46,7 @@
         return;
     isLoading = YES;
     var request = [[HTTPRequest alloc] initWithMethod:"GET" URL:[self url] target:self action:@selector(didReceiveResponse:)];
-    [request setErrorAction:@selector(didEndRequestErrorPanel)];
+    [request setErrorAction:@selector(didReceiveError)];
     [request send];
 }
 
@@ -84,7 +84,7 @@
         0);
 }
 
-- (void)didEndRequestErrorPanel
+- (void)didReceiveError
 {
     isLoading = NO;
     setTimeout(function () { [app.outlineView collapseItem:self]; }, 0);
@@ -194,6 +194,11 @@ var traverse = function (name, tree) {
 @implementation Env (NodeItem)
 
 - (BOOL)isExpandable
+{
+    return NO;
+}
+
+- (BOOL)isEditable
 {
     return NO;
 }
