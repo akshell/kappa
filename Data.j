@@ -97,6 +97,29 @@
     CPArray envs @accessors;
 }
 
+- (BOOL)hasEnvWithName:(CPString)aName
+{
+    var nameLower = aName.toLowerCase();
+    for (var i = 0; i < envs.length; ++i)
+        if (envs[i].name.toLowerCase() == nameLower)
+            return YES;
+    return NO;
+}
+
+- (void)addEnv:(Env)env
+{
+    var nameLower = env.name.toLowerCase();
+    for (var i = 1; i < envs.length; ++i)
+        if (envs[i].name.toLowerCase() > nameLower)
+            break;
+    envs.splice(i, 0, env);
+}
+
+- (BOOL)removeEnv:(Env)env
+{
+    [envs removeObject:env];
+}
+
 @end
 
 @implementation Data : CPObject

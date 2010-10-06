@@ -23,7 +23,7 @@
     var actionMenu = [actionPopupButton menu];
     [[actionMenu addItemWithTitle:"New File" action:@selector(showNewFile) keyEquivalent:nil] setTarget:self];
     [[actionMenu addItemWithTitle:"New Folder" action:@selector(showNewFolder) keyEquivalent:nil] setTarget:self];
-    [actionMenu addItemWithTitle:"New Environment" action:nil keyEquivalent:nil];
+    [[actionMenu addItemWithTitle:"New Environment" action:@selector(showNewEnv) keyEquivalent:nil] setTarget:self];
     [actionMenu addItemWithTitle:"Use Library…" action:nil keyEquivalent:nil];
     [actionMenu addItem:[CPMenuItem separatorItem]];
     [actionMenu addItemWithTitle:"Delete…" action:nil keyEquivalent:nil];
@@ -127,6 +127,35 @@
             var item = callback(parentItem, parentFolder);
             [outlineView reloadItem:parentItem reloadChildren:YES];
             [outlineView scrollRectToVisible:[outlineView frameOfDataViewAtColumn:0 row:[outlineView rowForItem:item]]];
+        },
+        0);
+}
+
+- (void)showNewEnv
+{
+    [items[1] loadWithTarget:self action:@selector(doShowNewEnv) context:nil];
+}
+
+- (void)doShowNewEnv
+{
+    [outlineView expandItem:items[1]];
+    var name = "untitled-env";
+    if ([DATA.app hasEnvWithName:name]) {
+        name += "-";
+        var newName;
+        for (var i = 2;; ++i) {
+            newName = name + i;
+            if (![DATA.app hasEnvWithName:newName])
+                break;
+        }
+        name = newName;
+    }
+    var newEnvItem = [[NewEnvItem alloc] initWithApp:DATA.app name:name];
+    setTimeout(
+        function () {
+            [DATA.app addEnv:newEnvItem];
+            [outlineView reloadItem:items[1] reloadChildren:YES];
+            [outlineView scrollRectToVisible:[outlineView frameOfDataViewAtColumn:0 row:[outlineView rowForItem:newEnvItem]]];
         },
         0);
 }

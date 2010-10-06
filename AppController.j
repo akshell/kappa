@@ -74,7 +74,8 @@
     [[mainMenu addItemWithTitle:"File" action:nil keyEquivalent:nil] setSubmenu:fileSubmenu];
 
     var appSubmenu = [CPMenu new];
-    [appSubmenu addItemWithTitle:"New Environment" action:nil keyEquivalent:nil];
+    [[appSubmenu addItemWithTitle:"New Environment" action:@selector(showNewEnv) keyEquivalent:nil]
+        setTarget:sidebarController];
     [appSubmenu addItemWithTitle:"Use Library…" action:nil keyEquivalent:nil];
     [appSubmenu addItem:[CPMenuItem separatorItem]];
     [appSubmenu addItemWithTitle:"Diff…" action:nil keyEquivalent:nil];

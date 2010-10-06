@@ -363,7 +363,7 @@ var traverse = function (name, tree) {
 
 @end
 
-@implementation NewEntryItem : SmartItem
+@implementation NewItem : SmartItem
 {
     CPString name @accessors(readonly);
 }
@@ -396,6 +396,22 @@ var traverse = function (name, tree) {
     return [app.outlineView parentForItem:self];
 }
 
+@end
+
+var revealItem = function (outlineView, item) {
+    setTimeout(
+        function () {
+            [outlineView reloadItem:[outlineView parentForItem:item] reloadChildren:YES];
+            [outlineView expandItem:item];
+            var row = [outlineView rowForItem:item];
+            [outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
+            [outlineView scrollRectToVisible:[outlineView frameOfDataViewAtColumn:0 row:row]];
+        },
+        0);
+};
+
+@implementation NewEntryItem : NewItem
+
 - (id)parentFolder
 {
     var parentItem = [self parentItem];
@@ -405,6 +421,7 @@ var traverse = function (name, tree) {
 - (void)submit:(CPTextField)sender
 {
     isLoading = YES;
+    [sender removeFromSuperview];
     var newName = [sender stringValue];
     if (newName) {
         if (newName.indexOf("/") != -1) {
@@ -422,7 +439,6 @@ var traverse = function (name, tree) {
             }
         }
     }
-    [sender removeFromSuperview];
     [app.outlineView reloadItem:self reloadChildren:NO];
     [self doSubmit];
 }
@@ -470,9 +486,7 @@ var traverse = function (name, tree) {
     [parentFolder removeFile:self];
     var file = [[File alloc] initWithName:name];
     [parentFolder addFile:file];
-    [app.outlineView reloadItem:parentItem reloadChildren:YES];
-    [app.outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:[app.outlineView rowForItem:file]]
-                 byExtendingSelection:NO];
+    revealItem(app.outlineView, file);
 }
 
 @end
@@ -501,10 +515,56 @@ var traverse = function (name, tree) {
     [parentFolder removeFolder:self];
     var folder = [[Folder alloc] initWithName:name];
     [parentFolder addFolder:folder];
-    [app.outlineView reloadItem:parentItem reloadChildren:YES];
-    [app.outlineView expandItem:folder];
-    [app.outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:[app.outlineView rowForItem:folder]]
-                 byExtendingSelection:NO];
+    revealItem(app.outlineView, folder);
+}
+
+@end
+
+@implementation NewEnvItem : NewItem
+
+- (CPString)getImageName
+{
+    return "Env";
+}
+
+- (void)submit:(CPTextField)sender
+{
+    isLoading = YES;
+    [sender removeFromSuperview];
+    var newName = [sender stringValue];
+    if (newName) {
+        var initialName = name;
+        name = "";
+        if ([app hasEnvWithName:newName]) {
+            [[[Alert alloc] initWithMessage:"The environment with the name \"" + newName.toLowerCase() + "\" already exists."
+                                    comment:"Environment name must be case-insensitively unique."]
+                showPanel];
+            name = initialName;
+        } else {
+            name = newName;
+        }
+    }
+    var request = [[HTTPRequest alloc] initWithMethod:"POST"
+                                                  URL:"/apps/" + app.name + "/envs/"
+                                               target:self
+                                               action:@selector(didReceiveResponse)];
+    [request setErrorAction:@selector(removeSelf)];
+    [request send:{name: name}];
+    [app.outlineView reloadItem:self reloadChildren:NO];
+}
+
+- (void)didReceiveResponse
+{
+    [app removeEnv:self];
+    var env = [[Env alloc] initWithName:name];
+    [app addEnv:env];
+    revealItem(app.outlineView, env);
+}
+
+- (void)removeSelf
+{
+    [app removeEnv:self];
+    [app.outlineView reloadItem:[self parentItem] reloadChildren:YES];
 }
 
 @end
