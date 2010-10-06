@@ -6,14 +6,15 @@
 @implementation SidebarController : CPObject
 {
     @outlet CPButtonBar buttonBar;
-    @outlet CPScrollView scrollView;
+    @outlet CPView sidebarView;
+    CPScrollView scrollView;
     CPOutlineView outlineView;
     CPArray items;
 }
 
 - (void)awakeFromCib
 {
-    [self setOutlineView];
+    [self setScrollView];
     [DATA addObserver:self forKeyPath:"app" options:CPKeyValueObservingOptionNew context:nil];
 
     var plusButton = [CPButtonBar plusButton];
@@ -32,43 +33,55 @@
     [buttonBar setButtons:[plusButton, minusButton, actionPopupButton]];
 }
 
-- (void)setOutlineView
+- (void)setScrollView
 {
-    if (DATA.app && DATA.app.rootItems) {
-        items = DATA.app.rootItems;
+    [scrollView removeFromSuperview];
+    var sidebarBoundsSize = [sidebarView boundsSize];
+    var scrollViewFrame = CGRectMake(0, 0, sidebarBoundsSize.width, sidebarBoundsSize.height - [buttonBar frameSize].height);
+    if (DATA.app && DATA.app.scrollView) {
+        scrollView = DATA.app.scrollView;
         outlineView = DATA.app.outlineView;
-        [scrollView setDocumentView:outlineView];
+        items = DATA.app.rootItems;
+        [scrollView setFrame:scrollViewFrame];
+        [sidebarView addSubview:scrollView];
         return;
     }
+    scrollView = [[CPScrollView alloc] initWithFrame:scrollViewFrame];
+    [scrollView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
+    [scrollView setHasHorizontalScroller:NO];
+    [scrollView setAutohidesScrollers:YES];
     outlineView = [[CPOutlineView alloc] initWithFrame:[[scrollView contentView] bounds]];
     [outlineView setAllowsMultipleSelection:YES];
     [outlineView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
     [outlineView setColumnAutoresizingStyle:CPTableViewLastColumnOnlyAutoresizingStyle];
     [outlineView setHeaderView:nil];
     [outlineView setCornerView:nil];
-    var column = [[CPTableColumn alloc] initWithIdentifier:"column"];
+    var column = [CPTableColumn new];
     [column setDataView:[NodeView new]];
     [outlineView addTableColumn:column];
     [outlineView setOutlineTableColumn:column];
     if (DATA.app) {
-        items = DATA.app.rootItems = [
+        DATA.app.scrollView = scrollView;
+        DATA.app.outlineView = outlineView;
+        DATA.app.rootItems = items = [
             [[CodeItem alloc] initWithApp:DATA.app],
             [[EnvsItem alloc] initWithApp:DATA.app],
             [[LibsItem alloc] initWithApp:DATA.app]
         ];
-        DATA.app.outlineView = outlineView;
     } else {
         items = [];
     }
     [outlineView setDataSource:self];
     [outlineView expandItem:items[0]];
     [scrollView setDocumentView:outlineView];
+    [sidebarView addSubview:scrollView];
+    [outlineView sizeLastColumnToFit];
 }
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
 {
     if (keyPath == "app")
-        [self setOutlineView];
+        [self setScrollView];
 }
 
 - (id)rootForItem:(id)item
