@@ -152,6 +152,9 @@
 @end
 
 @implementation CodeItem : DeferredItem
+{
+    Folder root;
+}
 
 - (CPString)name
 {
@@ -165,7 +168,7 @@
 
 - (BOOL)isReady
 {
-    return app.code;
+    return root;
 }
 
 - (CPString)url
@@ -175,17 +178,20 @@
 
 - (void)processData:(JSObject)data
 {
-    [app setCode:[[Folder alloc] initWithTree:data]];
+    root = [[Folder alloc] initWithTree:data];
 }
 
 - (unsigned)getNumberOfChildren
 {
-    return [app.code numberOfChildren];
+    return [root numberOfChildren];
 }
 
-- (id)childAtIndex:(unsigned)index
+- (id)forward:(SEL)selector :(marg_list)args
 {
-    return [app.code childAtIndex:index];
+    var newArgs = [root, selector];
+    for (var i = 2; i < args.length; ++i)
+        newArgs.push(args[i]);
+    return objj_msgSend.apply(objj_msgSend, newArgs);
 }
 
 @end
@@ -356,7 +362,7 @@
 
 - (void)processData:(CPString)data
 {
-    [app.codeItem loadWithTarget:self action:@selector(setManifest:) context:data];
+    [app.code loadWithTarget:self action:@selector(setManifest:) context:data];
     app.libItems = [];
     try {
         data = JSON.parse(data);
@@ -425,19 +431,13 @@
         [self submit:[notification object]];
 }
 
-- (id)parentItem
-{
-    return [app.outlineView parentForItem:self];
-}
-
 @end
 
 @implementation NewEntryItem : NewItem
 
 - (id)parentFolder
 {
-    var parentItem = [self parentItem];
-    return [parentItem isKindOfClass:Folder] ? parentItem : app.code;
+    return [app.outlineView parentForItem:self];
 }
 
 - (void)submit:(CPTextField)sender
@@ -467,8 +467,9 @@
 
 - (void)removeSelf
 {
-    [[self parentFolder] removeFile:self];
-    [app.outlineView reloadItem:[self parentItem] reloadChildren:YES];
+    var parentFolder = [self parentFolder];
+    [parentFolder removeFile:self];
+    [app.outlineView reloadItem:parentFolder reloadChildren:YES];
 }
 
 - (CPString)path
@@ -507,7 +508,7 @@
     [parentFolder removeFile:self];
     var file = [[File alloc] initWithName:name];
     [parentFolder addFile:file];
-    [app.outlineView revealChildItem:file ofItem:[self parentItem]];
+    [app.outlineView revealChildItem:file ofItem:parentFolder];
 }
 
 @end
@@ -535,7 +536,7 @@
     [parentFolder removeFolder:self];
     var folder = [[Folder alloc] initWithName:name];
     [parentFolder addFolder:folder];
-    [app.outlineView revealChildItem:folder ofItem:[self parentItem]];
+    [app.outlineView revealChildItem:folder ofItem:parentFolder];
 }
 
 @end
@@ -584,7 +585,7 @@
 - (void)removeSelf
 {
     [app removeEnv:self];
-    [app.outlineView reloadItem:[self parentItem] reloadChildren:YES];
+    [app.outlineView reloadItem:app.envsItem reloadChildren:YES];
 }
 
 @end

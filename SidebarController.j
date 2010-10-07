@@ -68,11 +68,11 @@
     [outlineView setOutlineTableColumn:column];
     app.scrollView = scrollView;
     app.outlineView = outlineView;
-    app.codeItem = [[CodeItem alloc] initWithApp:app];
+    app.code = [[CodeItem alloc] initWithApp:app];
     app.envsItem = [[EnvsItem alloc] initWithApp:app];
     app.libsItem = [[LibsItem alloc] initWithApp:app];
     [outlineView setDataSource:self];
-    [outlineView expandItem:app.codeItem];
+    [outlineView expandItem:app.code];
     [scrollView setDocumentView:outlineView];
     [outlineView sizeLastColumnToFit];
 }
@@ -92,39 +92,38 @@
 
 - (void)showNewFile
 {
-    function callback(parentItem, parentFolder) {
+    function callback(parentFolder) {
         var newFileItem = [[NewFileItem alloc] initWithApp:app
                                                       name:[parentFolder uniqueChildNameWithPrefix:"untitled file"]];
         [parentFolder addFile:newFileItem];
         return newFileItem;
     };
-    [app.codeItem loadWithTarget:self action:@selector(showNewEntry:) context:callback];
+    [app.code loadWithTarget:self action:@selector(showNewEntry:) context:callback];
 }
 
 - (void)showNewFolder
 {
-    function callback(parentItem, parentFolder) {
+    function callback(parentFolder) {
         var newFolderItem = [[NewFolderItem alloc] initWithApp:app
                                                           name:[parentFolder uniqueChildNameWithPrefix:"untitled folder"]];
         [parentFolder addFolder:newFolderItem];
         return newFolderItem;
     };
-    [app.codeItem loadWithTarget:self action:@selector(showNewEntry:) context:callback];
+    [app.code loadWithTarget:self action:@selector(showNewEntry:) context:callback];
 }
 
 - (void)showNewEntry:(Function)callback
 {
     var selectedItem = [outlineView itemAtRow:[outlineView selectedRow]];
-    var parentItem = (
-        [self rootForItem:selectedItem] === app.codeItem
+    var parentFolder = (
+        [self rootForItem:selectedItem] === app.code
         ? [selectedItem isKindOfClass:File] ? [outlineView parentForItem:selectedItem] : selectedItem
-        : app.codeItem);
-    var parentFolder = parentItem === app.codeItem ? app.code : parentItem;
-    [outlineView expandItem:parentItem];
+        : app.code);
+    [outlineView expandItem:parentFolder];
     setTimeout(
         function () {
-            var item = callback(parentItem, parentFolder);
-            [outlineView reloadItem:parentItem reloadChildren:YES];
+            var item = callback(parentFolder);
+            [outlineView reloadItem:parentFolder reloadChildren:YES];
             [outlineView scrollRectToVisible:[outlineView frameOfDataViewAtColumn:0 row:[outlineView rowForItem:item]]];
         },
         0);
@@ -161,7 +160,7 @@
 
 - (id)outlineView:(CPOutlineView)anOutlineview child:(int)index ofItem:(id)item
 {
-    return item ? [item childAtIndex:index] : [app.codeItem, app.envsItem, app.libsItem][index];
+    return item ? [item childAtIndex:index] : [app.code, app.envsItem, app.libsItem][index];
 }
 
 - (BOOL)outlineView:(CPOutlineView)anOutlineview isItemExpandable:(id)item

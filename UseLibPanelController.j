@@ -142,7 +142,7 @@
         manifest = {libs:{}};
         file = [[File alloc] initWithName:"manifest.json"];
         [app.code addFile:file];
-        [app.outlineView reloadItem:app.codeItem reloadChildren:YES];
+        [app.outlineView reloadItem:app.code reloadChildren:YES];
     }
     manifest.libs[[aliasField stringValue]] = identifier;
     [file setContent:JSON.stringify(manifest, null, "  ")];
