@@ -27,8 +27,8 @@
                     objj_msgSend(target, action, data, context);
                 return;
             }
-            if (errorAction)
-                objj_msgSend(target, errorAction, data, context);
+            if (errorAction && objj_msgSend(target, errorAction, data, context))
+                return;
             var message, comment;
             if (isJSON) {
                 message = data.message;

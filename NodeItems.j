@@ -42,6 +42,12 @@
 
 - (void)load
 {
+    if (![self isReady])
+        [self doLoad];
+}
+
+- (void)doLoad
+{
     if (isLoading)
         return;
     isLoading = YES;
@@ -59,15 +65,20 @@
     target = aTarget;
     action = anAction;
     context = aContext;
-    [self load];
+    [self doLoad];
     [app.outlineView reloadItem:self];
+}
+
+- (void)loadWithTarget:(id)aTarget action:(SEL)anAction
+{
+    [self loadWithTarget:aTarget action:anAction context:nil];
 }
 
 - (unsigned)numberOfChildren
 {
     if ([self isReady])
         return [self getNumberOfChildren];
-    [self load];
+    [self doLoad];
     return 0;
 }
 
@@ -140,18 +151,6 @@
 
 @end
 
-var traverse = function (name, tree) {
-    var folderNames = [];
-    var fileNames = [];
-    for (var childName in tree)
-        (tree[childName] ? folderNames : fileNames).push(childName);
-    folderNames.sort();
-    fileNames.sort();
-    return [[Folder alloc] initWithName:name
-                                folders:folderNames.map(function (folderName) { return traverse(folderName, tree[folderName]); })
-                                  files:fileNames.map(function (fileName) { return [[File alloc] initWithName:fileName]; })];
-};
-
 @implementation CodeItem : DeferredItem
 
 - (CPString)name
@@ -176,7 +175,7 @@ var traverse = function (name, tree) {
 
 - (void)processData:(JSObject)data
 {
-    [app setCode:traverse('', data)];
+    [app setCode:[[Folder alloc] initWithTree:data]];
 }
 
 - (unsigned)getNumberOfChildren
@@ -275,6 +274,27 @@ var traverse = function (name, tree) {
     return self;
 }
 
++ (CPString)identifierForAuthorName:(CPString)authorName appName:(CPString)appName version:(CPString)version
+{
+    return authorName + "/" + appName + ":" + version;
+}
+
+- (id)initWithApp:(App)anApp
+             name:(CPString)aName
+       authorName:(CPString)anAuthorName
+          appName:(CPString)anAppName
+          version:(CPString)aVersion
+{
+    if (self = [super initWithApp:anApp]) {
+        name = aName;
+        authorName = anAuthorName;
+        appName = anAppName;
+        version = aVersion;
+        identifier = [LibItem identifierForAuthorName:authorName appName:appName version:version];
+    }
+    return self;
+}
+
 - (BOOL)isExpandable
 {
     return authorName && appName && version;
@@ -297,7 +317,7 @@ var traverse = function (name, tree) {
 
 - (void)processData:(JSObject)data
 {
-    DATA.libs[identifier] = traverse('', data);
+    DATA.libs[identifier] = [[Folder alloc] initWithTree:data];
 }
 
 - (unsigned)getNumberOfChildren
@@ -336,6 +356,7 @@ var traverse = function (name, tree) {
 
 - (void)processData:(CPString)data
 {
+    [app.rootItems[0] loadWithTarget:self action:@selector(setManifest:) context:data];
     app.libItems = [];
     try {
         data = JSON.parse(data);
@@ -349,6 +370,19 @@ var traverse = function (name, tree) {
         if (typeof(identifier) == "string")
             app.libItems.push([[LibItem alloc] initWithApp:app name:name identifier:identifier]);
     }
+}
+
+- (void)setManifest:(CPString)data
+{
+    [[app.code fileWithName:"manifest.json"] setContent:data];
+}
+
+- (BOOL)didReceiveError
+{
+    isLoading = NO;
+    app.libItems = [];
+    setTimeout(function () { [app.outlineView reloadItem:self]; }, 0);
+    return YES;
 }
 
 - (unsigned)getNumberOfChildren
@@ -439,7 +473,7 @@ var revealItem = function (outlineView, item) {
             }
         }
     }
-    [app.outlineView reloadItem:self reloadChildren:NO];
+    [app.outlineView reloadItem:self];
     [self doSubmit];
 }
 
@@ -550,7 +584,7 @@ var revealItem = function (outlineView, item) {
                                                action:@selector(didReceiveResponse)];
     [request setErrorAction:@selector(removeSelf)];
     [request send:{name: name}];
-    [app.outlineView reloadItem:self reloadChildren:NO];
+    [app.outlineView reloadItem:self];
 }
 
 - (void)didReceiveResponse

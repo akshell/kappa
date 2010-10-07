@@ -1,5 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
+@import "UseLibPanelController.j"
 @import "NodeView.j"
 @import "NodeItems.j"
 
@@ -7,6 +8,7 @@
 {
     @outlet CPButtonBar buttonBar;
     @outlet CPView sidebarView;
+    UseLibPanelController useLibPanelController;
     CPScrollView scrollView;
     CPOutlineView outlineView;
     CPArray items;
@@ -14,6 +16,8 @@
 
 - (void)awakeFromCib
 {
+    useLibPanelController = [UseLibPanelController new];
+
     [self setScrollView];
     [DATA addObserver:self forKeyPath:"app" options:CPKeyValueObservingOptionNew context:nil];
 
@@ -24,7 +28,8 @@
     [[actionMenu addItemWithTitle:"New File" action:@selector(showNewFile) keyEquivalent:nil] setTarget:self];
     [[actionMenu addItemWithTitle:"New Folder" action:@selector(showNewFolder) keyEquivalent:nil] setTarget:self];
     [[actionMenu addItemWithTitle:"New Environment" action:@selector(showNewEnv) keyEquivalent:nil] setTarget:self];
-    [actionMenu addItemWithTitle:"Use Library…" action:nil keyEquivalent:nil];
+    [[actionMenu addItemWithTitle:"Use Library…" action:@selector(showWindow:) keyEquivalent:nil]
+        setTarget:useLibPanelController];
     [actionMenu addItem:[CPMenuItem separatorItem]];
     [actionMenu addItemWithTitle:"Delete…" action:nil keyEquivalent:nil];
     [actionMenu addItemWithTitle:"Move…" action:nil keyEquivalent:nil];
@@ -133,7 +138,7 @@
 
 - (void)showNewEnv
 {
-    [items[1] loadWithTarget:self action:@selector(doShowNewEnv) context:nil];
+    [items[1] loadWithTarget:self action:@selector(doShowNewEnv)];
 }
 
 - (void)doShowNewEnv

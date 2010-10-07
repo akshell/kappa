@@ -76,7 +76,8 @@
     var appSubmenu = [CPMenu new];
     [[appSubmenu addItemWithTitle:"New Environment" action:@selector(showNewEnv) keyEquivalent:nil]
         setTarget:sidebarController];
-    [appSubmenu addItemWithTitle:"Use Library…" action:nil keyEquivalent:nil];
+    [[appSubmenu addItemWithTitle:"Use Library…" action:@selector(showWindow:) keyEquivalent:nil]
+        setTarget:sidebarController.useLibPanelController];
     [appSubmenu addItem:[CPMenuItem separatorItem]];
     [appSubmenu addItemWithTitle:"Diff…" action:nil keyEquivalent:nil];
     [appSubmenu addItemWithTitle:"Commit…" action:nil keyEquivalent:nil];

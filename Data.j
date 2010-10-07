@@ -15,6 +15,10 @@
 @end
 
 @implementation File : Entry
+{
+    CPString content @accessors;
+}
+
 @end
 
 @implementation Folder : Entry
@@ -30,6 +34,26 @@
         files = files_;
     }
     return self;
+}
+
+- (id)initWithName:(CPString)aName tree:(JSObject)tree
+{
+    if (self = [super initWithName:aName]) {
+        var folderNames = [];
+        var fileNames = [];
+        for (var childName in tree)
+            (tree[childName] ? folderNames : fileNames).push(childName);
+        folders = folderNames.sort().map(
+            function (folderName) { return [[Folder alloc] initWithName:folderName tree:tree[folderName]]; });
+        files = fileNames.sort().map(
+            function (fileName) { return [[File alloc] initWithName:fileName]; });
+    }
+    return self;
+}
+
+- (id)initWithTree:(JSObject)tree
+{
+    return [self initWithName:"" tree:tree];
 }
 
 - (id)initWithName:(CPString)aName
@@ -84,6 +108,14 @@
         if (![self hasChildWithName:childName])
             return childName;
     }
+}
+
+- (File)fileWithName:(CPString)aName
+{
+    for (var i = 0; i < files.length; ++i)
+        if (files[i].name == aName)
+            return files[i];
+    return nil;
 }
 
 @end
