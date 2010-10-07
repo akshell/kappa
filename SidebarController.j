@@ -80,7 +80,7 @@
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
 {
     if (keyPath == "app")
-        [self setScrollView];
+        [self reload];
 }
 
 - (id)rootForItem:(id)item

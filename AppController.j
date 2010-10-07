@@ -236,7 +236,7 @@
         [self setAppItemsEnabled:YES];
     }
     [appsMenu insertItem:[item copy] atIndex:index];
-    DATA.apps.splice(index, 0, {name: appName});
+    DATA.apps.splice(index, 0, [[App alloc] initWithName:appName]);
     [DATA setAppIndex:index];
 }
 
