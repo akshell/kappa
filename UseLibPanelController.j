@@ -163,11 +163,7 @@
                                        appName:[nameField stringValue]
                                        version:[versionField stringValue]];
     app.libItems.push(libItem);
-    [app.outlineView reloadItem:app.rootItems[2] reloadChildren:YES];
-    [app.outlineView expandItem:app.rootItems[2]];
-    var row = [app.outlineView rowForItem:libItem];
-    [app.outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
-    [app.outlineView scrollRectToVisible:[app.outlineView frameOfDataViewAtColumn:0 row:row]];
+    [app.outlineView revealChildItem:libItem ofItem:app.rootItems[2]];
     [self close];
 }
 

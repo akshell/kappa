@@ -432,18 +432,6 @@
 
 @end
 
-var revealItem = function (outlineView, item) {
-    setTimeout(
-        function () {
-            [outlineView reloadItem:[outlineView parentForItem:item] reloadChildren:YES];
-            [outlineView expandItem:item];
-            var row = [outlineView rowForItem:item];
-            [outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
-            [outlineView scrollRectToVisible:[outlineView frameOfDataViewAtColumn:0 row:row]];
-        },
-        0);
-};
-
 @implementation NewEntryItem : NewItem
 
 - (id)parentFolder
@@ -515,12 +503,11 @@ var revealItem = function (outlineView, item) {
 
 - (void)didReceiveResponse
 {
-    var parentItem = [self parentItem];
     var parentFolder = [self parentFolder];
     [parentFolder removeFile:self];
     var file = [[File alloc] initWithName:name];
     [parentFolder addFile:file];
-    revealItem(app.outlineView, file);
+    [app.outlineView revealChildItem:file ofItem:[self parentItem]];
 }
 
 @end
@@ -544,12 +531,11 @@ var revealItem = function (outlineView, item) {
 
 - (void)didReceiveResponse
 {
-    var parentItem = [self parentItem];
     var parentFolder = [self parentFolder];
     [parentFolder removeFolder:self];
     var folder = [[Folder alloc] initWithName:name];
     [parentFolder addFolder:folder];
-    revealItem(app.outlineView, folder);
+    [app.outlineView revealChildItem:folder ofItem:[self parentItem]];
 }
 
 @end
@@ -592,7 +578,7 @@ var revealItem = function (outlineView, item) {
     [app removeEnv:self];
     var env = [[Env alloc] initWithName:name];
     [app addEnv:env];
-    revealItem(app.outlineView, env);
+    [app.outlineView revealChildItem:env ofItem:app.rootItems[1]];
 }
 
 - (void)removeSelf

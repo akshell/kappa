@@ -7,6 +7,7 @@
 @import "Data.j";
 @import "CPPanel.j"
 @import "CPMenu.j"
+@import "CPOutlineView.j"
 
 DATA = [Data new];
 
