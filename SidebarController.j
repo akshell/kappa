@@ -9,6 +9,15 @@
     @outlet CPButtonBar buttonBar;
     @outlet CPView sidebarView;
     UseLibPanelController useLibPanelController;
+    CPButton plusButton;
+    CPButton minusButton;
+    CPButton actionPopUpButton;
+    CPMenu actionsMenu;
+    CPArray addControls;
+    CPArray deleteControls;
+    CPArray moveControls;
+    CPArray duplicateControls;
+    CPArray renameControls;
     CPScrollView scrollView;
     App app;
 }
@@ -16,30 +25,30 @@
 - (void)awakeFromCib
 {
     useLibPanelController = [UseLibPanelController new];
-
-    [self reload];
-    [DATA addObserver:self forKeyPath:"app" options:CPKeyValueObservingOptionNew context:nil];
-
-    var plusButton = [CPButtonBar plusButton];
-    var minusButton = [CPButtonBar minusButton];
-    var actionPopupButton = [CPButtonBar actionPopupButton];
-    var actionMenu = [actionPopupButton menu];
+    plusButton = [CPButtonBar plusButton];
+    minusButton = [CPButtonBar minusButton];
+    actionPopUpButton = [CPButtonBar actionPopupButton];
+    var actionMenu = [actionPopUpButton menu];
+    [actionMenu setAutoenablesItems:NO];
     [[actionMenu addItemWithTitle:"New File" action:@selector(showNewFile) keyEquivalent:nil] setTarget:self];
     [[actionMenu addItemWithTitle:"New Folder" action:@selector(showNewFolder) keyEquivalent:nil] setTarget:self];
     [[actionMenu addItemWithTitle:"New Environment" action:@selector(showNewEnv) keyEquivalent:nil] setTarget:self];
     [[actionMenu addItemWithTitle:"Use Library…" action:@selector(showWindow:) keyEquivalent:nil]
         setTarget:useLibPanelController];
     [actionMenu addItem:[CPMenuItem separatorItem]];
-    [actionMenu addItemWithTitle:"Delete…" action:nil keyEquivalent:nil];
-    [actionMenu addItemWithTitle:"Move…" action:nil keyEquivalent:nil];
-    [actionMenu addItemWithTitle:"Duplicate" action:nil keyEquivalent:nil];
-    [actionMenu addItemWithTitle:"Rename" action:nil keyEquivalent:nil];
-    [buttonBar setButtons:[plusButton, minusButton, actionPopupButton]];
+    addControls = [plusButton];
+    deleteControls = [[actionMenu addItemWithTitle:"Delete…" action:nil keyEquivalent:nil], minusButton];
+    moveControls = [[actionMenu addItemWithTitle:"Move…" action:nil keyEquivalent:nil]];
+    duplicateControls = [[actionMenu addItemWithTitle:"Duplicate" action:nil keyEquivalent:nil]];
+    renameControls = [[actionMenu addItemWithTitle:"Rename" action:nil keyEquivalent:nil]];
+    [buttonBar setButtons:[plusButton, minusButton, actionPopUpButton]];
+    [DATA addObserver:self forKeyPath:"app" options:CPKeyValueObservingOptionNew context:nil];
 }
 
 - (void)reload
 {
     app = DATA.app;
+    [plusButton, minusButton, actionPopUpButton].forEach(function (button) { [button setEnabled:app]; });
     [scrollView removeFromSuperview];
     var sidebarBoundsSize = [sidebarView boundsSize];
     var scrollViewFrame = CGRectMake(0, 0, sidebarBoundsSize.width, sidebarBoundsSize.height - [buttonBar frameSize].height);
@@ -47,6 +56,7 @@
         scrollView = app.scrollView;
         [scrollView setFrame:scrollViewFrame];
         [sidebarView addSubview:scrollView];
+        [self outlineViewSelectionDidChange:nil];
         return;
     }
     scrollView = [[CPScrollView alloc] initWithFrame:scrollViewFrame];
@@ -56,8 +66,9 @@
     [sidebarView addSubview:scrollView];
     if (!app)
         return;
-    outlineView = [[CPOutlineView alloc] initWithFrame:[[scrollView contentView] bounds]];
+    var outlineView = [[CPOutlineView alloc] initWithFrame:[[scrollView contentView] bounds]];
     [outlineView setAllowsMultipleSelection:YES];
+    [outlineView setAllowsEmptySelection:NO]
     [outlineView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
     [outlineView setColumnAutoresizingStyle:CPTableViewLastColumnOnlyAutoresizingStyle];
     [outlineView setHeaderView:nil];
@@ -72,9 +83,24 @@
     app.envsItem = [[EnvsItem alloc] initWithApp:app];
     app.libsItem = [[LibsItem alloc] initWithApp:app];
     [outlineView setDataSource:self];
+    [outlineView setDelegate:self];
     [outlineView expandItem:app.code];
+    [outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
     [scrollView setDocumentView:outlineView];
     [outlineView sizeLastColumnToFit];
+}
+
+- (void)setActionsMenu:(CPMenu)anActionsMenu
+{
+    actionsMenu = anActionsMenu;
+    [actionsMenu setAutoenablesItems:NO];
+    [deleteControls, moveControls, duplicateControls, renameControls].forEach(
+        function (controls) {
+            var item = [controls[0] copy];
+            controls.push(item);
+            [actionsMenu addItem:item];
+        });
+    [self reload];
 }
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
@@ -85,7 +111,7 @@
 
 - (id)rootForItem:(id)item
 {
-    for (var parentItem = item; parentItem; parentItem = [outlineView parentForItem:parentItem])
+    for (var parentItem = item; parentItem; parentItem = [app.outlineView parentForItem:parentItem])
         item = parentItem;
     return item;
 }
@@ -114,17 +140,17 @@
 
 - (void)showNewEntry:(Function)callback
 {
-    var selectedItem = [outlineView itemAtRow:[outlineView selectedRow]];
+    var selectedItem = [app.outlineView itemAtRow:[app.outlineView selectedRow]];
     var parentFolder = (
         [self rootForItem:selectedItem] === app.code
-        ? [selectedItem isKindOfClass:File] ? [outlineView parentForItem:selectedItem] : selectedItem
+        ? [selectedItem isKindOfClass:File] ? [app.outlineView parentForItem:selectedItem] : selectedItem
         : app.code);
-    [outlineView expandItem:parentFolder];
+    [app.outlineView expandItem:parentFolder];
     setTimeout(
         function () {
             var item = callback(parentFolder);
-            [outlineView reloadItem:parentFolder reloadChildren:YES];
-            [outlineView scrollRectToVisible:[outlineView frameOfDataViewAtColumn:0 row:[outlineView rowForItem:item]]];
+            [app.outlineView reloadItem:parentFolder reloadChildren:YES];
+            [app.outlineView scrollRectToVisible:[app.outlineView frameOfDataViewAtColumn:0 row:[app.outlineView rowForItem:item]]];
         },
         0);
 }
@@ -136,7 +162,7 @@
 
 - (void)doShowNewEnv
 {
-    [outlineView expandItem:app.envsItem];
+    [app.outlineView expandItem:app.envsItem];
     var name = "untitled-env";
     if ([app hasEnvWithName:name]) {
         name += "-";
@@ -152,8 +178,8 @@
     setTimeout(
         function () {
             [app addEnv:newEnvItem];
-            [outlineView reloadItem:app.envsItem reloadChildren:YES];
-            [outlineView scrollRectToVisible:[outlineView frameOfDataViewAtColumn:0 row:[outlineView rowForItem:newEnvItem]]];
+            [app.outlineView reloadItem:app.envsItem reloadChildren:YES];
+            [app.outlineView scrollRectToVisible:[app.outlineView frameOfDataViewAtColumn:0 row:[app.outlineView rowForItem:newEnvItem]]];
         },
         0);
 }
@@ -176,6 +202,48 @@
 - (id)outlineView:(CPOutlineView)anOutlineview objectValueForTableColumn:(CPTableColumn)tableColumn byItem:(id)item
 {
     return item;
+}
+
+- (void)outlineViewSelectionDidChange:(id)sender
+{
+    var indexSet = [app.outlineView selectedRowIndexes];
+    var isAddable = YES;
+    var isDeletable = YES;
+    var isMovable = YES;
+    var isDuplicatable = YES;
+    var firstRootItem;
+    var firstParentItem;
+    for (var index = [indexSet firstIndex]; index != CPNotFound; index = [indexSet indexGreaterThanIndex:index]) {
+        var item = [app.outlineView itemAtRow:index];
+        var rootItem = [self rootForItem:item];
+        if (firstRootItem)
+            isAddable = isAddable && rootItem === firstRootItem;
+        else
+            firstRootItem = rootItem;
+        isDeletable = isDeletable && item !== rootItem && (rootItem !== app.libsItem || [item isKindOfClass:LibItem]);
+        isDuplicatable = isDuplicatable && item !== rootItem && rootItem === app.code;
+        isMovable = isMovable && isDuplicatable;
+        if (isMovable) {
+            var parentItem = [app.outlineView parentForItem:item];
+            if (firstParentItem)
+                isMovable = firstParentItem === parentItem;
+            else
+                firstParentItem = parentItem;
+        }
+    }
+    var isRenamable = [indexSet count] == 1 && isDeletable;
+    [actionsMenu _highlightItemAtIndex:CPNotFound];
+    [[actionPopUpButton menu] _highlightItemAtIndex:CPNotFound];
+    [
+        [addControls, isAddable],
+        [deleteControls, isDeletable],
+        [moveControls, isMovable],
+        [duplicateControls, isDuplicatable],
+        [renameControls, isRenamable]
+    ].forEach(
+        function (pair) {
+            pair[0].forEach(function (control) { [control setEnabled:pair[1]]; });
+        });
 }
 
 @end

@@ -66,10 +66,7 @@
     [fileSubmenu addItemWithTitle:"Save" action:nil keyEquivalent:nil];
     [fileSubmenu addItemWithTitle:"Save All" action:nil keyEquivalent:nil];
     var actionsSubmenu = [CPMenu new];
-    [actionsSubmenu addItemWithTitle:"Delete…" action:nil keyEquivalent:nil];
-    [actionsSubmenu addItemWithTitle:"Move…" action:nil keyEquivalent:nil];
-    [actionsSubmenu addItemWithTitle:"Duplicate" action:nil keyEquivalent:nil];
-    [actionsSubmenu addItemWithTitle:"Rename" action:nil keyEquivalent:nil];
+    [sidebarController setActionsMenu:actionsSubmenu];
     [[fileSubmenu addItemWithTitle:"Actions" action:nil keyEquivalent:nil] setSubmenu:actionsSubmenu];
     [[mainMenu addItemWithTitle:"File" action:nil keyEquivalent:nil] setSubmenu:fileSubmenu];
 
@@ -104,7 +101,7 @@
     [helpSubmenu addItemWithTitle:"Twitter" action:nil keyEquivalent:nil];
     [[mainMenu addItemWithTitle:"Help" action:nil keyEquivalent:nil] setSubmenu:helpSubmenu];
 
-    [akshellSubmenu, fileSubmenu, actionsSubmenu, appSubmenu, helpSubmenu].forEach(
+    [akshellSubmenu, fileSubmenu, appSubmenu, helpSubmenu].forEach(
         function (submenu) { [submenu setAutoenablesItems:NO]; });
 
     [mainMenu addItem:[CPMenuItem separatorItem]];
