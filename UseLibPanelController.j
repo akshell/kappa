@@ -72,15 +72,13 @@
 - (void)doSubmit
 {
     var alias = [aliasField stringValue];
-    for (var i = 0; i < app.libItems.length; ++i) {
-        if (app.libItems[i].name == alias) {
-            [[[Alert alloc] initWithMessage:"The alias \"" + alias + "\" is already taken."
-                                    comment:"Please choose another alias."
-                                     target:self
-                                     action:@selector(didEndAliasErrorSheet)]
-                showSheetForWindow:[self window]];
-            return;
-        }
+    if ([app hasLibWithName:alias]) {
+        [[[Alert alloc] initWithMessage:"The alias \"" + alias + "\" is already taken."
+                                comment:"Please choose another alias."
+                                 target:self
+                                 action:@selector(didEndAliasErrorSheet)]
+            showSheetForWindow:[self window]];
+        return;
     }
     [self requestWithMethod:"GET"
                         URL:("/libs/" +
@@ -162,7 +160,7 @@
                                     authorName:[authorField stringValue]
                                        appName:[nameField stringValue]
                                        version:[versionField stringValue]];
-    app.libItems.push(libItem);
+    [app addLib:libItem];
     [app.outlineView revealChildItem:libItem ofItem:app.libsItem];
     [self close];
 }

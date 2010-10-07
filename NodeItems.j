@@ -352,7 +352,7 @@
 
 - (BOOL)isReady
 {
-    return app.libItems;
+    return app.libs;
 }
 
 - (CPString)url
@@ -363,7 +363,7 @@
 - (void)processData:(CPString)data
 {
     [app.code loadWithTarget:self action:@selector(setManifest:) context:data];
-    app.libItems = [];
+    [app setLibs:[]];
     try {
         data = JSON.parse(data);
     } catch (error) {
@@ -374,7 +374,7 @@
     for (var name in data.libs) {
         var identifier = data.libs[name];
         if (typeof(identifier) == "string")
-            app.libItems.push([[LibItem alloc] initWithApp:app name:name identifier:identifier]);
+            [app addLib:[[LibItem alloc] initWithApp:app name:name identifier:identifier]];
     }
 }
 
@@ -386,19 +386,19 @@
 - (BOOL)didReceiveError
 {
     isLoading = NO;
-    app.libItems = [];
+    [app setLibs:[]];
     setTimeout(function () { [app.outlineView reloadItem:self]; }, 0);
     return YES;
 }
 
 - (unsigned)getNumberOfChildren
 {
-    return app.libItems.length;
+    return app.libs.length;
 }
 
 - (id)childAtIndex:(unsigned)index
 {
-    return app.libItems[index];
+    return app.libs[index];
 }
 
 @end
