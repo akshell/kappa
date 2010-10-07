@@ -356,7 +356,7 @@
 
 - (void)processData:(CPString)data
 {
-    [app.rootItems[0] loadWithTarget:self action:@selector(setManifest:) context:data];
+    [app.codeItem loadWithTarget:self action:@selector(setManifest:) context:data];
     app.libItems = [];
     try {
         data = JSON.parse(data);
@@ -578,7 +578,7 @@
     [app removeEnv:self];
     var env = [[Env alloc] initWithName:name];
     [app addEnv:env];
-    [app.outlineView revealChildItem:env ofItem:app.rootItems[1]];
+    [app.outlineView revealChildItem:env ofItem:app.envsItem];
 }
 
 - (void)removeSelf

@@ -10,15 +10,14 @@
     @outlet CPView sidebarView;
     UseLibPanelController useLibPanelController;
     CPScrollView scrollView;
-    CPOutlineView outlineView;
-    CPArray items;
+    App app;
 }
 
 - (void)awakeFromCib
 {
     useLibPanelController = [UseLibPanelController new];
 
-    [self setScrollView];
+    [self reload];
     [DATA addObserver:self forKeyPath:"app" options:CPKeyValueObservingOptionNew context:nil];
 
     var plusButton = [CPButtonBar plusButton];
@@ -38,15 +37,14 @@
     [buttonBar setButtons:[plusButton, minusButton, actionPopupButton]];
 }
 
-- (void)setScrollView
+- (void)reload
 {
+    app = DATA.app;
     [scrollView removeFromSuperview];
     var sidebarBoundsSize = [sidebarView boundsSize];
     var scrollViewFrame = CGRectMake(0, 0, sidebarBoundsSize.width, sidebarBoundsSize.height - [buttonBar frameSize].height);
-    if (DATA.app && DATA.app.scrollView) {
-        scrollView = DATA.app.scrollView;
-        outlineView = DATA.app.outlineView;
-        items = DATA.app.rootItems;
+    if (app && app.scrollView) {
+        scrollView = app.scrollView;
         [scrollView setFrame:scrollViewFrame];
         [sidebarView addSubview:scrollView];
         return;
@@ -55,6 +53,9 @@
     [scrollView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
     [scrollView setHasHorizontalScroller:NO];
     [scrollView setAutohidesScrollers:YES];
+    [sidebarView addSubview:scrollView];
+    if (!app)
+        return;
     outlineView = [[CPOutlineView alloc] initWithFrame:[[scrollView contentView] bounds]];
     [outlineView setAllowsMultipleSelection:YES];
     [outlineView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
@@ -65,21 +66,14 @@
     [column setDataView:[NodeView new]];
     [outlineView addTableColumn:column];
     [outlineView setOutlineTableColumn:column];
-    if (DATA.app) {
-        DATA.app.scrollView = scrollView;
-        DATA.app.outlineView = outlineView;
-        DATA.app.rootItems = items = [
-            [[CodeItem alloc] initWithApp:DATA.app],
-            [[EnvsItem alloc] initWithApp:DATA.app],
-            [[LibsItem alloc] initWithApp:DATA.app]
-        ];
-    } else {
-        items = [];
-    }
+    app.scrollView = scrollView;
+    app.outlineView = outlineView;
+    app.codeItem = [[CodeItem alloc] initWithApp:app];
+    app.envsItem = [[EnvsItem alloc] initWithApp:app];
+    app.libsItem = [[LibsItem alloc] initWithApp:app];
     [outlineView setDataSource:self];
-    [outlineView expandItem:items[0]];
+    [outlineView expandItem:app.codeItem];
     [scrollView setDocumentView:outlineView];
-    [sidebarView addSubview:scrollView];
     [outlineView sizeLastColumnToFit];
 }
 
@@ -99,33 +93,33 @@
 - (void)showNewFile
 {
     function callback(parentItem, parentFolder) {
-        var newFileItem = [[NewFileItem alloc] initWithApp:DATA.app
+        var newFileItem = [[NewFileItem alloc] initWithApp:app
                                                       name:[parentFolder uniqueChildNameWithPrefix:"untitled file"]];
         [parentFolder addFile:newFileItem];
         return newFileItem;
     };
-    [items[0] loadWithTarget:self action:@selector(showNewEntry:) context:callback];
+    [app.codeItem loadWithTarget:self action:@selector(showNewEntry:) context:callback];
 }
 
 - (void)showNewFolder
 {
     function callback(parentItem, parentFolder) {
-        var newFolderItem = [[NewFolderItem alloc] initWithApp:DATA.app
+        var newFolderItem = [[NewFolderItem alloc] initWithApp:app
                                                           name:[parentFolder uniqueChildNameWithPrefix:"untitled folder"]];
         [parentFolder addFolder:newFolderItem];
         return newFolderItem;
     };
-    [items[0] loadWithTarget:self action:@selector(showNewEntry:) context:callback];
+    [app.codeItem loadWithTarget:self action:@selector(showNewEntry:) context:callback];
 }
 
 - (void)showNewEntry:(Function)callback
 {
     var selectedItem = [outlineView itemAtRow:[outlineView selectedRow]];
     var parentItem = (
-        [self rootForItem:selectedItem] === items[0]
+        [self rootForItem:selectedItem] === app.codeItem
         ? [selectedItem isKindOfClass:File] ? [outlineView parentForItem:selectedItem] : selectedItem
-        : items[0]);
-    var parentFolder = parentItem === items[0] ? DATA.app.code : parentItem;
+        : app.codeItem);
+    var parentFolder = parentItem === app.codeItem ? app.code : parentItem;
     [outlineView expandItem:parentItem];
     setTimeout(
         function () {
@@ -138,28 +132,28 @@
 
 - (void)showNewEnv
 {
-    [items[1] loadWithTarget:self action:@selector(doShowNewEnv)];
+    [app.envsItem loadWithTarget:self action:@selector(doShowNewEnv)];
 }
 
 - (void)doShowNewEnv
 {
-    [outlineView expandItem:items[1]];
+    [outlineView expandItem:app.envsItem];
     var name = "untitled-env";
-    if ([DATA.app hasEnvWithName:name]) {
+    if ([app hasEnvWithName:name]) {
         name += "-";
         var newName;
         for (var i = 2;; ++i) {
             newName = name + i;
-            if (![DATA.app hasEnvWithName:newName])
+            if (![app hasEnvWithName:newName])
                 break;
         }
         name = newName;
     }
-    var newEnvItem = [[NewEnvItem alloc] initWithApp:DATA.app name:name];
+    var newEnvItem = [[NewEnvItem alloc] initWithApp:app name:name];
     setTimeout(
         function () {
-            [DATA.app addEnv:newEnvItem];
-            [outlineView reloadItem:items[1] reloadChildren:YES];
+            [app addEnv:newEnvItem];
+            [outlineView reloadItem:app.envsItem reloadChildren:YES];
             [outlineView scrollRectToVisible:[outlineView frameOfDataViewAtColumn:0 row:[outlineView rowForItem:newEnvItem]]];
         },
         0);
@@ -167,7 +161,7 @@
 
 - (id)outlineView:(CPOutlineView)anOutlineview child:(int)index ofItem:(id)item
 {
-    return item ? [item childAtIndex:index] : items[index];
+    return item ? [item childAtIndex:index] : [app.codeItem, app.envsItem, app.libsItem][index];
 }
 
 - (BOOL)outlineView:(CPOutlineView)anOutlineview isItemExpandable:(id)item
@@ -177,7 +171,7 @@
 
 - (int)outlineView:(CPOutlineView)anOutlineview numberOfChildrenOfItem:(id)item
 {
-    return item ? [item numberOfChildren] : items.length;
+    return item ? [item numberOfChildren] : 3;
 }
 
 - (id)outlineView:(CPOutlineView)anOutlineview objectValueForTableColumn:(CPTableColumn)tableColumn byItem:(id)item

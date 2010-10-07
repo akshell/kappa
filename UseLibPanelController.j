@@ -37,7 +37,7 @@
 - (void)showWindow:(id)sender
 {
     app = DATA.app;
-    [app.rootItems[2] load];
+    [app.libsItem load];
     [super showWindow:sender];
 }
 
@@ -66,7 +66,7 @@
 
 - (@action)submit:(id)sender
 {
-    [app.rootItems[2] loadWithTarget:self action:@selector(doSubmit)];
+    [app.libsItem loadWithTarget:self action:@selector(doSubmit)];
 }
 
 - (void)doSubmit
@@ -142,7 +142,7 @@
         manifest = {libs:{}};
         file = [[File alloc] initWithName:"manifest.json"];
         [app.code addFile:file];
-        [app.outlineView reloadItem:app.rootItems[0] reloadChildren:YES];
+        [app.outlineView reloadItem:app.codeItem reloadChildren:YES];
     }
     manifest.libs[[aliasField stringValue]] = identifier;
     [file setContent:JSON.stringify(manifest, null, "  ")];
@@ -163,7 +163,7 @@
                                        appName:[nameField stringValue]
                                        version:[versionField stringValue]];
     app.libItems.push(libItem);
-    [app.outlineView revealChildItem:libItem ofItem:app.rootItems[2]];
+    [app.outlineView revealChildItem:libItem ofItem:app.libsItem];
     [self close];
 }
 
