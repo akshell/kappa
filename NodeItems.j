@@ -25,9 +25,14 @@
 
 @implementation DeferredItem : SmartItem
 {
-    id target;
-    SEL action;
-    JSObject context;
+    CPArray invocations;
+}
+
+- (id)initWithApp:(App)anApp
+{
+    if (self = [super initWithApp:anApp])
+        invocations = [];
+    return self;
 }
 
 - (BOOL)isExpandable
@@ -40,12 +45,6 @@
     return NO;
 }
 
-- (void)load
-{
-    if (![self isReady])
-        [self doLoad];
-}
-
 - (void)doLoad
 {
     if (isLoading)
@@ -56,15 +55,23 @@
     [request send];
 }
 
-- (void)loadWithTarget:(id)aTarget action:(SEL)anAction context:(JSObject)aContext
+- (void)load
+{
+    if (![self isReady])
+        [self doLoad];
+}
+
+- (void)loadWithTarget:(id)target action:(SEL)action context:(JSObject)context
 {
     if ([self isReady]) {
-        objj_msgSend(aTarget, anAction, aContext);
+        objj_msgSend(target, action, context);
         return;
     }
-    target = aTarget;
-    action = anAction;
-    context = aContext;
+    var invocation = [CPInvocation invocationWithMethodSignature:nil];
+    [invocation setTarget:target];
+    [invocation setSelector:action];
+    [invocation setArgument:context atIndex:2];
+    invocations.push(invocation);
     [self doLoad];
     [app.outlineView reloadItem:self];
 }
@@ -89,8 +96,8 @@
     setTimeout(
         function () {
             [app.outlineView reloadItem:self reloadChildren:YES];
-            objj_msgSend(target, action, context);
-            target = nil;
+            invocations.forEach(function (invocation) { [invocation invoke]; });
+            invocations = [];
         },
         0);
 }
