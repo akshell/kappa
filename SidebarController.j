@@ -13,7 +13,6 @@
     CPButton minusButton;
     CPButton actionPopUpButton;
     CPMenu actionsMenu;
-    CPArray addControls;
     CPArray deleteControls;
     CPArray moveControls;
     CPArray duplicateControls;
@@ -36,7 +35,6 @@
     [[actionMenu addItemWithTitle:"Use Library…" action:@selector(showWindow:) keyEquivalent:nil]
         setTarget:useLibPanelController];
     [actionMenu addItem:[CPMenuItem separatorItem]];
-    addControls = [plusButton];
     deleteControls = [[actionMenu addItemWithTitle:"Delete…" action:nil keyEquivalent:nil], minusButton];
     moveControls = [[actionMenu addItemWithTitle:"Move…" action:nil keyEquivalent:nil]];
     duplicateControls = [[actionMenu addItemWithTitle:"Duplicate" action:nil keyEquivalent:nil]];
@@ -207,39 +205,29 @@
 - (void)outlineViewSelectionDidChange:(id)sender
 {
     var indexSet = [app.outlineView selectedRowIndexes];
-    var isAddable = YES;
-    var isDeletable = YES;
-    var isMovable = YES;
-    var isDuplicatable = YES;
     var firstRootItem;
-    var firstParentItem;
-    for (var index = [indexSet firstIndex]; index != CPNotFound; index = [indexSet indexGreaterThanIndex:index]) {
+    var rootIsCommon = YES;
+    var itemsAreDeletable = YES;
+    for (var index = [indexSet firstIndex]; index != CPNotFound && rootIsCommon; index = [indexSet indexGreaterThanIndex:index]) {
         var item = [app.outlineView itemAtRow:index];
         var rootItem = [self rootForItem:item];
         if (firstRootItem)
-            isAddable = isAddable && rootItem === firstRootItem;
+            rootIsCommon = rootItem === firstRootItem;
         else
             firstRootItem = rootItem;
-        isDeletable = isDeletable && item !== rootItem && (rootItem !== app.libsItem || [item isKindOfClass:LibItem]);
-        isDuplicatable = isDuplicatable && item !== rootItem && rootItem === app.code;
-        isMovable = isMovable && isDuplicatable;
-        if (isMovable) {
-            var parentItem = [app.outlineView parentForItem:item];
-            if (firstParentItem)
-                isMovable = firstParentItem === parentItem;
-            else
-                firstParentItem = parentItem;
-        }
+        itemsAreDeletable =
+            itemsAreDeletable && rootIsCommon && item !== rootItem && (rootItem !== app.libsItem || [item isKindOfClass:LibItem]);
     }
-    var isRenamable = [indexSet count] == 1 && isDeletable;
+    var itemsAreMovableAndDuplicatable = itemsAreDeletable && firstRootItem === app.code;
+    var itemIsRenamable = itemsAreDeletable && [indexSet count] == 1;
     [actionsMenu _highlightItemAtIndex:CPNotFound];
     [[actionPopUpButton menu] _highlightItemAtIndex:CPNotFound];
+    [plusButton setEnabled:rootIsCommon];
     [
-        [addControls, isAddable],
-        [deleteControls, isDeletable],
-        [moveControls, isMovable],
-        [duplicateControls, isDuplicatable],
-        [renameControls, isRenamable]
+        [deleteControls, itemsAreDeletable],
+        [moveControls, itemsAreMovableAndDuplicatable],
+        [duplicateControls, itemsAreMovableAndDuplicatable],
+        [renameControls, itemIsRenamable]
     ].forEach(
         function (pair) {
             pair[0].forEach(function (control) { [control setEnabled:pair[1]]; });
