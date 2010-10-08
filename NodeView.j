@@ -8,7 +8,7 @@ var makeImage = function (path) {
 
 @implementation NodeView : CPView
 {
-    BOOL isSpinner;
+    BOOL isLoading;
 }
 
 - (id)init
@@ -24,8 +24,8 @@ var makeImage = function (path) {
 {
     if (!item)
         return;
-    isSpinner = [item imageName] == "Spinner";
-    var path = isSpinner ? "WhiteSpinner.gif" : [item imageName] + ".png";
+    isLoading = item.isLoading;
+    var path = isLoading ? "WhiteSpinner.gif" : [item imageName] + ".png";
     [[self subviews][0] setImage:makeImage(path)];
     if (![item isEditable]) {
         [[self subviews][1] setStringValue:[item name]];
@@ -47,14 +47,14 @@ var makeImage = function (path) {
 
 - (BOOL)setThemeState:(CPThemeState)state
 {
-    if (state == CPThemeStateSelectedDataView && isSpinner)
+    if (state == CPThemeStateSelectedDataView && isLoading)
         [[self subviews][0] setImage:makeImage("BlueSpinner.gif")];
     return [super setThemeState:state];
 }
 
 - (BOOL)unsetThemeState:(CPThemeState)state
 {
-    if (state == CPThemeStateSelectedDataView && isSpinner)
+    if (state == CPThemeStateSelectedDataView && isLoading)
         [[self subviews][0] setImage:makeImage("WhiteSpinner.gif")];
     return [super unsetThemeState:state];
 }

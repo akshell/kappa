@@ -14,6 +14,20 @@
     return [self itemAtRow:[self selectedRow]];
 }
 
+- (CPArray)selectedItems
+{
+    var indexSet = [self selectedRowIndexes];
+    var items = [];
+    for (var index = [indexSet firstIndex]; index != CPNotFound; index = [indexSet indexGreaterThanIndex:index])
+        items.push([self itemAtRow:index]);
+    return items;
+}
+
+- (void)selectItem:(id)item
+{
+    [self selectRowIndexes:[CPIndexSet indexSetWithIndex:[self rowForItem:item]] byExtendingSelection:NO];
+}
+
 - (void)showItem:(id)item
 {
     [self scrollRectToVisible:[self frameOfDataViewAtColumn:0 row:[self rowForItem:item]]];

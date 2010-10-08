@@ -153,17 +153,22 @@
     [envs removeObject:env];
 }
 
-- (void)addLib:(id)lib
-{
-    libs.push(lib);
-}
-
 - (BOOL)hasLibWithName:(CPString)aName
 {
     for (var i = 0; i < libs.length; ++i)
         if (libs[i].name == aName)
             return YES;
     return NO;
+}
+
+- (void)addLib:(id)lib
+{
+    libs.push(lib);
+}
+
+- (void)removeLib:(id)lib
+{
+    [libs removeObject:lib];
 }
 
 @end

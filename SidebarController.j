@@ -100,6 +100,11 @@
             controls.push(item);
             [actionsMenu addItem:item];
         });
+    deleteControls.forEach(
+        function (control) {
+            [control setTarget:self];
+            [control setAction:@selector(showDelete)];
+        });
     [self reload];
 }
 
@@ -192,6 +197,124 @@
     }
 }
 
+- (void)showDelete
+{
+    var items = [app.outlineView selectedItems];
+    var description;
+    var action;
+    switch ([app.outlineView rootForItem:items[0]]) {
+    case app.code:
+        description =
+            items.length == 1
+            ? ([items[0] isKindOfClass:File] ? "file" : "folder") + " \"" + items[0].name + "\""
+            : "selected " + items.length + " entries";
+        action = @selector(deleteEntries);
+        break;
+    case app.envsItem:
+        description =
+            items.length == 1 ? "environment \"" + items[0].name + "\"" : "selected " + items.length + " environments";
+        action = @selector(deleteEnvs);
+        break;
+    case app.libsItem:
+        description =
+            (items.length == 1 ? "library \"" + items[0].name + "\"" : "selected " + items.length + " libraries") +
+            " from the app";
+        action = @selector(deleteLibs);
+        break;
+    }
+    [[[Confirm alloc] initWithMessage:"Are you sure want to delete the " + description + "?"
+                              comment:"You cannot undo this action."
+                               target:self
+                               action:action]
+        showPanel];
+}
+
+- (void)deleteEntries
+{
+    var entries = [app.outlineView selectedItems];
+    entries.reverse();
+    var paths = entries.map(
+        function (entry) {
+            entry.isLoading = YES;
+            [app.outlineView reloadItem:entry];
+            return [app.code pathOfItem:entry];
+        });
+    var request = [[HTTPRequest alloc] initWithMethod:"POST"
+                                                  URL:"/apps/" + app.name + "/code/"
+                                               target:self
+                                               action:@selector(didDelete:entries:)];
+    [request setContext:entries];
+    [request send:{action: "rm", paths: paths}];
+    [app.outlineView selectItem:app.code];
+}
+
+- (void)didDelete:(JSObject)data entries:(CPArray)entries
+{
+    entries.forEach(
+        function (entry) {
+            var parentFolder = [app.outlineView parentForItem:entry];
+            if ([entry isKindOfClass:File])
+                [parentFolder removeFile:entry];
+            else
+                [parentFolder removeFolder:entry];
+            [app.outlineView reloadItem:parentFolder reloadChildren:YES];
+            if (parentFolder === app.code && entry.name == "manifest.json") {
+                app.libs = [];
+                [app.outlineView reloadItem:app.libsItem reloadChildren:YES];
+            }
+        });
+}
+
+- (void)deleteEnvs
+{
+    [app.outlineView selectedItems].forEach(
+        function (env) {
+            env.isLoading = YES;
+            [app.outlineView reloadItem:env];
+            var request = [[HTTPRequest alloc] initWithMethod:"DELETE"
+                                                          URL:"/apps/" + app.name + "/envs/" + env.name
+                                                       target:self
+                                                       action:@selector(didDelete:env:)];
+            [request setContext:env];
+            [request send];
+        });
+    [app.outlineView selectItem:app.envsItem];
+}
+
+- (void)didDelete:(JSObject)data env:(Env)env
+{
+    [app removeEnv:env];
+    [app.outlineView reloadItem:app.envsItem reloadChildren:YES];
+}
+
+- (void)deleteLibs
+{
+    var manifest = JSON.parse([app.code fileWithName:"manifest.json"].content);
+    var libs = [app.outlineView selectedItems];
+    libs.forEach(
+        function (lib) {
+            lib.isLoading = YES;
+            [app.outlineView reloadItem:lib];
+            delete manifest.libs[lib.name];
+        });
+    var content = JSON.stringify(manifest, null, "  ");
+    var request = [[HTTPRequest alloc] initWithMethod:"PUT"
+                                                  URL:"/apps/" + app.name + "/code/manifest.json"
+                                               target:self
+                                               action:@selector(didDelete:libs:)];
+    [request setContext:{content:content, libs: libs}];
+    [request setValue:"application/json" forHeader:"Content-Type"];
+    [request send:content];
+    [app.outlineView selectItem:app.libsItem];
+}
+
+- (void)didDelete:(JSObject)data libs:(JSObject)context
+{
+    [[app.code fileWithName:"manifest.json"] setContent:context.content];
+    context.libs.forEach(function (lib) { [app removeLib:lib]; });
+    [app.outlineView reloadItem:app.libsItem reloadChildren:YES];
+}
+
 - (id)outlineView:(CPOutlineView)anOutlineview child:(int)index ofItem:(id)item
 {
     return item ? [item childAtIndex:index] : [app.code, app.envsItem, app.libsItem][index];
@@ -214,22 +337,24 @@
 
 - (void)outlineViewSelectionDidChange:(id)sender
 {
-    var indexSet = [app.outlineView selectedRowIndexes];
+    var items = [app.outlineView selectedItems];
     var firstRootItem;
     var rootIsCommon = YES;
     var itemsAreDeletable = YES;
-    for (var index = [indexSet firstIndex]; index != CPNotFound && rootIsCommon; index = [indexSet indexGreaterThanIndex:index]) {
-        var item = [app.outlineView itemAtRow:index];
+    for (var i = 0; i < items.length && rootIsCommon; ++i) {
+        var item = items[i];
         var rootItem = [app.outlineView rootForItem:item];
         if (firstRootItem)
             rootIsCommon = rootItem === firstRootItem;
         else
             firstRootItem = rootItem;
         itemsAreDeletable =
-            itemsAreDeletable && rootIsCommon && item !== rootItem && (rootItem !== app.libsItem || [item isKindOfClass:LibItem]);
+            itemsAreDeletable && rootIsCommon && item !== rootItem &&
+            (rootItem !== app.libsItem || [item isKindOfClass:LibItem]) &&
+            (rootItem !== app.envsItem || item !== app.envs[0]);
     }
     var itemsAreMovableAndDuplicatable = itemsAreDeletable && firstRootItem === app.code;
-    var itemIsRenamable = itemsAreDeletable && [indexSet count] == 1;
+    var itemIsRenamable = itemsAreDeletable && items.length == 1;
     [actionsMenu _highlightItemAtIndex:CPNotFound];
     [[actionPopUpButton menu] _highlightItemAtIndex:CPNotFound];
     [plusButton setEnabled:rootIsCommon];

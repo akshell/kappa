@@ -16,11 +16,6 @@
     return self;
 }
 
-- (CPString)imageName
-{
-    return isLoading ? "Spinner" : [self getImageName];
-}
-
 @end
 
 @implementation DeferredItem : SmartItem
@@ -168,7 +163,7 @@
     return "Code";
 }
 
-- (CPString)getImageName
+- (CPString)imageName
 {
     return "Code";
 }
@@ -191,6 +186,18 @@
 - (unsigned)getNumberOfChildren
 {
     return [root numberOfChildren];
+}
+
+- (CPString)pathOfItem:(id)item
+{
+    var parts = [];
+    while (item !== self) {
+        if (!item)
+            return nil;
+        parts.unshift(item.name);
+        item = [app.outlineView parentForItem:item];
+    }
+    return parts.join("/");
 }
 
 - (id)forward:(SEL)selector :(marg_list)args
@@ -229,7 +236,7 @@
     return "Environments";
 }
 
-- (CPString)getImageName
+- (CPString)imageName
 {
     return "Envs";
 }
@@ -352,7 +359,7 @@
     return "Libraries";
 }
 
-- (CPString)getImageName
+- (CPString)imageName
 {
     return "Libs";
 }
@@ -479,22 +486,11 @@
     [app.outlineView reloadItem:parentFolder reloadChildren:YES];
 }
 
-- (CPString)path
-{
-    var parts = [];
-    var item = self;
-    do {
-        parts.unshift(item.name);
-        item = [app.outlineView parentForItem:item];
-    } while ([item isKindOfClass:Folder]);
-    return parts.join("/");
-}
-
 @end
 
 @implementation NewFileItem : NewEntryItem
 
-- (CPString)getImageName
+- (CPString)imageName
 {
     return "File";
 }
@@ -502,7 +498,7 @@
 - (void)doSubmit
 {
     var request = [[HTTPRequest alloc] initWithMethod:"PUT"
-                                                  URL:"/apps/" + app.name + "/code/" + [self path]
+                                                  URL:"/apps/" + app.name + "/code/" + [app.code pathOfItem:self]
                                                target:self
                                                action:@selector(didReceiveResponse)];
     [request setErrorAction:@selector(removeSelf)];
@@ -522,7 +518,7 @@
 
 @implementation NewFolderItem : NewEntryItem
 
-- (CPString)getImageName
+- (CPString)imageName
 {
     return "Folder";
 }
@@ -534,7 +530,7 @@
                                                target:self
                                                action:@selector(didReceiveResponse)];
     [request setErrorAction:@selector(removeSelf)];
-    [request send:{action: "mkdir", path: [self path]}];
+    [request send:{action: "mkdir", path: [app.code pathOfItem:self]}];
 }
 
 - (void)didReceiveResponse
@@ -550,7 +546,7 @@
 
 @implementation NewEnvItem : NewItem
 
-- (CPString)getImageName
+- (CPString)imageName
 {
     return "Env";
 }
