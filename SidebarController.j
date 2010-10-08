@@ -107,13 +107,6 @@
         [self reload];
 }
 
-- (id)rootForItem:(id)item
-{
-    for (var parentItem = item; parentItem; parentItem = [app.outlineView parentForItem:parentItem])
-        item = parentItem;
-    return item;
-}
-
 - (void)showNewFile
 {
     function callback(parentFolder) {
@@ -138,9 +131,9 @@
 
 - (void)showNewEntry:(Function)callback
 {
-    var selectedItem = [app.outlineView itemAtRow:[app.outlineView selectedRow]];
+    var selectedItem = [app.outlineView selectedItem];
     var parentFolder = (
-        [self rootForItem:selectedItem] === app.code
+        [app.outlineView rootForItem:selectedItem] === app.code
         ? [selectedItem isKindOfClass:File] ? [app.outlineView parentForItem:selectedItem] : selectedItem
         : app.code);
     [app.outlineView expandItem:parentFolder];
@@ -148,7 +141,7 @@
         function () {
             var item = callback(parentFolder);
             [app.outlineView reloadItem:parentFolder reloadChildren:YES];
-            [app.outlineView scrollRectToVisible:[app.outlineView frameOfDataViewAtColumn:0 row:[app.outlineView rowForItem:item]]];
+            [app.outlineView showItem:item];
         },
         0);
 }
@@ -177,7 +170,7 @@
         function () {
             [app addEnv:newEnvItem];
             [app.outlineView reloadItem:app.envsItem reloadChildren:YES];
-            [app.outlineView scrollRectToVisible:[app.outlineView frameOfDataViewAtColumn:0 row:[app.outlineView rowForItem:newEnvItem]]];
+            [app.outlineView showItem:newEnvItem];
         },
         0);
 }
@@ -210,7 +203,7 @@
     var itemsAreDeletable = YES;
     for (var index = [indexSet firstIndex]; index != CPNotFound && rootIsCommon; index = [indexSet indexGreaterThanIndex:index]) {
         var item = [app.outlineView itemAtRow:index];
-        var rootItem = [self rootForItem:item];
+        var rootItem = [app.outlineView rootForItem:item];
         if (firstRootItem)
             rootIsCommon = rootItem === firstRootItem;
         else

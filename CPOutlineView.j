@@ -1,6 +1,23 @@
 // (c) 2010 by Anton Korenyushkin
 
-@implementation CPOutlineView (RevealChildItemOfItem)
+@implementation CPOutlineView (Utils)
+
+- (id)rootForItem:(id)item
+{
+    for (var parentItem = item; parentItem; parentItem = [self parentForItem:parentItem])
+        item = parentItem;
+    return item;
+}
+
+- (id)selectedItem
+{
+    return [self itemAtRow:[self selectedRow]];
+}
+
+- (void)showItem:(id)item
+{
+    [self scrollRectToVisible:[self frameOfDataViewAtColumn:0 row:[self rowForItem:item]]];
+}
 
 - (void)revealChildItem:(id)childItem ofItem:(id)parentItem
 {
