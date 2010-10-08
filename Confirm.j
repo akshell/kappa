@@ -22,7 +22,7 @@
 
 - (void)cancel
 {
-    invocation = nil;
+    target = nil;
     [self close];
 }
 
