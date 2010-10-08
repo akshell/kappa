@@ -25,6 +25,8 @@
 {
     useLibPanelController = [UseLibPanelController new];
     plusButton = [CPButtonBar plusButton];
+    [plusButton setTarget:self];
+    [plusButton setAction:@selector(showAdd)];
     minusButton = [CPButtonBar minusButton];
     actionPopUpButton = [CPButtonBar actionPopupButton];
     var actionMenu = [actionPopUpButton menu];
@@ -173,6 +175,21 @@
             [app.outlineView showItem:newEnvItem];
         },
         0);
+}
+
+- (void)showAdd
+{
+    switch ([app.outlineView rootForItem:[app.outlineView selectedItem]]) {
+    case app.code:
+        [self showNewFile];
+        break;
+    case app.envsItem:
+        [self showNewEnv];
+        break;
+    case app.libsItem:
+        [useLibPanelController showWindow:nil];
+        break;
+    }
 }
 
 - (id)outlineView:(CPOutlineView)anOutlineview child:(int)index ofItem:(id)item
