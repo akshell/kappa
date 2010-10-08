@@ -180,6 +180,7 @@
     [[mainMenu itemAtIndex:2] setEnabled:enabled];
     [[mainMenu itemAtIndex:3] setEnabled:enabled];
     var fileSubmenu = [[mainMenu itemAtIndex:1] submenu];
+    [fileSubmenu _highlightItemAtIndex:CPNotFound];
     for (var i = 1; i < 9; ++i)
         [[fileSubmenu itemAtIndex:i] setEnabled:enabled];
     [[mainWindow toolbar] items].forEach(
