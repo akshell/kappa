@@ -240,7 +240,7 @@
             return [app.code pathOfItem:entry];
         });
     var request = [[HTTPRequest alloc] initWithMethod:"POST"
-                                                  URL:"/apps/" + app.name + "/code/"
+                                                  URL:[app url] + "code/"
                                                target:self
                                                action:@selector(didDelete:entries:)];
     [request setContext:entries];
@@ -272,7 +272,7 @@
             env.isLoading = YES;
             [app.outlineView reloadItem:env];
             var request = [[HTTPRequest alloc] initWithMethod:"DELETE"
-                                                          URL:"/apps/" + app.name + "/envs/" + env.name
+                                                          URL:[app url] + "envs/" + env.name
                                                        target:self
                                                        action:@selector(didDelete:env:)];
             [request setContext:env];
@@ -299,7 +299,7 @@
         });
     var content = JSON.stringify(manifest, null, "  ");
     var request = [[HTTPRequest alloc] initWithMethod:"PUT"
-                                                  URL:"/apps/" + app.name + "/code/manifest.json"
+                                                  URL:[app url] + "code/manifest.json"
                                                target:self
                                                action:@selector(didDelete:libs:)];
     [request setContext:{content:content, libs: libs}];

@@ -130,6 +130,11 @@
     CPArray libs @accessors;
 }
 
+- (CPString)url
+{
+    return "/apps/" + name + "/";
+}
+
 - (BOOL)hasEnvWithName:(CPString)aName
 {
     var nameLower = aName.toLowerCase();

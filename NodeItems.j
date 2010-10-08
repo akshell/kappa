@@ -175,7 +175,7 @@
 
 - (CPString)url
 {
-    return "/apps/" + app.name + "/code/";
+    return [app url] + "code/";
 }
 
 - (void)processData:(JSObject)data
@@ -248,7 +248,7 @@
 
 - (CPString)url
 {
-    return "/apps/" + app.name + "/envs/";
+    return [app url] + "envs/";
 }
 
 - (void)processData:(CPArray)data
@@ -371,7 +371,7 @@
 
 - (CPString)url
 {
-    return "/apps/" + app.name + "/code/manifest.json";
+    return [app url] + "code/manifest.json";
 }
 
 - (void)processData:(CPString)data
@@ -498,7 +498,7 @@
 - (void)doSubmit
 {
     var request = [[HTTPRequest alloc] initWithMethod:"PUT"
-                                                  URL:"/apps/" + app.name + "/code/" + [app.code pathOfItem:self]
+                                                  URL:[app url] + "code/" + [app.code pathOfItem:self]
                                                target:self
                                                action:@selector(didReceiveResponse)];
     [request setErrorAction:@selector(removeSelf)];
@@ -526,7 +526,7 @@
 - (void)doSubmit
 {
     var request = [[HTTPRequest alloc] initWithMethod:"POST"
-                                                  URL:"/apps/" + app.name + "/code/"
+                                                  URL:[app url] + "code/"
                                                target:self
                                                action:@selector(didReceiveResponse)];
     [request setErrorAction:@selector(removeSelf)];
@@ -569,7 +569,7 @@
         }
     }
     var request = [[HTTPRequest alloc] initWithMethod:"POST"
-                                                  URL:"/apps/" + app.name + "/envs/"
+                                                  URL:[app url] + "envs/"
                                                target:self
                                                action:@selector(didReceiveResponse)];
     [request setErrorAction:@selector(removeSelf)];

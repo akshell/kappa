@@ -249,7 +249,7 @@
 
 - (void)doDeleteApp
 {
-    [[[HTTPRequest alloc] initWithMethod:"DELETE" URL:"/apps/" + DATA.app.name + "/"] send];
+    [[[HTTPRequest alloc] initWithMethod:"DELETE" URL:[DATA.app url]] send];
     [appsMenu removeItemAtIndex:DATA.appIndex];
     var appPopUpButton = [self appPopUpButton];
     [appPopUpButton removeItemAtIndex:DATA.appIndex];

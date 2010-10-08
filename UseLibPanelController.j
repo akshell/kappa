@@ -144,7 +144,7 @@
     manifest.libs[[aliasField stringValue]] = identifier;
     [file setContent:JSON.stringify(manifest, null, "  ")];
     var request = [[HTTPRequest alloc] initWithMethod:"PUT"
-                                                  URL:"/apps/" + app.name + "/code/manifest.json"
+                                                  URL:[app url] + "code/manifest.json"
                                                target:self
                                                action:@selector(didPutManifest)];
     [request setWindow:[self window]];
