@@ -102,13 +102,12 @@
         [[self window] makeFirstResponder:authorField];
 }
 
-- (void)showManifestErrorSheetWithMessage:(CPString)message
+- (void)showManifestErrorPanelWithMessage:(CPString)message
 {
+    [self close];
     [[[Alert alloc] initWithMessage:message
-                            comment:"Please fix the manifest file before adding libraries to the app."
-                             target:self
-                             action:@selector(close)]
-        showSheetForWindow:[self window]];
+                            comment:"Please fix the manifest file before adding libraries to the app."]
+        showPanel];
 }
 
 - (void)didReceiveResponse:(JSObject)data
@@ -123,17 +122,17 @@
         try {
             manifest = JSON.parse(file.content);
         } catch (error) {
-            [self showManifestErrorSheetWithMessage:"The file \"manifest.json\" contains incorrect JSON data."];
+            [self showManifestErrorPanelWithMessage:"The file \"manifest.json\" contains incorrect JSON data."];
             return;
         }
         if (typeof(manifest) != "object") {
-            [self showManifestErrorSheetWithMessage:"The file \"manifest.json\" must contain a JSON object."];
+            [self showManifestErrorPanelWithMessage:"The file \"manifest.json\" must contain a JSON object."];
             return;
         }
         if (!manifest.libs) {
             manifest.libs = {};
         } else if (typeof(manifest.libs) != "object") {
-            [self showManifestErrorSheetWithMessage:"The \"libs\" manifest property must be an object."];
+            [self showManifestErrorPanelWithMessage:"The \"libs\" manifest property must be an object."];
             return;
         }
     } else {
