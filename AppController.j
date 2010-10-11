@@ -1,6 +1,7 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "Data.j"
+@import "AppPropertyProxy.j"
 @import "SidebarController.j"
 @import "AboutPanelController.j"
 @import "KeyPanelController.j"
@@ -10,12 +11,14 @@
 @import "ResetPasswordPanelController.j"
 @import "NewAppPanelController.j"
 @import "ContactPanelController.j"
+@import "UseLibPanelController.j"
 @import "Confirm.j"
 
 @implementation AppController : CPObject
 {
     @outlet CPWindow mainWindow;
-    @outlet SidebarController sidebarController;
+    @outlet CPView sidebarView;
+    AppPropertyProxy sidebarControllerProxy;
     AboutPanelController aboutPanelController;
     KeyPanelController keyPanelController;
     ChangePasswordPanelController changePasswordPanelController;
@@ -24,14 +27,17 @@
     LoginPanelController loginPanelController;
     ContactPanelController contactPanelController;
     NewAppPanelController newAppPanelController;
+    UseLibPanelController useLibPanelController;
     CPMenuItem passwordMenuItem;
     CPMenu fileMenu;
     CPMenu appsMenu;
+    CPMenuItem actionsMenuItem;
     CPPopUpButton appPopUpButton;
 }
 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification
 {
+    sidebarControllerProxy = [[AppPropertyProxy alloc] initWithPropertyName:"sidebarController"];
     aboutPanelController = [AboutPanelController new];
     keyPanelController = [KeyPanelController new];
     changePasswordPanelController = [ChangePasswordPanelController new];
@@ -40,6 +46,7 @@
     loginPanelController = [[LoginPanelController alloc] initWithResetPasswordPanelController:resetPasswordPanelController];
     contactPanelController = [ContactPanelController new];
     newAppPanelController = [[NewAppPanelController alloc] initWithTarget:self action:@selector(didCreateAppWithName:)];
+    useLibPanelController = [UseLibPanelController new];
 
     var mainMenu = [CPApp mainMenu];
     [mainMenu removeAllItems];
@@ -56,33 +63,28 @@
     fileMenu = [CPMenu new];
     [[fileMenu addItemWithTitle:"New App…" action:@selector(showWindow:) keyEquivalent:nil]
         setTarget:newAppPanelController];
-    [[fileMenu addItemWithTitle:"New File" action:@selector(showNewFile) keyEquivalent:nil]
-        setTarget:sidebarController];
-    [[fileMenu addItemWithTitle:"New Folder" action:@selector(showNewFolder) keyEquivalent:nil]
-        setTarget:sidebarController];
+    [fileMenu addItemWithTitle:"New File" target:sidebarControllerProxy action:@selector(showNewFile)];
+    [fileMenu addItemWithTitle:"New Folder" target:sidebarControllerProxy action:@selector(showNewFolder)];
     appsMenu = [CPMenu new];
     [[fileMenu addItemWithTitle:"Open App" action:nil keyEquivalent:nil] setSubmenu:appsMenu];
     [fileMenu addItem:[CPMenuItem separatorItem]];
     [fileMenu addItemWithTitle:"Close File \"xxx\"" action:nil keyEquivalent:nil];
     [fileMenu addItemWithTitle:"Save" action:nil keyEquivalent:nil];
     [fileMenu addItemWithTitle:"Save All" action:nil keyEquivalent:nil];
-    var actionsMenu = [CPMenu new];
-    [sidebarController setActionsMenu:actionsMenu];
-    [[fileMenu addItemWithTitle:"Actions" action:nil keyEquivalent:nil] setSubmenu:actionsMenu];
+    actionsMenuItem = [fileMenu addItemWithTitle:"Actions" action:nil keyEquivalent:nil];
+    [actionsMenuItem setSubmenu:[CPMenu new]];
     [[mainMenu addItemWithTitle:"File" action:nil keyEquivalent:nil] setSubmenu:fileMenu];
 
     var appMenu = [CPMenu new];
-    [[appMenu addItemWithTitle:"New Environment" action:@selector(showNewEnv) keyEquivalent:nil]
-        setTarget:sidebarController];
-    [[appMenu addItemWithTitle:"Use Library…" action:@selector(showWindow:) keyEquivalent:nil]
-        setTarget:sidebarController.useLibPanelController];
+    [appMenu addItemWithTitle:"New Environment" target:sidebarControllerProxy action:@selector(showNewEnv)];
+    [appMenu addItemWithTitle:"Use Library…" target:useLibPanelController action:@selector(showWindow:)];
     [appMenu addItem:[CPMenuItem separatorItem]];
     [appMenu addItemWithTitle:"Diff…" action:nil keyEquivalent:nil];
     [appMenu addItemWithTitle:"Commit…" action:nil keyEquivalent:nil];
     [appMenu addItem:[CPMenuItem separatorItem]];
     [appMenu addItemWithTitle:"Manage Domains…" action:nil keyEquivalent:nil];
     [appMenu addItemWithTitle:"Publish App…" action:nil keyEquivalent:nil];
-    [appMenu addItemWithTitle:"Delete App…" action:@selector(deleteApp) keyEquivalent:nil];
+    [appMenu addItemWithTitle:"Delete App…" action:@selector(showDeleteApp) keyEquivalent:nil];
     [[mainMenu addItemWithTitle:"App" action:nil keyEquivalent:nil] setSubmenu:appMenu];
 
     var viewMenu = [CPMenu new];
@@ -112,9 +114,11 @@
     [toolbar setDelegate:self];
     [mainWindow setToolbar:toolbar];
     [self fillAppMenus];
+    [self showSidebar];
 
     [DATA addObserver:self forKeyPath:"username" options:CPKeyValueObservingOptionNew context:nil];
     [DATA addObserver:self forKeyPath:"apps" options:CPKeyValueObservingOptionNew context:nil];
+    [DATA addObserver:self forKeyPath:"app" options:CPKeyValueObservingOptionNew context:nil];
 }
 
 - (CPPopUpButton)appPopUpButton
@@ -158,6 +162,23 @@
     [self setAppItemsEnabled:DATA.apps.length];
 }
 
+- (void)showSidebar
+{
+    if (DATA.app) {
+        if (!DATA.app.sidebarController)
+            DATA.app.sidebarController = [[SidebarController alloc] initWithApp:DATA.app
+                                                          useLibPanelController:useLibPanelController];
+        [DATA.app.sidebarController showInView:sidebarView withActionsMenuItem:actionsMenuItem];
+    } else {
+        var sidebarSize = [sidebarView boundsSize];
+        var buttonBar = [[CPButtonBar alloc] initWithFrame:CGRectMake(0, sidebarSize.height - 26, sidebarSize.width, 26)];
+        var buttons = [[CPButtonBar plusButton], [CPButtonBar minusButton], [CPButtonBar actionPopupButton]];
+        buttons.forEach(function (button) { [button setEnabled:NO]; });
+        [buttonBar setButtons:buttons];
+        [sidebarView addSubview:buttonBar];
+    }
+}
+
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
 {
     switch (keyPath) {
@@ -171,7 +192,11 @@
         [appsMenu removeAllItems];
         [[self appPopUpButton] removeAllItems];
         [self fillAppMenus];
-        break
+        break;
+    case "app":
+        [sidebarView setSubviews:[]];
+        [self showSidebar];
+        break;
     }
 }
 
@@ -205,10 +230,10 @@
 
 - (void)switchApp:(CPMenuItem)sender
 {
-    if ([sender title] == DATA.app.name)
+    var index = [[sender menu] indexOfItem:sender];
+    if (index == DATA.appIndex)
         return;
     [[appsMenu itemAtIndex:DATA.appIndex] setState:CPOffState];
-    var index = [[sender menu] indexOfItem:sender];
     [[appsMenu itemAtIndex:index] setState:CPOnState];
     [[self appPopUpButton] selectItemAtIndex:index];
     [DATA setAppIndex:index];
@@ -238,16 +263,16 @@
     [DATA setAppIndex:index];
 }
 
-- (void)deleteApp
+- (void)showDeleteApp
 {
     [[[Confirm alloc] initWithMessage:"Are you sure want to delete the app \"" + DATA.app.name + "\"?"
                               comment:"You cannot undo this action."
                                target:self
-                               action:@selector(doDeleteApp)]
+                               action:@selector(deleteApp)]
         showPanel];
 }
 
-- (void)doDeleteApp
+- (void)deleteApp
 {
     [[[HTTPRequest alloc] initWithMethod:"DELETE" URL:[DATA.app url]] send];
     [appsMenu removeItemAtIndex:DATA.appIndex];
@@ -305,7 +330,7 @@
         [item setMinSize:CGSizeMake(32, 32)];
         switch (itemIdentifier) {
         case "New":
-            [item setTarget:sidebarController];
+            [item setTarget:sidebarControllerProxy];
             [item setAction:@selector(showNewFile)];
             break;
         }

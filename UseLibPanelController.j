@@ -15,7 +15,6 @@
     @outlet CPTextField aliasLabel;
     @outlet CPTextField aliasField;
     @outlet CPButton useButton;
-    App app;
 }
 
 - (id)init
@@ -36,8 +35,7 @@
 
 - (void)showWindow:(id)sender
 {
-    app = DATA.app;
-    [app.libsItem load];
+    [DATA.app.libsItem load];
     [super showWindow:sender];
 }
 
@@ -66,13 +64,13 @@
 
 - (@action)submit:(id)sender
 {
-    [app.libsItem loadWithTarget:self action:@selector(doSubmit)];
+    [DATA.app.libsItem loadWithTarget:self action:@selector(doSubmit)];
 }
 
 - (void)doSubmit
 {
     var alias = [aliasField stringValue];
-    if ([app hasLibWithName:alias]) {
+    if ([DATA.app hasLibWithName:alias]) {
         [[[Alert alloc] initWithMessage:"The alias \"" + alias + "\" is already taken."
                                 comment:"Please choose another alias."
                                  target:self
@@ -116,7 +114,7 @@
                                               appName:[nameField stringValue]
                                               version:[versionField stringValue]];
     DATA.libs[identifier] = [[Folder alloc] initWithTree:data];
-    var file = [app.code fileWithName:"manifest.json"];
+    var file = [DATA.app.code fileWithName:"manifest.json"];
     var manifest;
     if (file) {
         try {
@@ -138,13 +136,13 @@
     } else {
         manifest = {libs:{}};
         file = [[File alloc] initWithName:"manifest.json"];
-        [app.code addFile:file];
-        [app.outlineView reloadItem:app.code reloadChildren:YES];
+        [DATA.app.code addFile:file];
+        [DATA.app.outlineView reloadItem:DATA.app.code reloadChildren:YES];
     }
     manifest.libs[[aliasField stringValue]] = identifier;
     [file setContent:JSON.stringify(manifest, null, "  ")];
     var request = [[HTTPRequest alloc] initWithMethod:"PUT"
-                                                  URL:[app url] + "code/manifest.json"
+                                                  URL:[DATA.app url] + "code/manifest.json"
                                                target:self
                                                action:@selector(didPutManifest)];
     [request setWindow:[self window]];
@@ -154,13 +152,13 @@
 
 - (void)didPutManifest
 {
-    var libItem = [[LibItem alloc] initWithApp:app
+    var libItem = [[LibItem alloc] initWithApp:DATA.app
                                           name:[aliasField stringValue]
                                     authorName:[authorField stringValue]
                                        appName:[nameField stringValue]
                                        version:[versionField stringValue]];
-    [app addLib:libItem];
-    [app.outlineView revealChildItem:libItem ofItem:app.libsItem];
+    [DATA.app addLib:libItem];
+    [DATA.app.outlineView revealChildItem:libItem ofItem:DATA.app.libsItem];
     [self close];
 }
 

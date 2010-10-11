@@ -6,112 +6,95 @@
 
 @implementation SidebarController : CPObject
 {
-    @outlet CPButtonBar buttonBar;
-    @outlet CPView sidebarView;
+    App app;
     UseLibPanelController useLibPanelController;
+    CPScrollView scrollView;
+    CPButtonBar buttonBar;
     CPButton plusButton;
-    CPButton minusButton;
-    CPButton actionPopUpButton;
     CPMenu actionsMenu;
+    CPMenu actionButtonMenu;
     CPArray deleteControls;
     CPArray moveControls;
     CPArray duplicateControls;
     CPArray renameControls;
-    CPScrollView scrollView;
-    App app;
 }
 
-- (void)awakeFromCib
+- (id)initWithApp:(App)anApp useLibPanelController:(UseLibPanelController)aUseLibPanelController
 {
-    useLibPanelController = [UseLibPanelController new];
-    plusButton = [CPButtonBar plusButton];
-    [plusButton setTarget:self];
-    [plusButton setAction:@selector(showAdd)];
-    minusButton = [CPButtonBar minusButton];
-    actionPopUpButton = [CPButtonBar actionPopupButton];
-    var actionMenu = [actionPopUpButton menu];
-    [actionMenu setAutoenablesItems:NO];
-    [[actionMenu addItemWithTitle:"New File" action:@selector(showNewFile) keyEquivalent:nil] setTarget:self];
-    [[actionMenu addItemWithTitle:"New Folder" action:@selector(showNewFolder) keyEquivalent:nil] setTarget:self];
-    [[actionMenu addItemWithTitle:"New Environment" action:@selector(showNewEnv) keyEquivalent:nil] setTarget:self];
-    [[actionMenu addItemWithTitle:"Use Library…" action:@selector(showWindow:) keyEquivalent:nil]
-        setTarget:useLibPanelController];
-    [actionMenu addItem:[CPMenuItem separatorItem]];
-    deleteControls = [[actionMenu addItemWithTitle:"Delete…" action:nil keyEquivalent:nil], minusButton];
-    moveControls = [[actionMenu addItemWithTitle:"Move…" action:nil keyEquivalent:nil]];
-    duplicateControls = [[actionMenu addItemWithTitle:"Duplicate" action:nil keyEquivalent:nil]];
-    renameControls = [[actionMenu addItemWithTitle:"Rename" action:nil keyEquivalent:nil]];
-    [buttonBar setButtons:[plusButton, minusButton, actionPopUpButton]];
-    [DATA addObserver:self forKeyPath:"app" options:CPKeyValueObservingOptionNew context:nil];
-}
+    if (self = [super init]) {
+        app = anApp;
+        useLibPanelController = aUseLibPanelController;
 
-- (void)reload
-{
-    app = DATA.app;
-    [plusButton, minusButton, actionPopUpButton].forEach(function (button) { [button setEnabled:app]; });
-    [scrollView removeFromSuperview];
-    var sidebarBoundsSize = [sidebarView boundsSize];
-    var scrollViewFrame = CGRectMake(0, 0, sidebarBoundsSize.width, sidebarBoundsSize.height - [buttonBar frameSize].height);
-    if (app && app.scrollView) {
-        scrollView = app.scrollView;
-        [scrollView setFrame:scrollViewFrame];
-        [sidebarView addSubview:scrollView];
-        [self outlineViewSelectionDidChange:nil];
-        return;
+        plusButton = [CPButtonBar plusButton];
+        [plusButton setTarget:self];
+        [plusButton setAction:@selector(showAdd)];
+        var minusButton = [CPButtonBar minusButton];
+        [minusButton setTarget:self];
+        [minusButton setAction:@selector(showDelete)];
+        var actionButton = [CPButtonBar actionPopupButton];
+        actionButtonMenu = [actionButton menu];
+        [actionButtonMenu addItemWithTitle:"New File" target:self action:@selector(showNewFile)];
+        [actionButtonMenu addItemWithTitle:"New Folder" target:self action:@selector(showNewFolder)];
+        [actionButtonMenu addItemWithTitle:"New Environment" target:self action:@selector(showNewEnv)];
+        [actionButtonMenu addItemWithTitle:"Use Library…" target:useLibPanelController action:@selector(showWindow:)];
+        [actionButtonMenu addItem:[CPMenuItem separatorItem]];
+        actionsMenu = [CPMenu new];
+        deleteControls = [minusButton];
+        moveControls = [];
+        duplicateControls = [];
+        renameControls = [];
+        [actionButtonMenu, actionsMenu].forEach(
+            function (menu) {
+                [menu setAutoenablesItems:NO];
+                deleteControls.push([menu addItemWithTitle:"Delete…" target:self action:@selector(showDelete)]);
+                moveControls.push([menu addItemWithTitle:"Move…" target:nil action:nil]);
+                duplicateControls.push([menu addItemWithTitle:"Duplicate" target:nil action:nil]);
+                renameControls.push([menu addItemWithTitle:"Rename" target:nil action:nil]);
+            });
+
+        buttonBar = [CPButtonBar new];
+        [buttonBar setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
+        [buttonBar setButtons:[plusButton, minusButton, actionButton]];
+
+        scrollView = [CPScrollView new];
+        [scrollView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
+        [scrollView setHasHorizontalScroller:NO];
+        [scrollView setAutohidesScrollers:YES];
+
+        var outlineView = [CPOutlineView new];
+        [outlineView setAllowsMultipleSelection:YES];
+        [outlineView setAllowsEmptySelection:NO];
+        [outlineView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
+        [outlineView setColumnAutoresizingStyle:CPTableViewLastColumnOnlyAutoresizingStyle];
+        [outlineView setHeaderView:nil];
+        [outlineView setCornerView:nil];
+        var column = [CPTableColumn new];
+        [column setDataView:[NodeView new]];
+        [outlineView addTableColumn:column];
+        [outlineView setOutlineTableColumn:column];
+        app.outlineView = outlineView;
+        app.code = [[CodeItem alloc] initWithApp:app];
+        app.envsItem = [[EnvsItem alloc] initWithApp:app];
+        app.libsItem = [[LibsItem alloc] initWithApp:app];
+        [outlineView setDataSource:self];
+        [outlineView setDelegate:self];
+        [outlineView expandItem:app.code];
+        [outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
+        [scrollView setDocumentView:outlineView];
     }
-    scrollView = [[CPScrollView alloc] initWithFrame:scrollViewFrame];
-    [scrollView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
-    [scrollView setHasHorizontalScroller:NO];
-    [scrollView setAutohidesScrollers:YES];
-    [sidebarView addSubview:scrollView];
-    if (!app)
-        return;
-    var outlineView = [[CPOutlineView alloc] initWithFrame:[[scrollView contentView] bounds]];
-    [outlineView setAllowsMultipleSelection:YES];
-    [outlineView setAllowsEmptySelection:NO]
-    [outlineView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
-    [outlineView setColumnAutoresizingStyle:CPTableViewLastColumnOnlyAutoresizingStyle];
-    [outlineView setHeaderView:nil];
-    [outlineView setCornerView:nil];
-    var column = [CPTableColumn new];
-    [column setDataView:[NodeView new]];
-    [outlineView addTableColumn:column];
-    [outlineView setOutlineTableColumn:column];
-    app.scrollView = scrollView;
-    app.outlineView = outlineView;
-    app.code = [[CodeItem alloc] initWithApp:app];
-    app.envsItem = [[EnvsItem alloc] initWithApp:app];
-    app.libsItem = [[LibsItem alloc] initWithApp:app];
-    [outlineView setDataSource:self];
-    [outlineView setDelegate:self];
-    [outlineView expandItem:app.code];
-    [outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
-    [scrollView setDocumentView:outlineView];
-    [outlineView sizeLastColumnToFit];
+    return self;
 }
 
-- (void)setActionsMenu:(CPMenu)anActionsMenu
+- (void)showInView:(CPView)superview withActionsMenuItem:(CPMenuItem)actionsMenuItem
 {
-    actionsMenu = anActionsMenu;
-    [actionsMenu setAutoenablesItems:NO];
-    [deleteControls, moveControls, duplicateControls, renameControls].forEach(
-        function (controls) {
-            var item = [controls[0] copy];
-            controls.push(item);
-            [actionsMenu addItem:item];
-        });
-    deleteControls.forEach(
-        function (control) {
-            [control setTarget:self];
-            [control setAction:@selector(showDelete)];
-        });
-    [self reload];
-}
-
-- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
-{
-    if (keyPath == "app")
-        [self reload];
+    var superviewSize = [superview boundsSize];
+    [buttonBar setFrame:CGRectMake(0, superviewSize.height - 26, superviewSize.width, 26)];
+    [scrollView setFrame:CGRectMake(0, 0, superviewSize.width, superviewSize.height - 26)];
+    [app.outlineView sizeLastColumnToFit];
+    [superview addSubview:scrollView];
+    [superview addSubview:buttonBar];
+    [[actionsMenuItem submenu] setSupermenu:nil];
+    [actionsMenuItem setSubmenu:actionsMenu];
 }
 
 - (void)showNewFile
@@ -356,7 +339,7 @@
     var itemsAreMovableAndDuplicatable = itemsAreDeletable && firstRootItem === app.code;
     var itemIsRenamable = itemsAreDeletable && items.length == 1;
     [actionsMenu _highlightItemAtIndex:CPNotFound];
-    [[actionPopUpButton menu] _highlightItemAtIndex:CPNotFound];
+    [actionButtonMenu _highlightItemAtIndex:CPNotFound];
     [plusButton setEnabled:rootIsCommon];
     [
         [deleteControls, itemsAreDeletable],

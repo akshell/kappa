@@ -200,12 +200,15 @@
     return parts.join("/");
 }
 
-- (id)forward:(SEL)selector :(marg_list)args
+- (CPMethodSignature)methodSignatureForSelector:(SEL)selector
 {
-    var newArgs = [root, selector];
-    for (var i = 2; i < args.length; ++i)
-        newArgs.push(args[i]);
-    return objj_msgSend.apply(objj_msgSend, newArgs);
+    return YES;
+}
+
+- (void)forwardInvocation:(CPInvocation)invocation
+{
+    [invocation setTarget:root];
+    [invocation invoke];
 }
 
 @end

@@ -8,4 +8,11 @@
         [self removeItemAtIndex:index];
 }
 
+- (CPMenuItem)addItemWithTitle:(CPString)title target:(id)target action:(SEL)action
+{
+    var item = [self addItemWithTitle:title action:action keyEquivalent:nil];
+    [item setTarget:target];
+    return item;
+}
+
 @end
