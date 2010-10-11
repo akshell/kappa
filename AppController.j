@@ -52,57 +52,53 @@
     [mainMenu removeAllItems];
 
     var akshellMenu = [CPMenu new];
-    [[akshellMenu addItemWithTitle:"About Akshell" action:@selector(showWindow:) keyEquivalent:nil]
-        setTarget:aboutPanelController];
+    [akshellMenu addItemWithTitle:"About Akshell" target:aboutPanelController action:@selector(showWindow:)];
     [akshellMenu addItem:[CPMenuItem separatorItem]];
-    [[akshellMenu addItemWithTitle:"SSH Public Key" action:@selector(showWindow:) keyEquivalent:nil]
-        setTarget:keyPanelController];
+    [akshellMenu addItemWithTitle:"SSH Public Key" target:keyPanelController action:@selector(showWindow:)];
     passwordMenuItem = [akshellMenu addItemWithTitle:"" action:@selector(showWindow:) keyEquivalent:nil];
-    [[mainMenu addItemWithTitle:"Akshell" action:nil keyEquivalent:nil] setSubmenu:akshellMenu];
+    [[mainMenu addItemWithTitle:"Akshell"] setSubmenu:akshellMenu];
 
     fileMenu = [CPMenu new];
-    [[fileMenu addItemWithTitle:"New App…" action:@selector(showWindow:) keyEquivalent:nil]
-        setTarget:newAppPanelController];
+    [fileMenu addItemWithTitle:"New App…" target:newAppPanelController action:@selector(showWindow:)];
     [fileMenu addItemWithTitle:"New File" target:sidebarControllerProxy action:@selector(showNewFile)];
     [fileMenu addItemWithTitle:"New Folder" target:sidebarControllerProxy action:@selector(showNewFolder)];
     appsMenu = [CPMenu new];
-    [[fileMenu addItemWithTitle:"Open App" action:nil keyEquivalent:nil] setSubmenu:appsMenu];
+    [[fileMenu addItemWithTitle:"Open App"] setSubmenu:appsMenu];
     [fileMenu addItem:[CPMenuItem separatorItem]];
-    [fileMenu addItemWithTitle:"Close File \"xxx\"" action:nil keyEquivalent:nil];
-    [fileMenu addItemWithTitle:"Save" action:nil keyEquivalent:nil];
-    [fileMenu addItemWithTitle:"Save All" action:nil keyEquivalent:nil];
-    actionsMenuItem = [fileMenu addItemWithTitle:"Actions" action:nil keyEquivalent:nil];
+    [fileMenu addItemWithTitle:"Close File \"xxx\""];
+    [fileMenu addItemWithTitle:"Save"];
+    [fileMenu addItemWithTitle:"Save All"];
+    actionsMenuItem = [fileMenu addItemWithTitle:"Actions"];
     [actionsMenuItem setSubmenu:[CPMenu new]];
-    [[mainMenu addItemWithTitle:"File" action:nil keyEquivalent:nil] setSubmenu:fileMenu];
+    [[mainMenu addItemWithTitle:"File"] setSubmenu:fileMenu];
 
     var appMenu = [CPMenu new];
     [appMenu addItemWithTitle:"New Environment" target:sidebarControllerProxy action:@selector(showNewEnv)];
     [appMenu addItemWithTitle:"Use Library…" target:useLibPanelController action:@selector(showWindow:)];
     [appMenu addItem:[CPMenuItem separatorItem]];
-    [appMenu addItemWithTitle:"Diff…" action:nil keyEquivalent:nil];
-    [appMenu addItemWithTitle:"Commit…" action:nil keyEquivalent:nil];
+    [appMenu addItemWithTitle:"Diff…"];
+    [appMenu addItemWithTitle:"Commit…"];
     [appMenu addItem:[CPMenuItem separatorItem]];
-    [appMenu addItemWithTitle:"Manage Domains…" action:nil keyEquivalent:nil];
-    [appMenu addItemWithTitle:"Publish App…" action:nil keyEquivalent:nil];
-    [appMenu addItemWithTitle:"Delete App…" action:@selector(showDeleteApp) keyEquivalent:nil];
-    [[mainMenu addItemWithTitle:"App" action:nil keyEquivalent:nil] setSubmenu:appMenu];
+    [appMenu addItemWithTitle:"Manage Domains…"];
+    [appMenu addItemWithTitle:"Publish App…"];
+    [appMenu addItemWithTitle:"Delete App…" target:self action:@selector(showDeleteApp)];
+    [[mainMenu addItemWithTitle:"App"] setSubmenu:appMenu];
 
     var viewMenu = [CPMenu new];
-    [[viewMenu addItemWithTitle:"Eval" action:nil keyEquivalent:nil] setSubmenu:[CPMenu new]];
-    [[viewMenu addItemWithTitle:"Preview" action:nil keyEquivalent:nil] setSubmenu:[CPMenu new]];
-    [viewMenu addItemWithTitle:"Git" action:nil keyEquivalent:nil];
-    [[mainMenu addItemWithTitle:"View" action:nil keyEquivalent:nil] setSubmenu:viewMenu];
+    [[viewMenu addItemWithTitle:"Eval"] setSubmenu:[CPMenu new]];
+    [[viewMenu addItemWithTitle:"Preview"] setSubmenu:[CPMenu new]];
+    [viewMenu addItemWithTitle:"Git"];
+    [[mainMenu addItemWithTitle:"View"] setSubmenu:viewMenu];
 
     var helpMenu = [CPMenu new];
-    [helpMenu addItemWithTitle:"Getting Started" action:nil keyEquivalent:nil];
-    [helpMenu addItemWithTitle:"User Guide" action:nil keyEquivalent:nil];
-    [helpMenu addItemWithTitle:"Reference" action:nil keyEquivalent:nil];
+    [helpMenu addItemWithTitle:"Getting Started"];
+    [helpMenu addItemWithTitle:"User Guide"];
+    [helpMenu addItemWithTitle:"Reference"];
     [helpMenu addItem:[CPMenuItem separatorItem]];
-    [[helpMenu addItemWithTitle:"Contact…" action:@selector(showWindow:) keyEquivalent:nil]
-        setTarget:contactPanelController];
-    [helpMenu addItemWithTitle:"Blog" action:nil keyEquivalent:nil];
-    [helpMenu addItemWithTitle:"Twitter" action:nil keyEquivalent:nil];
-    [[mainMenu addItemWithTitle:"Help" action:nil keyEquivalent:nil] setSubmenu:helpMenu];
+    [helpMenu addItemWithTitle:"Contact…" target:contactPanelController action:@selector(showWindow:)];
+    [helpMenu addItemWithTitle:"Blog"];
+    [helpMenu addItemWithTitle:"Twitter"];
+    [[mainMenu addItemWithTitle:"Help"] setSubmenu:helpMenu];
 
     [akshellMenu, fileMenu, appMenu, helpMenu].forEach(
         function (menu) { [menu setAutoenablesItems:NO]; });
@@ -132,14 +128,12 @@
     if (DATA.username) {
         [passwordMenuItem setTitle:"Change Password…"];
         [passwordMenuItem setTarget:changePasswordPanelController];
-        [mainMenu addItemWithTitle:"Log Out (" + DATA.username + ")" action:@selector(logOut) keyEquivalent:nil];
+        [mainMenu addItemWithTitle:"Log Out (" + DATA.username + ")" target:self action:@selector(logOut)];
     } else {
         [passwordMenuItem setTitle:"Reset Password…"];
         [passwordMenuItem setTarget:resetPasswordPanelController];
-        [[mainMenu addItemWithTitle:"Sign Up" action:@selector(showWindow:) keyEquivalent:nil]
-                setTarget:signupPanelController];
-        [[mainMenu addItemWithTitle:"Log In" action:@selector(showWindow:) keyEquivalent:nil]
-                setTarget:loginPanelController];
+        [mainMenu addItemWithTitle:"Sign Up" target:signupPanelController action:@selector(showWindow:)];
+        [mainMenu addItemWithTitle:"Log In" target:loginPanelController action:@selector(showWindow:)];
     }
 }
 
