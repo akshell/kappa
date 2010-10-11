@@ -25,6 +25,7 @@
     ContactPanelController contactPanelController;
     NewAppPanelController newAppPanelController;
     CPMenuItem passwordMenuItem;
+    CPMenu fileMenu;
     CPMenu appsMenu;
     CPPopUpButton appPopUpButton;
 }
@@ -43,66 +44,66 @@
     var mainMenu = [CPApp mainMenu];
     [mainMenu removeAllItems];
 
-    var akshellSubmenu = [CPMenu new];
-    [[akshellSubmenu addItemWithTitle:"About Akshell" action:@selector(showWindow:) keyEquivalent:nil]
+    var akshellMenu = [CPMenu new];
+    [[akshellMenu addItemWithTitle:"About Akshell" action:@selector(showWindow:) keyEquivalent:nil]
         setTarget:aboutPanelController];
-    [akshellSubmenu addItem:[CPMenuItem separatorItem]];
-    [[akshellSubmenu addItemWithTitle:"SSH Public Key" action:@selector(showWindow:) keyEquivalent:nil]
+    [akshellMenu addItem:[CPMenuItem separatorItem]];
+    [[akshellMenu addItemWithTitle:"SSH Public Key" action:@selector(showWindow:) keyEquivalent:nil]
         setTarget:keyPanelController];
-    passwordMenuItem = [akshellSubmenu addItemWithTitle:"" action:@selector(showWindow:) keyEquivalent:nil];
-    [[mainMenu addItemWithTitle:"Akshell" action:nil keyEquivalent:nil] setSubmenu:akshellSubmenu];
+    passwordMenuItem = [akshellMenu addItemWithTitle:"" action:@selector(showWindow:) keyEquivalent:nil];
+    [[mainMenu addItemWithTitle:"Akshell" action:nil keyEquivalent:nil] setSubmenu:akshellMenu];
 
-    var fileSubmenu = [CPMenu new];
-    [[fileSubmenu addItemWithTitle:"New App…" action:@selector(showWindow:) keyEquivalent:nil]
+    fileMenu = [CPMenu new];
+    [[fileMenu addItemWithTitle:"New App…" action:@selector(showWindow:) keyEquivalent:nil]
         setTarget:newAppPanelController];
-    [[fileSubmenu addItemWithTitle:"New File" action:@selector(showNewFile) keyEquivalent:nil]
+    [[fileMenu addItemWithTitle:"New File" action:@selector(showNewFile) keyEquivalent:nil]
         setTarget:sidebarController];
-    [[fileSubmenu addItemWithTitle:"New Folder" action:@selector(showNewFolder) keyEquivalent:nil]
+    [[fileMenu addItemWithTitle:"New Folder" action:@selector(showNewFolder) keyEquivalent:nil]
         setTarget:sidebarController];
     appsMenu = [CPMenu new];
-    [[fileSubmenu addItemWithTitle:"Open App" action:nil keyEquivalent:nil] setSubmenu:appsMenu];
-    [fileSubmenu addItem:[CPMenuItem separatorItem]];
-    [fileSubmenu addItemWithTitle:"Close File \"xxx\"" action:nil keyEquivalent:nil];
-    [fileSubmenu addItemWithTitle:"Save" action:nil keyEquivalent:nil];
-    [fileSubmenu addItemWithTitle:"Save All" action:nil keyEquivalent:nil];
-    var actionsSubmenu = [CPMenu new];
-    [sidebarController setActionsMenu:actionsSubmenu];
-    [[fileSubmenu addItemWithTitle:"Actions" action:nil keyEquivalent:nil] setSubmenu:actionsSubmenu];
-    [[mainMenu addItemWithTitle:"File" action:nil keyEquivalent:nil] setSubmenu:fileSubmenu];
+    [[fileMenu addItemWithTitle:"Open App" action:nil keyEquivalent:nil] setSubmenu:appsMenu];
+    [fileMenu addItem:[CPMenuItem separatorItem]];
+    [fileMenu addItemWithTitle:"Close File \"xxx\"" action:nil keyEquivalent:nil];
+    [fileMenu addItemWithTitle:"Save" action:nil keyEquivalent:nil];
+    [fileMenu addItemWithTitle:"Save All" action:nil keyEquivalent:nil];
+    var actionsMenu = [CPMenu new];
+    [sidebarController setActionsMenu:actionsMenu];
+    [[fileMenu addItemWithTitle:"Actions" action:nil keyEquivalent:nil] setSubmenu:actionsMenu];
+    [[mainMenu addItemWithTitle:"File" action:nil keyEquivalent:nil] setSubmenu:fileMenu];
 
-    var appSubmenu = [CPMenu new];
-    [[appSubmenu addItemWithTitle:"New Environment" action:@selector(showNewEnv) keyEquivalent:nil]
+    var appMenu = [CPMenu new];
+    [[appMenu addItemWithTitle:"New Environment" action:@selector(showNewEnv) keyEquivalent:nil]
         setTarget:sidebarController];
-    [[appSubmenu addItemWithTitle:"Use Library…" action:@selector(showWindow:) keyEquivalent:nil]
+    [[appMenu addItemWithTitle:"Use Library…" action:@selector(showWindow:) keyEquivalent:nil]
         setTarget:sidebarController.useLibPanelController];
-    [appSubmenu addItem:[CPMenuItem separatorItem]];
-    [appSubmenu addItemWithTitle:"Diff…" action:nil keyEquivalent:nil];
-    [appSubmenu addItemWithTitle:"Commit…" action:nil keyEquivalent:nil];
-    [appSubmenu addItem:[CPMenuItem separatorItem]];
-    [appSubmenu addItemWithTitle:"Manage Domains…" action:nil keyEquivalent:nil];
-    [appSubmenu addItemWithTitle:"Publish App…" action:nil keyEquivalent:nil];
-    [appSubmenu addItemWithTitle:"Delete App…" action:@selector(deleteApp) keyEquivalent:nil];
-    [[mainMenu addItemWithTitle:"App" action:nil keyEquivalent:nil] setSubmenu:appSubmenu];
+    [appMenu addItem:[CPMenuItem separatorItem]];
+    [appMenu addItemWithTitle:"Diff…" action:nil keyEquivalent:nil];
+    [appMenu addItemWithTitle:"Commit…" action:nil keyEquivalent:nil];
+    [appMenu addItem:[CPMenuItem separatorItem]];
+    [appMenu addItemWithTitle:"Manage Domains…" action:nil keyEquivalent:nil];
+    [appMenu addItemWithTitle:"Publish App…" action:nil keyEquivalent:nil];
+    [appMenu addItemWithTitle:"Delete App…" action:@selector(deleteApp) keyEquivalent:nil];
+    [[mainMenu addItemWithTitle:"App" action:nil keyEquivalent:nil] setSubmenu:appMenu];
 
-    var viewSubmenu = [CPMenu new];
-    [[viewSubmenu addItemWithTitle:"Eval" action:nil keyEquivalent:nil] setSubmenu:[CPMenu new]];
-    [[viewSubmenu addItemWithTitle:"Preview" action:nil keyEquivalent:nil] setSubmenu:[CPMenu new]];
-    [viewSubmenu addItemWithTitle:"Git" action:nil keyEquivalent:nil];
-    [[mainMenu addItemWithTitle:"View" action:nil keyEquivalent:nil] setSubmenu:viewSubmenu];
+    var viewMenu = [CPMenu new];
+    [[viewMenu addItemWithTitle:"Eval" action:nil keyEquivalent:nil] setSubmenu:[CPMenu new]];
+    [[viewMenu addItemWithTitle:"Preview" action:nil keyEquivalent:nil] setSubmenu:[CPMenu new]];
+    [viewMenu addItemWithTitle:"Git" action:nil keyEquivalent:nil];
+    [[mainMenu addItemWithTitle:"View" action:nil keyEquivalent:nil] setSubmenu:viewMenu];
 
-    var helpSubmenu = [CPMenu new];
-    [helpSubmenu addItemWithTitle:"Getting Started" action:nil keyEquivalent:nil];
-    [helpSubmenu addItemWithTitle:"User Guide" action:nil keyEquivalent:nil];
-    [helpSubmenu addItemWithTitle:"Reference" action:nil keyEquivalent:nil];
-    [helpSubmenu addItem:[CPMenuItem separatorItem]];
-    [[helpSubmenu addItemWithTitle:"Contact…" action:@selector(showWindow:) keyEquivalent:nil]
+    var helpMenu = [CPMenu new];
+    [helpMenu addItemWithTitle:"Getting Started" action:nil keyEquivalent:nil];
+    [helpMenu addItemWithTitle:"User Guide" action:nil keyEquivalent:nil];
+    [helpMenu addItemWithTitle:"Reference" action:nil keyEquivalent:nil];
+    [helpMenu addItem:[CPMenuItem separatorItem]];
+    [[helpMenu addItemWithTitle:"Contact…" action:@selector(showWindow:) keyEquivalent:nil]
         setTarget:contactPanelController];
-    [helpSubmenu addItemWithTitle:"Blog" action:nil keyEquivalent:nil];
-    [helpSubmenu addItemWithTitle:"Twitter" action:nil keyEquivalent:nil];
-    [[mainMenu addItemWithTitle:"Help" action:nil keyEquivalent:nil] setSubmenu:helpSubmenu];
+    [helpMenu addItemWithTitle:"Blog" action:nil keyEquivalent:nil];
+    [helpMenu addItemWithTitle:"Twitter" action:nil keyEquivalent:nil];
+    [[mainMenu addItemWithTitle:"Help" action:nil keyEquivalent:nil] setSubmenu:helpMenu];
 
-    [akshellSubmenu, fileSubmenu, appSubmenu, helpSubmenu].forEach(
-        function (submenu) { [submenu setAutoenablesItems:NO]; });
+    [akshellMenu, fileMenu, appMenu, helpMenu].forEach(
+        function (menu) { [menu setAutoenablesItems:NO]; });
 
     [mainMenu addItem:[CPMenuItem separatorItem]];
     [self addUserMenus];
@@ -179,10 +180,9 @@
     var mainMenu = [CPApp mainMenu];
     [[mainMenu itemAtIndex:2] setEnabled:enabled];
     [[mainMenu itemAtIndex:3] setEnabled:enabled];
-    var fileSubmenu = [[mainMenu itemAtIndex:1] submenu];
-    [fileSubmenu _highlightItemAtIndex:CPNotFound];
+    [fileMenu _highlightItemAtIndex:CPNotFound];
     for (var i = 1; i < 9; ++i)
-        [[fileSubmenu itemAtIndex:i] setEnabled:enabled];
+        [[fileMenu itemAtIndex:i] setEnabled:enabled];
     [[mainWindow toolbar] items].forEach(
         function (item) { [item setEnabled:enabled]; });
 }
