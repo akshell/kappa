@@ -105,14 +105,18 @@
 
 @end
 
-@implementation File (NodeItem)
+@implementation Entry (NodeItem)
 
-- (BOOL)isExpandable
+- (BOOL)isEditable
 {
     return NO;
 }
 
-- (BOOL)isEditable
+@end
+
+@implementation File (NodeItem)
+
+- (BOOL)isExpandable
 {
     return NO;
 }
@@ -131,11 +135,6 @@
     return YES;
 }
 
-- (BOOL)isEditable
-{
-    return NO;
-}
-
 - (CPString)imageName
 {
     return "Folder";
@@ -149,6 +148,16 @@
 - (id)childAtIndex:(unsigned)index
 {
     return index < folders.length ? folders[index] : files[index - folders.length];
+}
+
+- (BOOL)hasChildWithName:(CPString)aName
+{
+    var child = [self childWithName:aName];
+    if (child)
+        [[[Alert alloc] initWithMessage:"The entry \"" + aName + "\" already exists."
+                                comment:"Please choose another name."]
+            showPanel];
+    return !!child;
 }
 
 @end
@@ -228,6 +237,20 @@
 - (CPString)imageName
 {
     return "Env";
+}
+
+@end
+
+@implementation App (NodeItemUtils)
+
+- (BOOL)hasEnvWithName:(CPString)aName
+{
+    var env = [self envWithName:aName];
+    if (env)
+        [[[Alert alloc] initWithMessage:"The environment \"" + env.name + "\" already exists."
+                                comment:"Environment name must be case-insensitively unique."]
+            showPanel];
+    return !!env;
 }
 
 @end
@@ -420,7 +443,7 @@
 
 @end
 
-@implementation NewItem : SmartItem
+@implementation EditableItem : SmartItem
 {
     CPString name @accessors(readonly);
 }
@@ -430,11 +453,6 @@
     if (self = [super initWithApp:anApp])
         name = aName;
     return self;
-}
-
-- (BOOL)isExpandable
-{
-    return NO;
 }
 
 - (BOOL)isEditable
@@ -448,19 +466,31 @@
         [self submit:[notification object]];
 }
 
+- (void)submit:(CPTextField)sender
+{
+    isLoading = YES;
+    [sender removeFromSuperview];
+    var outlineView = app.outlineView;
+    [self doSubmit:sender];
+    [outlineView reloadItem:self];
+}
+
 @end
 
-@implementation NewEntryItem : NewItem
+@implementation NewEntryItem : EditableItem
+
+- (BOOL)isExpandable
+{
+    return NO;
+}
 
 - (id)parentFolder
 {
     return [app.outlineView parentForItem:self];
 }
 
-- (void)submit:(CPTextField)sender
+- (void)doSubmit:(CPTextField)sender
 {
-    isLoading = YES;
-    [sender removeFromSuperview];
     var newName = [sender stringValue];
     if (newName) {
         if (newName.indexOf("/") != -1) {
@@ -468,18 +498,10 @@
         } else {
             var initialName = name;
             name = "";
-            if ([[self parentFolder] hasChildWithName:newName]) {
-                [[[Alert alloc] initWithMessage:"The entry \"" + newName + "\" already exists."
-                                        comment:"Please choose another name."]
-                    showPanel];
-                name = initialName;
-            } else {
-                name = newName;
-            }
+            name = [[self parentFolder] hasChildWithName:newName] ? initialName : newName;
         }
     }
-    [app.outlineView reloadItem:self];
-    [self doSubmit];
+    [self sendRequest];
 }
 
 - (void)removeSelf
@@ -498,7 +520,7 @@
     return "File";
 }
 
-- (void)doSubmit
+- (void)sendRequest
 {
     var request = [[HTTPRequest alloc] initWithMethod:"PUT"
                                                   URL:[app url] + "code/" + [app.code pathOfItem:self]
@@ -526,7 +548,7 @@
     return "Folder";
 }
 
-- (void)doSubmit
+- (void)sendRequest
 {
     var request = [[HTTPRequest alloc] initWithMethod:"POST"
                                                   URL:[app url] + "code/"
@@ -543,33 +565,30 @@
     var folder = [[Folder alloc] initWithName:name];
     [parentFolder addFolder:folder];
     [app.outlineView revealChildItem:folder ofItem:parentFolder];
+    [app.outlineView expandItem:folder];
 }
 
 @end
 
-@implementation NewEnvItem : NewItem
+@implementation NewEnvItem : EditableItem
+
+- (BOOL)isExpandable
+{
+    return NO;
+}
 
 - (CPString)imageName
 {
     return "Env";
 }
 
-- (void)submit:(CPTextField)sender
+- (void)doSubmit:(CPTextField)sender
 {
-    isLoading = YES;
-    [sender removeFromSuperview];
     var newName = [sender stringValue];
     if (newName) {
         var initialName = name;
         name = "";
-        if ([app hasEnvWithName:newName]) {
-            [[[Alert alloc] initWithMessage:"The environment with the name \"" + newName.toLowerCase() + "\" already exists."
-                                    comment:"Environment name must be case-insensitively unique."]
-                showPanel];
-            name = initialName;
-        } else {
-            name = newName;
-        }
+        name = [app hasEnvWithName:newName] ? initialName : newName;
     }
     var request = [[HTTPRequest alloc] initWithMethod:"POST"
                                                   URL:[app url] + "envs/"
@@ -577,7 +596,6 @@
                                                action:@selector(didReceiveResponse)];
     [request setErrorAction:@selector(removeSelf)];
     [request send:{name: name}];
-    [app.outlineView reloadItem:self];
 }
 
 - (void)didReceiveResponse
@@ -592,6 +610,205 @@
 {
     [app removeEnv:self];
     [app.outlineView reloadItem:app.envsItem reloadChildren:YES];
+}
+
+@end
+
+@implementation RenameItem : EditableItem
+{
+    Class oldIsa;
+    CPString initialName;
+}
+
++ (void)stealItem:(id)item withApp:(App)app
+{
+    item.oldIsa = item.isa;
+    item.isa = self;
+    item.isLoading = nil;
+    item.app = app;
+    item.initialName = item.name;
+}
+
+- (void)restore
+{
+    isa = oldIsa;
+    delete self.oldIsa;
+    delete self.isLoading;
+    delete self.app;
+    delete self.initialName;
+}
+
+- (void)doSubmit:(CPTextField)sender
+{
+    var newName = [sender stringValue];
+    if (newName && newName != name)
+        [self rename:newName];
+    else
+        [self restore];
+}
+
+- (void)didReceiveError
+{
+    name = initialName;
+    var outlineView = app.outlineView;
+    [self restore];
+    [outlineView reloadItem:self];
+}
+
+- (void)didReceiveResponse
+{
+    var outlineView = app.outlineView;
+    var parentItem = [outlineView parentForItem:self];
+    [self refresh];
+    [self restore];
+    [outlineView revealChildItem:self ofItem:parentItem];
+}
+
+- (void)requestWithMethod:(CPString)method URL:(CPString)url data:(JSObject)data
+{
+    var request = [[HTTPRequest alloc] initWithMethod:method URL:url target:self action:@selector(didReceiveResponse)];
+    [request setErrorAction:@selector(didReceiveError)];
+    [request send:data];
+}
+
+@end
+
+@implementation RenameEntryItem : RenameItem
+
+- (void)rename:(CPString)newName
+{
+    if ([[app.outlineView parentForItem:self] hasChildWithName:newName]) {
+        [self restore];
+        return;
+    }
+    var oldPath = [app.code pathOfItem:self];
+    name = newName;
+    var newPath = [app.code pathOfItem:self];
+    [self requestWithMethod:"POST" URL:[app url] + "code/" data:{action: "mv", pathPairs: [[oldPath, newPath]]}];
+}
+
+@end
+
+@implementation RenameFileItem : RenameEntryItem
+
+- (BOOL)isExpandable
+{
+    return NO;
+}
+
+- (CPString)imageName
+{
+    return "File";
+}
+
+- (void)refresh
+{
+    var parentFolder = [app.outlineView parentForItem:self];
+    [parentFolder removeFile:self];
+    [parentFolder addFile:self];
+}
+
+@end
+
+@implementation RenameFolderItem : RenameEntryItem
+
+- (BOOL)isExpandable
+{
+    return YES;
+}
+
+- (CPString)imageName
+{
+    return "Folder";
+}
+
+- (void)refresh
+{
+    var parentFolder = [app.outlineView parentForItem:self];
+    [parentFolder removeFolder:self];
+    [parentFolder addFolder:self];
+}
+
+@end
+
+@implementation RenameEnvItem : RenameItem
+
+- (BOOL)isExpandable
+{
+    return NO;
+}
+
+- (CPString)imageName
+{
+    return "Env";
+}
+
+- (void)rename:(CPString)newName
+{
+    if ([app hasEnvWithName:newName]) {
+        [self restore];
+        return;
+    }
+    name = newName;
+    [self requestWithMethod:"POST" URL:[app url] + "envs/" + initialName data:{action: "rename", name: name}];
+}
+
+- (void)refresh
+{
+    [app removeEnv:self];
+    [app addEnv:self];
+}
+
+@end
+
+@implementation RenameLibItem : RenameItem
+
+- (BOOL)isExpandable
+{
+    return YES;
+}
+
+- (CPString)imageName
+{
+    return "Lib";
+}
+
+- (void)rename:(CPString)newName
+{
+    if ([app libWithName:newName]) {
+        [[[Alert alloc] initWithMessage:"The alias \"" + newName + "\" is already taken."
+                                comment:"Please choose another alias."]
+            showPanel];
+        [self restore];
+        return;
+    }
+    var file = [app.code fileWithName:"manifest.json"];
+    var manifest = JSON.parse(file.content);
+    manifest.libs[newName] = manifest.libs[name];
+    delete manifest.libs[name];
+    name = newName;
+    [file setContent:JSON.stringify(manifest, null, "  ")];
+    var request = [[HTTPRequest alloc] initWithMethod:"PUT"
+                                                  URL:[app url] + "code/manifest.json"
+                                               target:self
+                                               action:@selector(didReceiveResponse)];
+    [request setErrorAction:@selector(didReceiveError)];
+    [request setValue:"application/json" forHeader:"Content-Type"];
+    [request send:file.content];
+}
+
+- (void)restore
+{
+    isLoading = NO;
+    isa = oldIsa;
+    delete self.oldIsa;
+    delete self.initialName;
+}
+
+- (void)refresh
+{
+    [app removeLib:self];
+    [app addLib:self];
 }
 
 @end

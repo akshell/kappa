@@ -49,7 +49,7 @@
                 deleteControls.push([menu addItemWithTitle:"Delete…" target:self action:@selector(showDelete)]);
                 moveControls.push([menu addItemWithTitle:"Move…" target:nil action:nil]);
                 duplicateControls.push([menu addItemWithTitle:"Duplicate" target:nil action:nil]);
-                renameControls.push([menu addItemWithTitle:"Rename" target:nil action:nil]);
+                renameControls.push([menu addItemWithTitle:"Rename" target:self action:@selector(showRename)]);
             });
 
         buttonBar = [CPButtonBar new];
@@ -145,12 +145,12 @@
 {
     [app.outlineView expandItem:app.envsItem];
     var name = "untitled-env";
-    if ([app hasEnvWithName:name]) {
+    if ([app envWithName:name]) {
         name += "-";
         var newName;
         for (var i = 2;; ++i) {
             newName = name + i;
-            if (![app hasEnvWithName:newName])
+            if (![app envWithName:newName])
                 break;
         }
         name = newName;
@@ -285,7 +285,7 @@
                                                   URL:[app url] + "code/manifest.json"
                                                target:self
                                                action:@selector(didDelete:libs:)];
-    [request setContext:{content:content, libs: libs}];
+    [request setContext:{content: content, libs: libs}];
     [request setValue:"application/json" forHeader:"Content-Type"];
     [request send:content];
     [app.outlineView selectItem:app.libsItem];
@@ -296,6 +296,20 @@
     [[app.code fileWithName:"manifest.json"] setContent:context.content];
     context.libs.forEach(function (lib) { [app removeLib:lib]; });
     [app.outlineView reloadItem:app.libsItem reloadChildren:YES];
+}
+
+- (void)showRename
+{
+    var item = [app.outlineView selectedItem];
+    [[item isKindOfClass:LibItem]
+        ? RenameLibItem
+        : [item isKindOfClass:Env]
+        ? RenameEnvItem
+        : [item isKindOfClass:Folder]
+        ? RenameFolderItem
+        : RenameFileItem
+        stealItem:item withApp:app];
+    [app.outlineView reloadItem:item];
 }
 
 - (id)outlineView:(CPOutlineView)anOutlineview child:(int)index ofItem:(id)item

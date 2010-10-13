@@ -1,6 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
-@implementation Entry : CPObject
+@implementation Entity : CPObject
 {
     CPString name @accessors(readonly);
 }
@@ -12,6 +12,9 @@
     return self;
 }
 
+@end
+
+@implementation Entry : Entity
 @end
 
 @implementation File : Entry
@@ -61,15 +64,15 @@
     return [self initWithName:aName folders:[] files:[]];
 }
 
-- (BOOL)hasChildWithName:(CPString)aName
+- (Entry)childWithName:(CPString)aName
 {
     for (var i = 0; i < folders.length; ++i)
         if (folders[i].name == aName)
-            return YES;
+            return folders[i];
     for (var i = 0; i < files.length; ++i)
         if (files[i].name == aName)
-            return YES;
-    return NO;
+            return files[i];
+    return nil;
 }
 
 - (void)addFile:(File)file
@@ -100,12 +103,12 @@
 
 - (CPString)uniqueChildNameWithPrefix:(CPString)prefix
 {
-    if (![self hasChildWithName:prefix])
+    if (![self childWithName:prefix])
         return prefix;
     prefix += " ";
     for (var i = 2;; ++i) {
         var childName = prefix + i;
-        if (![self hasChildWithName:childName])
+        if (![self childWithName:childName])
             return childName;
     }
 }
@@ -120,10 +123,10 @@
 
 @end
 
-@implementation Env : Entry
+@implementation Env : Entity
 @end
 
-@implementation App : Entry
+@implementation App : Entity
 {
     Folder code @accessors;
     CPArray envs @accessors;
@@ -135,13 +138,13 @@
     return "/apps/" + name + "/";
 }
 
-- (BOOL)hasEnvWithName:(CPString)aName
+- (Env)envWithName:(CPString)aName
 {
     var nameLower = aName.toLowerCase();
     for (var i = 0; i < envs.length; ++i)
         if (envs[i].name.toLowerCase() == nameLower)
-            return YES;
-    return NO;
+            return envs[i];
+    return nil;
 }
 
 - (void)addEnv:(Env)env
@@ -153,17 +156,17 @@
     envs.splice(i, 0, env);
 }
 
-- (BOOL)removeEnv:(Env)env
+- (void)removeEnv:(Env)env
 {
     [envs removeObject:env];
 }
 
-- (BOOL)hasLibWithName:(CPString)aName
+- (id)libWithName:(CPString)aName
 {
     for (var i = 0; i < libs.length; ++i)
         if (libs[i].name == aName)
-            return YES;
-    return NO;
+            return libs[i];
+    return nil;
 }
 
 - (void)addLib:(id)lib

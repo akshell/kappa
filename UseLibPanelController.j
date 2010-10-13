@@ -70,7 +70,7 @@
 - (void)doSubmit
 {
     var alias = [aliasField stringValue];
-    if ([DATA.app hasLibWithName:alias]) {
+    if ([DATA.app libWithName:alias]) {
         [[[Alert alloc] initWithMessage:"The alias \"" + alias + "\" is already taken."
                                 comment:"Please choose another alias."
                                  target:self
