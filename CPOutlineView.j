@@ -16,11 +16,9 @@
 
 - (CPArray)selectedItems
 {
-    var indexSet = [self selectedRowIndexes];
-    var items = [];
-    for (var index = [indexSet firstIndex]; index != CPNotFound; index = [indexSet indexGreaterThanIndex:index])
-        items.push([self itemAtRow:index]);
-    return items;
+    var indexes = []
+    [[self selectedRowIndexes] getIndexes:indexes maxCount:-1 inIndexRange:nil];
+    return indexes.map(function (index) { return [self itemAtRow:index]; });
 }
 
 - (void)selectItem:(id)item
@@ -31,15 +29,6 @@
 - (void)showItem:(id)item
 {
     [self scrollRectToVisible:[self frameOfDataViewAtColumn:0 row:[self rowForItem:item]]];
-}
-
-- (void)revealChildItem:(id)childItem ofItem:(id)parentItem
-{
-    [self reloadItem:parentItem reloadChildren:YES];
-    [self expandItem:parentItem];
-    var row = [self rowForItem:childItem];
-    [self selectRowIndexes:[CPIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
-    [self scrollRectToVisible:[self frameOfDataViewAtColumn:0 row:row]];
 }
 
 @end

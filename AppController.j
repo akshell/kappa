@@ -11,7 +11,6 @@
 @import "ResetPasswordPanelController.j"
 @import "NewAppPanelController.j"
 @import "ContactPanelController.j"
-@import "UseLibPanelController.j"
 @import "Confirm.j"
 
 @implementation AppController : CPObject
@@ -27,7 +26,6 @@
     LoginPanelController loginPanelController;
     ContactPanelController contactPanelController;
     NewAppPanelController newAppPanelController;
-    UseLibPanelController useLibPanelController;
     CPMenuItem passwordMenuItem;
     CPMenu fileMenu;
     CPMenu appsMenu;
@@ -46,7 +44,6 @@
     loginPanelController = [[LoginPanelController alloc] initWithResetPasswordPanelController:resetPasswordPanelController];
     contactPanelController = [ContactPanelController new];
     newAppPanelController = [[NewAppPanelController alloc] initWithTarget:self action:@selector(didCreateAppWithName:)];
-    useLibPanelController = [UseLibPanelController new];
 
     var mainMenu = [CPApp mainMenu];
     [mainMenu removeAllItems];
@@ -74,7 +71,7 @@
 
     var appMenu = [CPMenu new];
     [appMenu addItemWithTitle:"New Environment" target:sidebarControllerProxy action:@selector(showNewEnv)];
-    [appMenu addItemWithTitle:"Use Library…" target:useLibPanelController action:@selector(showWindow:)];
+    [appMenu addItemWithTitle:"Use Library…" target:sidebarControllerProxy action:@selector(showUseLib)];
     [appMenu addItem:[CPMenuItem separatorItem]];
     [appMenu addItemWithTitle:"Diff…"];
     [appMenu addItemWithTitle:"Commit…"];
@@ -112,9 +109,9 @@
     [self fillAppMenus];
     [self showSidebar];
 
-    [DATA addObserver:self forKeyPath:"username" options:CPKeyValueObservingOptionNew context:nil];
-    [DATA addObserver:self forKeyPath:"apps" options:CPKeyValueObservingOptionNew context:nil];
-    [DATA addObserver:self forKeyPath:"app" options:CPKeyValueObservingOptionNew context:nil];
+    [DATA addObserver:self forKeyPath:"username" options:nil context:nil];
+    [DATA addObserver:self forKeyPath:"apps" options:nil context:nil];
+    [DATA addObserver:self forKeyPath:"app" options:nil context:nil];
 }
 
 - (CPPopUpButton)appPopUpButton
@@ -160,8 +157,7 @@
 {
     if (DATA.app) {
         if (!DATA.app.sidebarController)
-            DATA.app.sidebarController = [[SidebarController alloc] initWithApp:DATA.app
-                                                          useLibPanelController:useLibPanelController];
+            DATA.app.sidebarController = [[SidebarController alloc] initWithApp:DATA.app];
         [DATA.app.sidebarController showInView:sidebarView withActionsMenuItem:actionsMenuItem];
     } else {
         var sidebarSize = [sidebarView boundsSize];
@@ -268,7 +264,7 @@
 
 - (void)deleteApp
 {
-    [[[HTTPRequest alloc] initWithMethod:"DELETE" URL:[DATA.app url]] send];
+    [[[HTTPRequest alloc] initWithMethod:"DELETE" URL:[DATA.app URL]] send];
     [appsMenu removeItemAtIndex:DATA.appIndex];
     var appPopUpButton = [self appPopUpButton];
     [appPopUpButton removeItemAtIndex:DATA.appIndex];
