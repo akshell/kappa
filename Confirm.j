@@ -1,16 +1,13 @@
 // (c) 2010 by Anton Korenyushkin
 
+@import "Alert.j"
+
 @implementation Confirm : Alert
 {
     BOOL shouldSendAction @accessors(readonly);
 }
 
-- (CPString)imagePath
-{
-    return "Caution.png";
-}
-
-- (void)createPanelWithStyleMask:(unsigned)styleMask
+- (void)createPanelWithStyleMask:(unsigned)styleMask // protected
 {
     [super createPanelWithStyleMask:styleMask];
     var contentView = [panel contentView];
@@ -21,7 +18,12 @@
     [contentView addSubview:cancelButton];
 }
 
-- (void)confirm
+- (CPString)imagePath // protected
+{
+    return "Caution.png";
+}
+
+- (void)confirm // protected
 {
     shouldSendAction = YES;
     [super confirm];

@@ -15,12 +15,12 @@
     @outlet CPButton signupButton;
 }
 
-- (id)init
+- (id)init // public
 {
     return [super initWithWindowCibName:"SignupPanel"];
 }
 
-- (void)awakeFromCib
+- (void)awakeFromCib // private
 {
     [nameLabel, emailLabel, passwordLabel, confirmLabel].forEach(
         function (label) { [label setAlignment:CPRightTextAlignment]; });
@@ -30,7 +30,7 @@
     [signupButton setKeyEquivalent:CPCarriageReturnCharacter];
 }
 
-- (void)controlTextDidChange:(id)sender
+- (void)controlTextDidChange:(id)sender // private
 {
     [signupButton setEnabled:([nameField stringValue] &&
                               [emailField stringValue] &&
@@ -38,7 +38,7 @@
                               [confirmField stringValue])];
 }
 
-- (@action)submit:(id)sender
+- (@action)submit:(id)sender // private
 {
     var password = [passwordField stringValue];
     if ([confirmField stringValue] == password)
@@ -53,7 +53,7 @@
                      showSheetForWindow:[self window]];
 }
 
-- (void)didEndMatchErrorSheet
+- (void)didEndMatchErrorSheet // private
 {
     [passwordField setStringValue:""];
     [confirmField setStringValue:""];
@@ -61,12 +61,12 @@
     [[self window] makeFirstResponder:passwordField];
 }
 
-- (void)didEndRequestErrorSheet:(Alert)sender
+- (void)didEndRequestErrorSheet:(Alert)sender // protected
 {
     [[self window] makeFirstResponder:[sender message].indexOf("email") == -1 ? nameField : emailField];
 }
 
-- (void)didReceiveResponse:(JSObject)data
+- (void)didReceiveResponse:(JSObject)data // protected
 {
     [DATA setUsername:[nameField stringValue]];
     [DATA setEmail:[emailField stringValue]];

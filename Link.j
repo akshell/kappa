@@ -4,7 +4,7 @@
 {
 }
 
-- (id)initWithCoder:(CPCoder)coder
+- (id)initWithCoder:(CPCoder)coder // public
 {
     if (self = [super initWithCoder:coder]) {
         [self setValue:"DarkBlue" forThemeAttribute:"text-color"];
@@ -13,7 +13,7 @@
     return self;
 }
 
-- (void)mouseDown:(CPEvent)event
+- (void)mouseDown:(CPEvent)event // protected
 {
     [self sendAction:[self action] to:[self target]];
 }

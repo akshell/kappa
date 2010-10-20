@@ -15,14 +15,14 @@
     ResetPasswordPanelController resetPasswordPanelController;
 }
 
-- (id)initWithResetPasswordPanelController:(ResetPasswordPanelController)aResetPasswordPanelController
+- (id)initWithResetPasswordPanelController:(ResetPasswordPanelController)aResetPasswordPanelController // public
 {
     if (self = [super initWithWindowCibName:"LoginPanel"])
         resetPasswordPanelController = aResetPasswordPanelController;
     return self;
 }
 
-- (void)awakeFromCib
+- (void)awakeFromCib // private
 {
     [nameLabel, passwordLabel].forEach(
         function (label) { [label setAlignment:CPRightTextAlignment]; });
@@ -33,24 +33,24 @@
     [resetPasswordLink sizeToFit];
 }
 
-- (void)controlTextDidChange:(id)sender
+- (void)controlTextDidChange:(id)sender // private
 {
     [loginButton setEnabled:[nameField stringValue] && [passwordField stringValue]];
 }
 
-- (@action)submit:(id)sender
+- (@action)submit:(id)sender // private
 {
     [self requestWithMethod:"POST" URL:"/login" data:{name: [nameField stringValue], password: [passwordField stringValue]}];
 }
 
-- (void)didReceiveResponse:(JSObject)data
+- (void)didReceiveResponse:(JSObject)data // protected
 {
     [DATA setUsername:[nameField stringValue]];
     [DATA setEmail:data.email];
     [DATA setAppNames:data.appNames config:data.config];
 }
 
-- (@action)resetPassword:(id)sender
+- (@action)resetPassword:(id)sender // private
 {
     [self close];
     [resetPasswordPanelController showWindow:nil];

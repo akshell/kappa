@@ -6,7 +6,7 @@
     id delegate @accessors(readonly);
 }
 
-- (id)initWithFrame:(CGRect)frame
+- (id)initWithFrame:(CGRect)frame // public
 {
     if (self = [super initWithFrame: frame]) {
         textarea = document.createElement("textarea");
@@ -25,22 +25,22 @@
     return self;
 }
 
-- (void)setEditable:(BOOL)flag
+- (void)setEditable:(BOOL)flag // public
 {
     textarea.readOnly = !flag;
 }
 
-- (CPString)stringValue
+- (CPString)stringValue // public
 {
     return textarea.value;
 }
 
-- (void)setStringValue:(CPString)value
+- (void)setStringValue:(CPString)value // public
 {
     textarea.value = value;
 }
 
-- (void)setDelegate:(id)aDelegate
+- (void)setDelegate:(id)aDelegate // public
 {
     var defaultCenter = [CPNotificationCenter defaultCenter];
     if (delegate)
@@ -53,23 +53,23 @@
                             object:self];
 }
 
-- (BOOL)acceptsFirstResponder
+- (BOOL)acceptsFirstResponder // public
 {
   return YES;
 }
 
-- (BOOL)becomeFirstResponder
+- (BOOL)becomeFirstResponder // public
 {
     setTimeout(function() { textarea.focus(); }, 0);
     return YES;
 }
 
-- (void)propagate
+- (void)propagate // private
 {
     [[[self window] platformWindow] _propagateCurrentDOMEvent:YES];
 }
 
-- (void)keyDown:(CPEvent)event
+- (void)keyDown:(CPEvent)event // public
 {
     if ([event keyCode] == CPTabKeyCode)
         [[self window] selectKeyViewFollowingView:self];
@@ -77,23 +77,23 @@
         [self propagate];
 }
 
-- (void)keyUp:(CPEvent)event
+- (void)keyUp:(CPEvent)event // public
 {
     [self propagate];
     [self textDidChange:[CPNotification notificationWithName:CPControlTextDidChangeNotification object:self userInfo:nil]];
 }
 
-- (void)mouseDown:(CPEvent)event
+- (void)mouseDown:(CPEvent)event // public
 {
     [self propagate];
 }
 
-- (void)mouseDown:(CPEvent)event
+- (void)mouseDown:(CPEvent)event // public
 {
     [self propagate];
 }
 
-- (void)mouseDragged:(CPEvent)event
+- (void)mouseDragged:(CPEvent)event // public
 {
     [self propagate];
 }

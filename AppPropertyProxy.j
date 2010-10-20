@@ -7,19 +7,19 @@
     CPString propertyName;
 }
 
-- (id)initWithPropertyName:(CPString)aPropertyName
+- (id)initWithPropertyName:(CPString)aPropertyName // public
 {
     if (self = [super init])
         propertyName = aPropertyName;
     return self;
 }
 
-- (CPMethodSignature)methodSignatureForSelector:(SEL)selector
+- (CPMethodSignature)methodSignatureForSelector:(SEL)selector // protected
 {
     return YES;
 }
 
-- (void)forwardInvocation:(CPInvocation)invocation
+- (void)forwardInvocation:(CPInvocation)invocation // protected
 {
     [invocation setTarget:DATA.app[propertyName]];
     [invocation invoke];

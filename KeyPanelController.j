@@ -9,17 +9,17 @@
     CPString keyValue;
 }
 
-- (id)init
+- (id)init // public
 {
     return [super initWithWindowCibName:"KeyPanel"];
 }
 
-- (void)awakeFromCib
+- (void)awakeFromCib // private
 {
     [keyTextView setEditable:NO];
 }
 
-- (void)showWindow:(id)sender
+- (void)showWindow:(id)sender // public
 {
     [super showWindow:sender];
     if (keyValue) {
@@ -30,13 +30,13 @@
     }
 }
 
-- (void)didReceiveResponse:(CPString)data
+- (void)didReceiveResponse:(CPString)data // protected
 {
     keyValue = data;
     [keyTextView setStringValue:keyValue];
 }
 
-- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
+- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // protected
 {
     if (keyPath == "username")
         keyValue = nil;

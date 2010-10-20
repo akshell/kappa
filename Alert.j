@@ -1,5 +1,15 @@
 // (c) 2010 by Anton Korenyushkin
 
+var createLabel = function (text, y, isBold) {
+    var font = isBold ? [CPFont boldSystemFontOfSize:12] : [CPFont systemFontOfSize:12];
+    var size = [text sizeWithFont:font inWidth:190];
+    var label = [[CPTextField alloc] initWithFrame:CGRectMake(80, y, size.width, size.height + 4)];
+    [label setFont:font];
+    [label setLineBreakMode:CPLineBreakByWordWrapping];
+    [label setStringValue:text];
+    return label;
+};
+
 @implementation Alert : CPObject
 {
     CPString message @accessors;
@@ -9,28 +19,45 @@
     CPPanel panel;
 }
 
-+ (CPTextField)createLabelWithText:(CPString)text y:y isBold:isBold
+- (void)initWithMessage:(CPString)aMessage comment:(CPString)aComment target:(id)aTarget action:(SEL)anAction // public
 {
-    var font = isBold ? [CPFont boldSystemFontOfSize:12] : [CPFont systemFontOfSize:12];
-    var size = [text sizeWithFont:font inWidth:190];
-    var label = [[CPTextField alloc] initWithFrame:CGRectMake(80, y, size.width, size.height + 4)];
-    [label setFont:font];
-    [label setLineBreakMode:CPLineBreakByWordWrapping];
-    [label setStringValue:text];
-    return label;
+    if (self = [super init]) {
+        message = aMessage;
+        comment = aComment;
+        target = aTarget;
+        action = anAction;
+    }
+    return self;
 }
 
-- (CPString)imagePath
+- (id)initWithMessage:(CPString)aMessage comment:(CPString)aComment // public
 {
-    return "Error.png";
+    return [self initWithMessage:aMessage comment:aComment target:nil action:nil];
 }
 
-- (void)createPanelWithStyleMask:(unsigned)styleMask
+- (id)initWithMessage:(CPString)aMessage // public
 {
-    var messageLabel = [Alert createLabelWithText:message y:16 isBold:YES];
+    return [self initWithMessage:aMessage comment:nil target:nil action:nil];
+}
+
+- (void)showPanel // public
+{
+    [self createPanelWithStyleMask:CPTitledWindowMask];
+    [CPApp runModalForWindow:panel];
+}
+
+- (void)showSheetForWindow:(CPWindow)window // public
+{
+    [self createPanelWithStyleMask:CPDocModalWindowMask];
+    [CPApp beginSheet:panel modalForWindow:window modalDelegate:nil didEndSelector:nil contextInfo:nil];
+}
+
+- (void)createPanelWithStyleMask:(unsigned)styleMask // protected
+{
+    var messageLabel = createLabel(message, 16, YES);
     var commentLabel;
     if (comment)
-        commentLabel = [Alert createLabelWithText:comment y:CGRectGetMaxY([messageLabel frame]) + 8 isBold:NO];
+        commentLabel = createLabel(comment, CGRectGetMaxY([messageLabel frame]) + 8, NO);
     var okButtonY = MAX(CGRectGetMaxY([commentLabel || messageLabel frame]), 64) + 16;
     var okButton = [[CPButton alloc] initWithFrame:CGRectMake(210, okButtonY, 60, 24)];
     [okButton setTitle:"OK"];
@@ -49,45 +76,17 @@
     [panel setDelegate:self];
 }
 
-- (void)initWithMessage:(CPString)aMessage comment:(CPString)aComment target:(id)aTarget action:(SEL)anAction
+- (CPString)imagePath // protected
 {
-    if (self = [super init]) {
-        message = aMessage;
-        comment = aComment;
-        target = aTarget;
-        action = anAction;
-    }
-    return self;
+    return "Error.png";
 }
 
-- (id)initWithMessage:(CPString)aMessage comment:(CPString)aComment
-{
-    return [self initWithMessage:aMessage comment:aComment target:nil action:nil];
-}
-
-- (id)initWithMessage:(CPString)aMessage
-{
-    return [self initWithMessage:aMessage comment:nil target:nil action:nil];
-}
-
-- (void)showPanel
-{
-    [self createPanelWithStyleMask:CPTitledWindowMask];
-    [CPApp runModalForWindow:panel];
-}
-
-- (void)showSheetForWindow:(CPWindow)window
-{
-    [self createPanelWithStyleMask:CPDocModalWindowMask];
-    [CPApp beginSheet:panel modalForWindow:window modalDelegate:nil didEndSelector:nil contextInfo:nil];
-}
-
-- (void)confirm
+- (void)confirm // protected
 {
     [panel dismiss];
 }
 
-- (void)windowWillClose:(id)sender
+- (void)windowWillClose:(id)sender // private
 {
     if (![panel isSheet])
         [CPApp stopModal];
@@ -95,7 +94,7 @@
         objj_msgSend(target, action, self);
 }
 
-- (BOOL)shouldSendAction
+- (BOOL)shouldSendAction // protected
 {
     return YES;
 }

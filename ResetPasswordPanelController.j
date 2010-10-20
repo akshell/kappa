@@ -8,23 +8,23 @@
     @outlet CPButton submitButton;
 }
 
-- (void)init
+- (void)init // public
 {
     return [super initWithWindowCibName:"ResetPasswordPanel"];
 }
 
-- (void)awakeFromCib
+- (void)awakeFromCib // private
 {
     [submitButton setEnabled:NO];
     [submitButton setKeyEquivalent:CPCarriageReturnCharacter];
 }
 
-- (void)controlTextDidChange:(id)sender
+- (void)controlTextDidChange:(id)sender // private
 {
     [submitButton setEnabled:[nameOrEmailField stringValue]];
 }
 
-- (@action)submit:(id)sender
+- (@action)submit:(id)sender // private
 {
     var value = [nameOrEmailField stringValue];
     var data = {};
@@ -32,7 +32,7 @@
     [self requestWithMethod:"POST" URL:"/password" data:data];
 }
 
-- (void)didReceiveResponse:(JSObject)data
+- (void)didReceiveResponse:(JSObject)data // protected
 {
     [[self window] close];
     var panel = [[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, 318, 104) styleMask:CPTitledWindowMask];
@@ -54,7 +54,7 @@
     [CPApp runModalForWindow:panel];
 }
 
-- (void)stopModal:(CPButton)sender
+- (void)stopModal:(CPButton)sender // private
 {
     [CPApp stopModal];
     [[sender window] close];

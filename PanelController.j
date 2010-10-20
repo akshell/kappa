@@ -4,31 +4,31 @@
 {
 }
 
-- (id)initWithWindow:(CPWindow)window
+- (id)initWithWindow:(CPWindow)window // public
 {
     if (self = [super initWithWindow:window])
         [DATA addObserver:self forKeyPath:"username" options:nil context:nil];
     return self;
 }
 
-- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
+- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // protected
 {
     if (keyPath == "username")
         [self close];
 }
 
-- (void)loadWindow
+- (void)loadWindow // public
 {
     [super loadWindow];
     [[self window] setDelegate:self];
 }
 
-- (void)windowWillClose:(id)sender
+- (void)windowWillClose:(id)sender // private
 {
     [self setWindow:nil];
 }
 
-- (@action)showWindow:(id)sender
+- (@action)showWindow:(id)sender // public
 {
     if (![[self window] isVisible])
         [[self window] center];

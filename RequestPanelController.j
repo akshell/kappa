@@ -8,7 +8,7 @@
 {
 }
 
-- (void)requestWithMethod:(CPString)method URL:(CPString)url data:(JSObject)data
+- (void)requestWithMethod:(CPString)method URL:(CPString)url data:(JSObject)data // protected
 {
     var request = [[HTTPRequest alloc] initWithMethod:method URL:url target:self action:@selector(didReceiveResponse:)];
     [request setErrorMessageAction:@selector(didEndRequestErrorSheet:)];
@@ -16,12 +16,12 @@
     [request send:data];
 }
 
-- (void)requestWithMethod:(CPString)method URL:(CPString)url
+- (void)requestWithMethod:(CPString)method URL:(CPString)url // protected
 {
     [self requestWithMethod:method URL:url data:nil];
 }
 
-- (void)didEndRequestErrorSheet:(Alert)sender
+- (void)didEndRequestErrorSheet:(Alert)sender // protected
 {
 }
 

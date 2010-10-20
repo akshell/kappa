@@ -13,12 +13,12 @@
     @outlet CPButton changeButton;
 }
 
-- (void)init
+- (void)init // public
 {
     return [super initWithWindowCibName:"ChangePasswordPanel"];
 }
 
-- (void)awakeFromCib
+- (void)awakeFromCib // private
 {
     [oldPasswordLabel, newPasswordLabel, confirmLabel].forEach(
         function (label) { [label setAlignment:CPRightTextAlignment]; });
@@ -28,12 +28,12 @@
     [changeButton setKeyEquivalent:CPCarriageReturnCharacter];
 }
 
-- (void)controlTextDidChange:(id)sender
+- (void)controlTextDidChange:(id)sender // private
 {
     [changeButton setEnabled:[oldPasswordField stringValue] && [newPasswordField stringValue] && [confirmField stringValue]];
 }
 
-- (@action)changePassword:(id)sender
+- (@action)changePassword:(id)sender // private
 {
     var newPassword = [newPasswordField stringValue];
     if ([confirmField stringValue] == newPassword)
@@ -48,14 +48,14 @@
                      showSheetForWindow:[self window]];
 }
 
-- (void)didEndRequestErrorSheet:(Alert)sender
+- (void)didEndRequestErrorSheet:(Alert)sender // protected
 {
     [oldPasswordField setStringValue:""];
     [changeButton setEnabled:NO];
     [[self window] makeFirstResponder:oldPasswordField];
 }
 
-- (void)didEndMatchErrorSheet
+- (void)didEndMatchErrorSheet // private
 {
     [newPasswordField setStringValue:""];
     [confirmField setStringValue:""];
@@ -63,7 +63,7 @@
     [[self window] makeFirstResponder:newPasswordField];
 }
 
-- (void)didReceiveResponse:(JSObject)data
+- (void)didReceiveResponse:(JSObject)data // protected
 {
    [[self window] close];
    [oldPasswordField, newPasswordField, confirmField].forEach(

@@ -9,12 +9,12 @@
     @outlet CPButton sendButton;
 }
 
-- (void)init
+- (void)init // public
 {
     return [super initWithWindowCibName:"ContactPanel"];
 }
 
-- (void)awakeFromCib
+- (void)awakeFromCib // private
 {
     [messageTextView setDelegate:self];
     [sendButton setEnabled:NO];
@@ -24,17 +24,17 @@
     }
 }
 
-- (void)controlTextDidChange:(id)sender
+- (void)controlTextDidChange:(id)sender // private
 {
     [sendButton setEnabled:[messageTextView stringValue]];
 }
 
-- (@action)submit:(id)sender
+- (@action)submit:(id)sender // private
 {
     [self requestWithMethod:"POST" URL:"/contact" data:{email: [emailField stringValue], message:[messageTextView stringValue]}];
 }
 
-- (void)didReceiveResponse:(JSObject)data
+- (void)didReceiveResponse:(JSObject)data // protected
 {
     [self close];
 }

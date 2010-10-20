@@ -10,7 +10,7 @@
     SEL action;
 }
 
-- (void)initWithTarget:(id)aTarget action:(SEL)anAction
+- (void)initWithTarget:(id)aTarget action:(SEL)anAction // public
 {
     if (self = [super initWithWindowCibName:"NewAppPanel"]) {
         target = aTarget;
@@ -19,23 +19,23 @@
     return self;
 }
 
-- (void)awakeFromCib
+- (void)awakeFromCib // private
 {
     [createButton setEnabled:NO];
     [createButton setKeyEquivalent:CPCarriageReturnCharacter];
 }
 
-- (void)controlTextDidChange:(id)sender
+- (void)controlTextDidChange:(id)sender // private
 {
     [createButton setEnabled:[nameField stringValue]];
 }
 
-- (@action)submit:(id)sender
+- (@action)submit:(id)sender // private
 {
     [self requestWithMethod:"POST" URL:"/apps/" data:{name: [nameField stringValue]}];
 }
 
-- (void)didReceiveResponse:(JSObject)data
+- (void)didReceiveResponse:(JSObject)data // protected
 {
     objj_msgSend(target, action, [nameField stringValue]);
     [self close];

@@ -11,7 +11,7 @@
     CPWindow window @accessors;
 }
 
-- (id)initWithMethod:(CPString)method URL:(CPString)url target:(id)target action:(SEL)action
+- (id)initWithMethod:(CPString)method URL:(CPString)url target:(id)target action:(SEL)action // public
 {
     if (self = [super init]) {
         showsAlert = YES;
@@ -51,17 +51,17 @@
     return self;
 }
 
-- (id)initWithMethod:(CPString)method URL:(CPString)url
+- (id)initWithMethod:(CPString)method URL:(CPString)url // public
 {
     return [self initWithMethod:method URL:url target:nil action:nil];
 }
 
-- (void)setValue:(CPString)value forHeader:(CPString)header
+- (void)setValue:(CPString)value forHeader:(CPString)header // public
 {
     request.setRequestHeader(header, value);
 }
 
-- (void)send:(JSObject)data
+- (void)send:(JSObject)data // public
 {
     if (data && typeof(data) != "string") {
         [self setValue:"application/json" forHeader:"Content-Type"];
@@ -70,7 +70,7 @@
     request.send(data || null);
 }
 
-- (void)send
+- (void)send // public
 {
     request.send(null);
 }

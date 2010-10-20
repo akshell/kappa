@@ -2,7 +2,7 @@
 
 @implementation CPPanel (EscapeAddition)
 
-- (void)dismiss
+- (void)dismiss // public
 {
     if ([self isSheet])
         [CPApp endSheet:self];
@@ -10,7 +10,7 @@
         [self close];
 }
 
-- (BOOL)performKeyEquivalent:(CPEvent)event
+- (BOOL)performKeyEquivalent:(CPEvent)event // public
 {
     if ([event characters] == CPEscapeFunctionKey) {
         [self dismiss];

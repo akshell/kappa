@@ -5,7 +5,7 @@
     CPString name @accessors;
 }
 
-- (id)initWithName:(CPString)aName
+- (id)initWithName:(CPString)aName // public
 {
     if (self = [super init])
         name = aName;
@@ -19,7 +19,7 @@
     Folder parentFolder @accessors;
 }
 
-- (id)initWithName:(CPString)aName parentFolder:(Folder)aParentFolder
+- (id)initWithName:(CPString)aName parentFolder:(Folder)aParentFolder // public
 {
     if (self = [super initWithName:aName])
         parentFolder = aParentFolder;
@@ -34,7 +34,7 @@
     CPString savedContent @accessors;
 }
 
-- (id)initEmptyWithName:(CPString)aName parentFolder:(Folder)aParentFolder
+- (id)initEmptyWithName:(CPString)aName parentFolder:(Folder)aParentFolder // public
 {
     if (self = [self initWithName:aName parentFolder:aParentFolder])
         savedContent = currentContent = "";
@@ -49,7 +49,7 @@
     CPArray files;
 }
 
-- (id)initWithName:(CPString)aName parentFolder:(Folder)aParentFolder folders:(CPArray)folders_ files:(CPArray)files_
+- (id)initWithName:(CPString)aName parentFolder:(Folder)aParentFolder folders:(CPArray)folders_ files:(CPArray)files_ // public
 {
     if (self = [super initWithName:aName parentFolder:aParentFolder]) {
         folders = folders_;
@@ -58,7 +58,7 @@
     return self;
 }
 
-- (id)initWithName:(CPString)aName parentFolder:(Folder)aParentFolder tree:(JSObject)tree
+- (id)initWithName:(CPString)aName parentFolder:(Folder)aParentFolder tree:(JSObject)tree // public
 {
     if (self = [super initWithName:aName parentFolder:aParentFolder]) {
         var folderNames = [];
@@ -73,17 +73,17 @@
     return self;
 }
 
-- (id)initWithTree:(JSObject)tree
+- (id)initWithTree:(JSObject)tree // public
 {
     return [self initWithName:"" parentFolder:nil tree:tree];
 }
 
-- (id)initWithName:(CPString)aName parentFolder:(Folder)aParentFolder
+- (id)initWithName:(CPString)aName parentFolder:(Folder)aParentFolder // public
 {
     return [self initWithName:aName parentFolder:aParentFolder folders:[] files:[]];
 }
 
-- (Entry)childWithName:(CPString)aName
+- (Entry)childWithName:(CPString)aName // public
 {
     for (var i = 0; i < folders.length; ++i)
         if (folders[i].name == aName)
@@ -107,7 +107,7 @@
     CPString version;
 }
 
-+ (CPString)identifierForAuthorName:(CPString)authorName appName:(CPString)appName version:(CPString)version
++ (CPString)identifierForAuthorName:(CPString)authorName appName:(CPString)appName version:(CPString)version // public
 {
     return authorName + "/" + appName + ":" + version;
 }
@@ -115,7 +115,7 @@
 - (id)initWithName:(CPString)aName
         authorName:(CPString)anAuthorName
            appName:(CPString)anAppName
-           version:(CPString)aVersion
+           version:(CPString)aVersion // public
 {
     if (self = [super initWithName:aName]) {
         authorName = anAuthorName;
@@ -126,7 +126,7 @@
     return self;
 }
 
-- (id)initWithName:(CPString)aName identifier:(CPString)anIdentifier
+- (id)initWithName:(CPString)aName identifier:(CPString)anIdentifier // public
 {
     if (self = [super initWithName:aName]) {
         identifier = anIdentifier;
@@ -150,12 +150,12 @@
     CPArray libs @accessors;
 }
 
-- (CPString)URL
+- (CPString)URL // public
 {
     return "/apps/" + name + "/";
 }
 
-- (Env)envWithName:(CPString)aName
+- (Env)envWithName:(CPString)aName // public
 {
     var nameLower = aName.toLowerCase();
     for (var i = 0; i < envs.length; ++i)
@@ -164,7 +164,7 @@
     return nil;
 }
 
-- (Lib)libWithName:(CPString)aName
+- (Lib)libWithName:(CPString)aName // public
 {
     for (var i = 0; i < libs.length; ++i)
         if (libs[i].name == aName)
@@ -185,7 +185,7 @@
     JSObject libs;
 }
 
-- (id)init
+- (id)init // public
 {
     if (self = [super init]) {
         username = USERNAME;
@@ -206,7 +206,7 @@
     return self;
 }
 
-- (void)setAppNames:(CPArray)appNames config:(JSObject)config
+- (void)setAppNames:(CPArray)appNames config:(JSObject)config // public
 {
     [self willChangeValueForKey:"apps"];
     apps = appNames.map(function (name) { return [[App alloc] initWithName:name]; });
@@ -214,7 +214,7 @@
     [self didChangeValueForKey:"apps"];
 }
 
-- (void)setAppIndex:(unsigned)anAppIndex
+- (void)setAppIndex:(unsigned)anAppIndex // public
 {
     isDirty = YES;
     appIndex = anAppIndex;

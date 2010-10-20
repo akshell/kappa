@@ -33,7 +33,11 @@
     CPPopUpButton appPopUpButton;
 }
 
-- (void)applicationDidFinishLaunching:(CPNotification)aNotification
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// General
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+- (void)applicationDidFinishLaunching:(CPNotification)aNotification // private
 {
     sidebarControllerProxy = [[AppPropertyProxy alloc] initWithPropertyName:"sidebarController"];
     aboutPanelController = [AboutPanelController new];
@@ -114,12 +118,12 @@
     [DATA addObserver:self forKeyPath:"app" options:nil context:nil];
 }
 
-- (CPPopUpButton)appPopUpButton
+- (CPPopUpButton)appPopUpButton // private
 {
     return [[[[mainWindow toolbar] items][0] view] subviews][0];
 }
 
-- (void)addUserMenus
+- (void)addUserMenus // private
 {
     var mainMenu = [CPApp mainMenu];
     if (DATA.username) {
@@ -134,7 +138,7 @@
     }
 }
 
-- (void)fillAppMenus
+- (void)fillAppMenus // private
 {
     var appPopUpButton = [self appPopUpButton];
     DATA.apps.forEach(
@@ -153,7 +157,7 @@
     [self setAppItemsEnabled:DATA.apps.length];
 }
 
-- (void)showSidebar
+- (void)showSidebar // private
 {
     if (DATA.app) {
         if (!DATA.app.sidebarController)
@@ -169,7 +173,7 @@
     }
 }
 
-- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context
+- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
     switch (keyPath) {
     case "username":
@@ -190,7 +194,7 @@
     }
 }
 
-- (void)setAppItemsEnabled:(BOOL)enabled
+- (void)setAppItemsEnabled:(BOOL)enabled // private
 {
     var mainMenu = [CPApp mainMenu];
     [[mainMenu itemAtIndex:2] setEnabled:enabled];
@@ -202,23 +206,23 @@
         function (item) { [item setEnabled:enabled]; });
 }
 
-@end
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Menu target
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@implementation AppController (MenuDelegate)
-
-- (void)logOut
+- (void)logOut // private
 {
     [[[HTTPRequest alloc] initWithMethod:"POST" URL:"/logout" target:self action:@selector(didLogOut)] send];
 }
 
-- (void)didLogOut
+- (void)didLogOut // private
 {
     [DATA setUsername:""];
     [DATA setEmail:""];
     [DATA setAppNames:["hello-world"] config:{}];
 }
 
-- (void)switchApp:(CPMenuItem)sender
+- (void)switchApp:(CPMenuItem)sender // private
 {
     var index = [[sender menu] indexOfItem:sender];
     if (index == DATA.appIndex)
@@ -229,7 +233,7 @@
     [DATA setAppIndex:index];
 }
 
-- (void)didCreateAppWithName:(CPString)appName
+- (void)didCreateAppWithName:(CPString)appName // private
 {
     var appNameLower = appName.toLowerCase();
     for (var index = 0; index < DATA.apps.length; ++index)
@@ -253,7 +257,7 @@
     [DATA setAppIndex:index];
 }
 
-- (void)showDeleteApp
+- (void)showDeleteApp // private
 {
     [[[Confirm alloc] initWithMessage:"Are you sure want to delete the app \"" + DATA.app.name + "\"?"
                               comment:"You cannot undo this action."
@@ -262,7 +266,7 @@
         showPanel];
 }
 
-- (void)deleteApp
+- (void)deleteApp // private
 {
     [[[HTTPRequest alloc] initWithMethod:"DELETE" URL:[DATA.app URL]] send];
     [appsMenu removeItemAtIndex:DATA.appIndex];
@@ -281,16 +285,16 @@
     [DATA setAppIndex:0];
 }
 
-@end
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Toolbar delegate
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@implementation AppController (ToolbarDelegate)
-
-- (CPArray)toolbarAllowedItemIdentifiers:(CPToolbar)toolbar
+- (CPArray)toolbarAllowedItemIdentifiers:(CPToolbar)toolbar // private
 {
     return [CPToolbarSpaceItemIdentifier, "App", "New", "Save", "Save All", "Eval", "Preview", "Git", "Diff", "Commit"];
 }
 
-- (CPArray)toolbarDefaultItemIdentifiers:(CPToolbar)toolbar
+- (CPArray)toolbarDefaultItemIdentifiers:(CPToolbar)toolbar // private
 {
     return [
         "App", CPToolbarSpaceItemIdentifier,
@@ -300,7 +304,9 @@
     ];
 }
 
-- (CPToolbarItem)toolbar:(CPToolbar)toolbar itemForItemIdentifier:(CPString)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
+- (CPToolbarItem)toolbar:(CPToolbar)toolbar
+   itemForItemIdentifier:(CPString)itemIdentifier
+willBeInsertedIntoToolbar:(BOOL)flag // private
 {
     var item = [[CPToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
     [item setLabel:itemIdentifier];
@@ -328,11 +334,11 @@
     return item;
 }
 
-@end
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SplitView delegate
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-@implementation AppController (SplitViewDelegate)
-
-- (unsigned)splitView:(CPSplitView)splitView constrainSplitPosition:(unsigned)position ofSubviewAt:(unsigned)index
+- (unsigned)splitView:(CPSplitView)splitView constrainSplitPosition:(unsigned)position ofSubviewAt:(unsigned)index // private
 {
     position = MIN(MAX(position, 150), [splitView frameSize].width - 500);
     [[[mainWindow toolbar] items][0] setMinSize:CGSizeMake(position - 35, 32)];

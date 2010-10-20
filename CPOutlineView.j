@@ -2,31 +2,31 @@
 
 @implementation CPOutlineView (Utils)
 
-- (id)rootForItem:(id)item
+- (id)rootForItem:(id)item // public
 {
     for (var parentItem = item; parentItem; parentItem = [self parentForItem:parentItem])
         item = parentItem;
     return item;
 }
 
-- (id)selectedItem
+- (id)selectedItem // public
 {
     return [self itemAtRow:[self selectedRow]];
 }
 
-- (CPArray)selectedItems
+- (CPArray)selectedItems // public
 {
     var indexes = []
     [[self selectedRowIndexes] getIndexes:indexes maxCount:-1 inIndexRange:nil];
     return indexes.map(function (index) { return [self itemAtRow:index]; });
 }
 
-- (void)selectItem:(id)item
+- (void)selectItem:(id)item // public
 {
     [self selectRowIndexes:[CPIndexSet indexSetWithIndex:[self rowForItem:item]] byExtendingSelection:NO];
 }
 
-- (void)showItem:(id)item
+- (void)showItem:(id)item // public
 {
     [self scrollRectToVisible:[self frameOfDataViewAtColumn:0 row:[self rowForItem:item]]];
 }

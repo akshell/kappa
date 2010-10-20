@@ -10,12 +10,12 @@
     @outlet CPTextField rightsLabel;
 }
 
-- (id)init
+- (id)init // public
 {
     return [super initWithWindowCibName:"AboutPanel"];
 }
 
-- (void)awakeFromCib
+- (void)awakeFromCib // private
 {
     [akshellLabel, versionLabel, copyrightLabel, rightsLabel].forEach(
         function (label) { [label setAlignment:CPCenterTextAlignment]; });

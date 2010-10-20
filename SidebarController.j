@@ -24,7 +24,7 @@
     CPArray renameControls;
 }
 
-- (id)initWithApp:(App)anApp
+- (id)initWithApp:(App)anApp // public
 {
     if (self = [super init]) {
         app = anApp;
