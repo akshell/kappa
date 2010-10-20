@@ -1,6 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
-@implementation CPPanel (EscapeAddition)
+@implementation CPPanel (Utils)
 
 - (void)dismiss // public
 {
