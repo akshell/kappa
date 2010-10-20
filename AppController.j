@@ -29,7 +29,11 @@
     CPMenuItem passwordMenuItem;
     CPMenu fileMenu;
     CPMenu appsMenu;
+    CPMenuItem newFileMenuItem;
+    CPMenuItem newFolderMenuItem;
     CPMenuItem actionsMenuItem;
+    CPMenuItem newEnvMenuItem;
+    CPMenuItem useLibMenuItem;
     CPPopUpButton appPopUpButton;
 }
 
@@ -61,8 +65,8 @@
 
     fileMenu = [CPMenu new];
     [fileMenu addItemWithTitle:"New App…" target:newAppPanelController action:@selector(showWindow:)];
-    [fileMenu addItemWithTitle:"New File" target:sidebarControllerProxy action:@selector(showNewFile)];
-    [fileMenu addItemWithTitle:"New Folder" target:sidebarControllerProxy action:@selector(showNewFolder)];
+    newFileMenuItem = [fileMenu addItemWithTitle:"New File" target:sidebarControllerProxy action:@selector(showNewFile)];
+    newFolderMenuItem = [fileMenu addItemWithTitle:"New Folder" target:sidebarControllerProxy action:@selector(showNewFolder)];
     appsMenu = [CPMenu new];
     [[fileMenu addItemWithTitle:"Open App"] setSubmenu:appsMenu];
     [fileMenu addItem:[CPMenuItem separatorItem]];
@@ -74,8 +78,8 @@
     [[mainMenu addItemWithTitle:"File"] setSubmenu:fileMenu];
 
     var appMenu = [CPMenu new];
-    [appMenu addItemWithTitle:"New Environment" target:sidebarControllerProxy action:@selector(showNewEnv)];
-    [appMenu addItemWithTitle:"Use Library…" target:sidebarControllerProxy action:@selector(showUseLib)];
+    newEnvMenuItem = [appMenu addItemWithTitle:"New Environment" target:sidebarControllerProxy action:@selector(showNewEnv)];
+    useLibMenuItem = [appMenu addItemWithTitle:"Use Library…" target:sidebarControllerProxy action:@selector(showUseLib)];
     [appMenu addItem:[CPMenuItem separatorItem]];
     [appMenu addItemWithTitle:"Diff…"];
     [appMenu addItemWithTitle:"Commit…"];
@@ -104,6 +108,9 @@
     [akshellMenu, fileMenu, appMenu, helpMenu].forEach(
         function (menu) { [menu setAutoenablesItems:NO]; });
 
+    [newFileMenuItem, newFolderMenuItem, newEnvMenuItem, useLibMenuItem].forEach(
+        function (menuItem) { [menuItem setEnabled:NO]; });
+
     [mainMenu addItem:[CPMenuItem separatorItem]];
     [self addUserMenus];
 
@@ -115,7 +122,10 @@
 
     [DATA addObserver:self forKeyPath:"username" options:nil context:nil];
     [DATA addObserver:self forKeyPath:"apps" options:nil context:nil];
-    [DATA addObserver:self forKeyPath:"app" options:nil context:nil];
+    [DATA addObserver:self forKeyPath:"app" options:nil context:"app"];
+    [DATA addObserver:self forKeyPath:"app.code" options:nil context:"app.code"];
+    [DATA addObserver:self forKeyPath:"app.envs" options:nil context:"app.envs"];
+    [DATA addObserver:self forKeyPath:"app.libs" options:nil context:"app.libs"];
 }
 
 - (CPPopUpButton)appPopUpButton // private
@@ -175,7 +185,7 @@
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
-    switch (keyPath) {
+    switch (context || keyPath) {
     case "username":
         var mainMenu = [CPApp mainMenu];
         for (var index = [mainMenu numberOfItems]; ![[mainMenu itemAtIndex:--index] isSeparatorItem];)
@@ -191,6 +201,16 @@
         [sidebarView setSubviews:[]];
         [self showSidebar];
         break;
+    case "app.code":
+        [newFileMenuItem doSetEnabled:DATA.app && DATA.app.code];
+        [newFolderMenuItem doSetEnabled:DATA.app && DATA.app.code];
+        break;
+    case "app.envs":
+        [newEnvMenuItem doSetEnabled:DATA.app && DATA.app.envs];
+        break;
+    case "app.libs":
+        [useLibMenuItem doSetEnabled:DATA.app && DATA.app.libs];
+        break;
     }
 }
 
@@ -199,9 +219,8 @@
     var mainMenu = [CPApp mainMenu];
     [[mainMenu itemAtIndex:2] setEnabled:enabled];
     [[mainMenu itemAtIndex:3] setEnabled:enabled];
-    [fileMenu _highlightItemAtIndex:CPNotFound];
-    for (var i = 1; i < 9; ++i)
-        [[fileMenu itemAtIndex:i] setEnabled:enabled];
+    for (var i = 3; i < 9; ++i)
+        [[fileMenu itemAtIndex:i] doSetEnabled:enabled];
     [[mainWindow toolbar] items].forEach(
         function (item) { [item setEnabled:enabled]; });
 }

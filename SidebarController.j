@@ -16,18 +16,25 @@
     CPOutlineView outlineView;
     CPButtonBar buttonBar;
     CPButton plusButton;
+    CPButton minusButton;
     CPMenu actionsMenu;
-    CPMenu actionButtonMenu;
-    CPArray deleteControls;
-    CPArray moveControls;
-    CPArray duplicateControls;
-    CPArray renameControls;
+    CPMenuItem newFileMenuItem;
+    CPMenuItem newFolderMenuItem;
+    CPMenuItem newEnvMenuItem;
+    CPMenuItem useLibMenuItem;
+    CPArray deleteMenuItems;
+    CPArray moveMenuItems;
+    CPArray duplicateMenuItems;
+    CPArray renameMenuItems;
 }
 
 - (id)initWithApp:(App)anApp // public
 {
     if (self = [super init]) {
         app = anApp;
+        [app addObserver:self forKeyPath:"code" options:nil context:nil];
+        [app addObserver:self forKeyPath:"envs" options:nil context:nil];
+        [app addObserver:self forKeyPath:"libs" options:nil context:nil];
 
         codeManager = [[CodeManager alloc] initWithApp:app];
         envManager = [[EnvManager alloc] initWithApp:app];
@@ -43,29 +50,31 @@
         plusButton = [CPButtonBar plusButton];
         [plusButton setTarget:self];
         [plusButton setAction:@selector(showAdd)];
-        var minusButton = [CPButtonBar minusButton];
+        minusButton = [CPButtonBar minusButton];
         [minusButton setTarget:self];
         [minusButton setAction:@selector(showDelete)];
         var actionButton = [CPButtonBar actionPopupButton];
-        actionButtonMenu = [actionButton menu];
-        [actionButtonMenu addItemWithTitle:"New File" target:self action:@selector(showNewFile)];
-        [actionButtonMenu addItemWithTitle:"New Folder" target:self action:@selector(showNewFolder)];
-        [actionButtonMenu addItemWithTitle:"New Environment" target:self action:@selector(showNewEnv)];
-        [actionButtonMenu addItemWithTitle:"Use Library…" target:self action:@selector(showUseLib)];
+        var actionButtonMenu = [actionButton menu];
+        newFileMenuItem = [actionButtonMenu addItemWithTitle:"New File" target:self action:@selector(showNewFile)];
+        newFolderMenuItem = [actionButtonMenu addItemWithTitle:"New Folder" target:self action:@selector(showNewFolder)];
+        newEnvMenuItem = [actionButtonMenu addItemWithTitle:"New Environment" target:self action:@selector(showNewEnv)];
+        useLibMenuItem = [actionButtonMenu addItemWithTitle:"Use Library…" target:self action:@selector(showUseLib)];
         [actionButtonMenu addItem:[CPMenuItem separatorItem]];
         actionsMenu = [CPMenu new];
-        deleteControls = [minusButton];
-        moveControls = [];
-        duplicateControls = [];
-        renameControls = [];
+        deleteMenuItems = [];
+        moveMenuItems = [];
+        duplicateMenuItems = [];
+        renameMenuItems = [];
         [actionButtonMenu, actionsMenu].forEach(
             function (menu) {
                 [menu setAutoenablesItems:NO];
-                deleteControls.push([menu addItemWithTitle:"Delete…" target:self action:@selector(showDelete)]);
-                moveControls.push([menu addItemWithTitle:"Move…" target:nil action:nil]);
-                duplicateControls.push([menu addItemWithTitle:"Duplicate" target:nil action:nil]);
-                renameControls.push([menu addItemWithTitle:"Rename" target:self action:@selector(showRename)]);
+                deleteMenuItems.push([menu addItemWithTitle:"Delete…" target:self action:@selector(showDelete)]);
+                moveMenuItems.push([menu addItemWithTitle:"Move…" target:nil action:nil]);
+                duplicateMenuItems.push([menu addItemWithTitle:"Duplicate" target:nil action:nil]);
+                renameMenuItems.push([menu addItemWithTitle:"Rename" target:self action:@selector(showRename)]);
             });
+        [newFileMenuItem, newFolderMenuItem, newEnvMenuItem, useLibMenuItem].forEach(
+            function (menuItem) { [menuItem setEnabled:NO]; });
 
         buttonBar = [CPButtonBar new];
         [buttonBar setAutoresizingMask:CPViewWidthSizable | CPViewMinYMargin];
@@ -148,18 +157,43 @@
     }
     var itemsAreMovableAndDuplicatable = itemsAreDeletable && firstManager === codeManager;
     var itemIsRenamable = itemsAreDeletable && items.length == 1;
-    [actionsMenu _highlightItemAtIndex:CPNotFound];
-    [actionButtonMenu _highlightItemAtIndex:CPNotFound];
-    [plusButton setEnabled:managerIsCommon];
+    [plusButton setEnabled:managerIsCommon && [firstManager isReady]];
+    [minusButton setEnabled:itemsAreDeletable];
     [
-        [deleteControls, itemsAreDeletable],
-        [moveControls, itemsAreMovableAndDuplicatable],
-        [duplicateControls, itemsAreMovableAndDuplicatable],
-        [renameControls, itemIsRenamable]
+        [deleteMenuItems, itemsAreDeletable],
+        [moveMenuItems, itemsAreMovableAndDuplicatable],
+        [duplicateMenuItems, itemsAreMovableAndDuplicatable],
+        [renameMenuItems, itemIsRenamable]
     ].forEach(
         function (pair) {
-            pair[0].forEach(function (control) { [control setEnabled:pair[1]]; });
+            pair[0].forEach(function (menuItem) { [menuItem doSetEnabled:pair[1]]; });
         });
+}
+
+- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
+{
+    var manager;
+    switch (keyPath) {
+    case "code":
+        [newFileMenuItem doSetEnabled:YES];
+        [newFolderMenuItem doSetEnabled:YES];
+        manager = codeManager;
+        break;
+    case "envs":
+        [newEnvMenuItem doSetEnabled:YES];
+        manager = envManager;
+        break;
+    case "libs":
+        [useLibMenuItem doSetEnabled:YES];
+        manager = libManager;
+        break;
+    }
+    var items = [outlineView selectedItems];
+    for (var i = 0; i < items.length; ++i)
+        if ([outlineView rootForItem:items[i]] !== manager)
+            break;
+    if (i == items.length)
+        [plusButton setEnabled:YES];
 }
 
 - (void)didManagerChange:(CPNotification)notification // private
@@ -194,9 +228,6 @@
 
 - (void)showNewEntryWithSelector:(SEL)selector // private
 {
-    // FIXME: This should be impossible
-    if (!app.code)
-        return;
     var selectedItem = [outlineView selectedItem];
     var parentFolder, parentItem;
     if ([outlineView rootForItem:selectedItem] !== codeManager || selectedItem === codeManager) {
@@ -212,9 +243,6 @@
 
 - (void)showNewEnv // public
 {
-    // FIXME: This should be impossible
-    if (!app.envs)
-        return;
     [outlineView expandItem:envManager];
     [outlineView load];
     [envManager newEnv];

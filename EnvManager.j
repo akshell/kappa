@@ -52,6 +52,11 @@
     return app.envs[index];
 }
 
+- (BOOL)isReady // public
+{
+    return !!app.envs;
+}
+
 - (CPString)URL // protected
 {
     return [app URL] + "envs/";

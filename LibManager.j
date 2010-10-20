@@ -110,6 +110,11 @@ var parseManifest = function (content) {
     return app.libs[index];
 }
 
+- (BOOL)isReady // public
+{
+    return !!app.libs;
+}
+
 - (void)codeDidChange // private
 {
     var entry = [app.code childWithName:"manifest.json"];

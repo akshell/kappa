@@ -1,6 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
-@implementation CPMenu (RemoveAllItems)
+@implementation CPMenu (Utils)
 
 - (void)removeAllItems // public
 {

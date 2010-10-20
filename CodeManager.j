@@ -120,12 +120,17 @@ var entryNameIsCorrect = function (name) {
 
 - (unsigned)numberOfChildren // public
 {
-    return [app.code numberOfChildren];
+    return app.code ? [app.code numberOfChildren] : 0;
 }
 
 - (Entry)childAtIndex:(unsigned)index // public
 {
     return [app.code childAtIndex:index];
+}
+
+- (BOOL)isReady // public
+{
+    return !!app.code;
 }
 
 - (CPString)URL // protected
