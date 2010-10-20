@@ -97,6 +97,15 @@
 
 @end
 
+var entryNameIsCorrect = function (name) {
+    if (name.indexOf("/") == -1)
+        return YES;
+    [[[Alert alloc] initWithMessage:"Entry names cannot contain slashes."
+                            comment:"Please fix the entry name."]
+        showPanel];
+    return NO;
+};
+
 @implementation CodeManager : Manager
 
 - (CPString)name // public
@@ -161,7 +170,7 @@
 
 - (void)createItem:(Entry)entry withName:(CPString)name // protected
 {
-    if (name != entry.name && ![entry.parentFolder hasChildWithName:name])
+    if (name != entry.name && entryNameIsCorrect(name) && ![entry.parentFolder hasChildWithName:name])
         [entry setName:name];
     if ([entry isKindOfClass:File])
         [self createItem:entry byRequestWithMethod:"PUT" URL:[self URL] + [entry path] data:""];
@@ -171,7 +180,7 @@
 
 - (void)renameItem:(Entry)entry to:(CPString)name // protected
 {
-    if ([entry.parentFolder hasChildWithName:name])
+    if (!entryNameIsCorrect(name) || [entry.parentFolder hasChildWithName:name])
         return;
     var pathPrefix = [entry.parentFolder path];
     if (pathPrefix)
