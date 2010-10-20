@@ -35,7 +35,7 @@
     var okButton = [[CPButton alloc] initWithFrame:CGRectMake(210, okButtonY, 60, 24)];
     [okButton setTitle:"OK"];
     [okButton setTarget:self];
-    [okButton setAction:@selector(close)];
+    [okButton setAction:@selector(confirm)];
     [okButton setKeyEquivalent:CPCarriageReturnCharacter];
     panel = [[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, 286, okButtonY + 24 + 16) styleMask:styleMask];
     var contentView = [panel contentView];
@@ -79,23 +79,25 @@
 - (void)showSheetForWindow:(CPWindow)window
 {
     [self createPanelWithStyleMask:CPDocModalWindowMask];
-    [CPApp beginSheet:panel modalForWindow:window modalDelegate:self didEndSelector:@selector(didEndSheet) contextInfo:nil];
+    [CPApp beginSheet:panel modalForWindow:window modalDelegate:nil didEndSelector:nil contextInfo:nil];
 }
 
-- (void)close
+- (void)confirm
 {
-    if ([panel isSheet]) {
-        [CPApp endSheet:panel];
-    } else {
+    [panel dismiss];
+}
+
+- (void)windowWillClose:(id)sender
+{
+    if (![panel isSheet])
         [CPApp stopModal];
-        [panel close];
+    if ([self shouldSendAction])
         objj_msgSend(target, action, self);
-    }
 }
 
-- (void)didEndSheet
+- (BOOL)shouldSendAction
 {
-    objj_msgSend(target, action, self);
+    return YES;
 }
 
 @end
