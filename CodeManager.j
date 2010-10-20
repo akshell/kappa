@@ -147,12 +147,19 @@ var getDuplicatePrefix = function (base) {
 @end
 
 var entryNameIsCorrect = function (name) {
-    if (name.indexOf("/") == -1)
-        return YES;
-    [[[Alert alloc] initWithMessage:"Entry names cannot contain slashes."
-                            comment:"Please fix the entry name."]
-        showPanel];
-    return NO;
+    if (name == "." || name == "..") {
+        [[[Alert alloc] initWithMessage:"The name \"" + name + "\" is incorrect."
+                                comment:"Please fix the entry name."]
+            showPanel];
+        return NO;
+    }
+    if (name.indexOf("/") != -1) {
+        [[[Alert alloc] initWithMessage:"Entry names cannot contain slashes."
+                                comment:"Please fix the entry name."]
+            showPanel];
+        return NO;
+    }
+    return YES;
 };
 
 @implementation CodeManager : Manager
