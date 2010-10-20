@@ -21,9 +21,11 @@
     return indexes.map(function (index) { return [self itemAtRow:index]; });
 }
 
-- (void)selectItem:(id)item // public
+- (void)selectItems:(CPArray)items // public
 {
-    [self selectRowIndexes:[CPIndexSet indexSetWithIndex:[self rowForItem:item]] byExtendingSelection:NO];
+    var indexSet = [CPIndexSet new];
+    items.forEach(function (item) { [indexSet addIndex:[self rowForItem:item]]; });
+    [self selectRowIndexes:indexSet byExtendingSelection:NO];
 }
 
 - (void)showItem:(id)item // public

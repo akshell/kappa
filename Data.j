@@ -34,10 +34,10 @@
     CPString savedContent @accessors;
 }
 
-- (id)initEmptyWithName:(CPString)aName parentFolder:(Folder)aParentFolder // public
+- (id)initWithName:(CPString)aName parentFolder:(Folder)aParentFolder content:(CPString)content // public
 {
     if (self = [self initWithName:aName parentFolder:aParentFolder])
-        savedContent = currentContent = "";
+        savedContent = currentContent = content;
     return self;
 }
 

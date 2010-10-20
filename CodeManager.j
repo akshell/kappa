@@ -14,6 +14,15 @@
 
 @end
 
+var getDuplicatePrefix = function (base) {
+    if (base.substring(base.length - 5) == " copy")
+        return base;
+    var spaceIndex = base.lastIndexOf(" ");
+    return (spaceIndex == -1 || isNaN(base.substring(spaceIndex + 1)) || base.substring(spaceIndex - 5, spaceIndex) != " copy"
+            ? base + " copy"
+            : base.substring(0, spaceIndex));
+};
+
 @implementation File (CodeManager)
 
 - (BOOL)isExpandable // public
@@ -42,6 +51,22 @@
 - (void)didSave:(CPString)data content:(CPString)content // public
 {
     [self setSavedContent:content];
+}
+
+- (File)duplicate // public
+{
+    var base, suffix;
+    var dotIndex = name.lastIndexOf(".");
+    if (dotIndex < 1) {
+        base = name;
+        suffix = "";
+    } else {
+        base = name.substring(0, dotIndex);
+        suffix = name.substring(dotIndex);
+    }
+    return [[File alloc] initWithName:[parentFolder uniqueChildNameWithPrefix:getDuplicatePrefix(base) suffix:suffix]
+                         parentFolder:parentFolder
+                              content:savedContent];
 }
 
 @end
@@ -73,16 +98,22 @@
     return parentFolder.folders;
 }
 
-- (CPString)uniqueChildNameWithPrefix:(CPString)prefix // public
+- (CPString)uniqueChildNameWithPrefix:(CPString)prefix suffix:(CPString)suffix // public
 {
-    if (![self childWithName:prefix])
-        return prefix;
+    var childName = prefix + suffix;
+    if (![self childWithName:childName])
+        return childName;
     prefix += " ";
     for (var i = 2;; ++i) {
-        var childName = prefix + i;
+        childName = prefix + i + suffix;
         if (![self childWithName:childName])
             return childName;
     }
+}
+
+- (CPString)uniqueChildNameWithPrefix:(CPString)prefix // public
+{
+    return [self uniqueChildNameWithPrefix:prefix suffix:""];
 }
 
 - (BOOL)hasChildWithName:(CPString)aName
@@ -93,6 +124,24 @@
                                 comment:"Please choose another name."]
             showPanel];
     return !!child;
+}
+
+- (Folder)duplicate // public
+{
+    var newFolder = [self cloneTo:parentFolder];
+    [newFolder setName:[parentFolder uniqueChildNameWithPrefix:getDuplicatePrefix(name)]];
+    return newFolder;
+}
+
+- (Folder)cloneTo:(Folder)newParentFolder // private
+{
+    var newFolder = [Folder alloc];
+    return [newFolder initWithName:name
+                      parentFolder:newParentFolder
+                           folders:folders.map(function (folder) { return [folder cloneTo:newFolder]; })
+                             files:files.map(function (file) { return [[File alloc] initWithName:file.name
+                                                                                    parentFolder:newFolder
+                                                                                         content:file.savedContent]; })];
 }
 
 @end
@@ -159,8 +208,9 @@ var entryNameIsCorrect = function (name) {
 
 - (File)newFileInFolder:(Folder)parentFolder // public
 {
-    var file = [[File alloc] initEmptyWithName:[parentFolder uniqueChildNameWithPrefix:"untitled file"]
-                                  parentFolder:parentFolder];
+    var file = [[File alloc] initWithName:[parentFolder uniqueChildNameWithPrefix:"untitled file"]
+                             parentFolder:parentFolder
+                                  content:""];
     [self insertNewItem:file];
     return file;
 }
@@ -223,12 +273,41 @@ var entryNameIsCorrect = function (name) {
     [request send:file.currentContent];
 }
 
-- (void)moveEntries:(CPArray)entries toFolder:(Folder)folder // public
+- (CPArray)duplicateEntries:(CPArray)entries // public
 {
-    // TODO
+    var newEntries = [];
+    var pathPairs = [];
+    for (var i = 0; i < entries.length; ++i) {
+        var entry = entries[i];
+        var newEntry = [entry duplicate];
+        newEntry.isLoading = YES;
+        [self insertItem:newEntry];
+        newEntries.push(newEntry);
+        pathPairs.push([[entry path], [newEntry path]]);
+    }
+    [self requestWithMethod:"POST"
+                        URL:[self URL]
+                       data:{action: "cp", pathPairs: pathPairs}
+                   selector:@selector(didDuplicateEntriesTo:)
+              errorSelector:@selector(didFailToDuplicateEntriesTo:)
+                   argument:newEntries];
+    [self notify];
+    return newEntries;
 }
 
-- (void)duplicateEntries:(CPArray)entries // public
+- (void)didDuplicateEntriesTo:(CPArray)newEntries // private
+{
+    newEntries.forEach(function (newEntry) { delete newEntry.isLoading; });
+    [self notify];
+}
+
+- (void)didFailToDuplicateEntriesTo:(CPArray)newEntries // private
+{
+    newEntries.forEach(function (newEntry) { [self removeItem:newEntry]; });
+    [self notify];
+}
+
+- (void)moveEntries:(CPArray)entries toFolder:(Folder)folder // public
 {
     // TODO
 }

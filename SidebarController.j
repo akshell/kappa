@@ -70,7 +70,7 @@
                 [menu setAutoenablesItems:NO];
                 deleteMenuItems.push([menu addItemWithTitle:"Delete…" target:self action:@selector(showDelete)]);
                 moveMenuItems.push([menu addItemWithTitle:"Move…" target:nil action:nil]);
-                duplicateMenuItems.push([menu addItemWithTitle:"Duplicate" target:nil action:nil]);
+                duplicateMenuItems.push([menu addItemWithTitle:"Duplicate" target:self action:@selector(duplicate)]);
                 renameMenuItems.push([menu addItemWithTitle:"Rename" target:self action:@selector(showRename)]);
             });
         [newFileMenuItem, newFolderMenuItem, newEnvMenuItem, useLibMenuItem].forEach(
@@ -212,7 +212,7 @@
     var mainWindow = [CPApp mainWindow];
     if ([mainWindow firstResponder] === mainWindow) {
         [outlineView showItem:item];
-        [outlineView selectItem:item];
+        [outlineView selectItems:[item]];
     }
 }
 
@@ -292,7 +292,12 @@
     var items = [outlineView selectedItems];
     var manager = [outlineView rootForItem:items[0]];
     [manager deleteItems:items];
-    [outlineView selectItem:manager];
+    [outlineView selectItems:[manager]];
+}
+
+- (void)duplicate // private
+{
+    [outlineView selectItems:[codeManager duplicateEntries:[outlineView selectedItems]]];
 }
 
 @end
