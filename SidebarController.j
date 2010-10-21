@@ -97,8 +97,8 @@
         [outlineView addTableColumn:column];
         [outlineView setOutlineTableColumn:column];
         [outlineView setDataSource:self];
-        [outlineView setDelegate:self];
         [outlineView expandItem:codeManager];
+        [outlineView setDelegate:self];
         [outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
         [scrollView setDocumentView:outlineView];
     }
@@ -168,6 +168,30 @@
         function (pair) {
             pair[0].forEach(function (menuItem) { [menuItem doSetEnabled:pair[1]]; });
         });
+}
+
+- (void)outlineViewItemWillExpand:(CPNotification)notification // private
+{
+    var items = [outlineView selectedItems];
+    setTimeout(function () { [outlineView selectItems:items]; }, 0);
+}
+
+- (void)outlineViewItemWillCollapse:(CPNotification)notification // private
+{
+    var items = [outlineView selectedItems];
+    var collapsedItem = [[[notification userInfo] allValues] objectAtIndex:0];
+    setTimeout(
+        function () {
+            items = items.map(
+                function (item) {
+                    for (var parentItem = item; parentItem; parentItem = [outlineView parentForItem:parentItem])
+                        if (parentItem === collapsedItem)
+                            return collapsedItem;
+                    return item;
+                });
+            [outlineView selectItems:items];
+        },
+        0);
 }
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
