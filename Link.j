@@ -1,8 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
 @implementation Link : CPTextField
-{
-}
 
 - (id)initWithCoder:(CPCoder)coder // public
 {

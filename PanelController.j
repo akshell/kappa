@@ -1,8 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
 @implementation PanelController : CPWindowController
-{
-}
 
 - (id)initWithWindow:(CPWindow)window // public
 {

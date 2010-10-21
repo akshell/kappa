@@ -5,8 +5,6 @@
 @import "Alert.j"
 
 @implementation RequestPanelController : PanelController
-{
-}
 
 - (void)requestWithMethod:(CPString)method URL:(CPString)url data:(JSObject)data // protected
 {
