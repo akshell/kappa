@@ -23,6 +23,7 @@
 
 - (void)didEndRequestErrorSheet:(Alert)sender // protected
 {
+    [self showWindow:nil];
 }
 
 @end
