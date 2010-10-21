@@ -244,7 +244,7 @@
     }
     [outlineView expandItem:parentItem];
     [outlineView load];
-    objj_msgSend(codeManager, selector, parentFolder);
+    [outlineView expandItem:objj_msgSend(codeManager, selector, parentFolder)];
 }
 
 - (void)showNewEnv // public
