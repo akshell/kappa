@@ -42,9 +42,9 @@ var NotificationName = "ManagerNotification";
     return YES;
 }
 
-- (void)revealItem:(id)item // protected
+- (void)revealItems:(CPArray)items // protected
 {
-    objj_msgSend(revealTarget, revealAction, item);
+    objj_msgSend(revealTarget, revealAction, items);
 }
 
 - (void)didReceiveRepr:(JSObject)repr // private
@@ -66,7 +66,7 @@ var NotificationName = "ManagerNotification";
     item.manager = self;
     [self insertItem:item];
     [self notify];
-    [self revealItem:item];
+    [self revealItems:[item]];
 }
 
 - (void)markRenameItem:(id)item // public
@@ -95,7 +95,7 @@ var NotificationName = "ManagerNotification";
     [self removeItem:item];
     [self insertItem:item];
     [self notify];
-    [self revealItem:item];
+    [self revealItems:[item]];
 }
 
 - (void)requestWithMethod:(CPString)method
@@ -103,25 +103,25 @@ var NotificationName = "ManagerNotification";
                      data:(JSObject)data
                  selector:(SEL)selector
             errorSelector:(SEL)errorSelector
-                 argument:(JSObject)argument // protected
+                     args:(JSObject)args // protected
 {
     var request = [[HTTPRequest alloc] initWithMethod:method
                                                   URL:url
                                                target:self
                                                action:@selector(didReceiveResponse:withContext:)];
     [request setErrorAction:@selector(didReceiveError:withContext:)];
-    [request setContext:{selector: selector, errorSelector: errorSelector, argument: argument}];
+    [request setContext:{selector: selector, errorSelector: errorSelector, args: args}];
     [request send:data];
 }
 
 - (void)didReceiveResponse:(JSObject)data withContext:(JSObject)context // private
 {
-    objj_msgSend(self, context.selector, context.argument);
+    objj_msgSend.apply(nil, [self, context.selector].concat(context.args));
 }
 
 - (void)didReceiveError:(JSObject)data withContext:(JSObject)context // private
 {
-    objj_msgSend(self, context.errorSelector, context.argument);
+    objj_msgSend.apply(nil, [self, context.errorSelector].concat(context.args));
 }
 
 - (void)createItem:(id)item byRequestWithMethod:(CPString)method URL:(CPString)url data:(JSObject)data // protected
@@ -132,7 +132,7 @@ var NotificationName = "ManagerNotification";
                        data:data
                    selector:@selector(didCreateItem:)
               errorSelector:@selector(didFailToCreateItem:)
-                   argument:item];
+                       args:[item]];
 }
 
 - (void)didCreateItem:(id)item // private
@@ -161,7 +161,7 @@ byRequestWithMethod:(CPString)method
                        data:data
                    selector:@selector(didRenameItem:)
               errorSelector:@selector(didFailToRenameItem:)
-                   argument:item];
+                       args:[item]];
 }
 
 - (void)didRenameItem:(id)item // private
@@ -187,7 +187,7 @@ byRequestWithMethod:(CPString)method
                        data:data
                    selector:@selector(didDeleteItems:)
               errorSelector:@selector(didFailToDeleteItems:)
-                   argument:items];
+                       args:[items]];
 }
 
 - (void)didDeleteItems:(CPArray)items // private

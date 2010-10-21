@@ -180,7 +180,7 @@ var parseManifest = function (content) {
     [self setLibs:newLibs];
     if (shouldRevealLastLib) {
         shouldRevealLastLib = NO;
-        [self revealItem:newLibs[newLibs.length - 1]];
+        [self revealItems:[newLibs[newLibs.length - 1]]];
     }
 }
 

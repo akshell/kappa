@@ -44,7 +44,7 @@
             function (manager) {
                 [manager addObserver:self selector:@selector(didManagerChange:)];
                 [manager setRevealTarget:self];
-                [manager setRevealAction:@selector(revealItem:)];
+                [manager setRevealAction:@selector(revealItems:)];
             });
 
         plusButton = [CPButtonBar plusButton];
@@ -69,7 +69,7 @@
             function (menu) {
                 [menu setAutoenablesItems:NO];
                 deleteMenuItems.push([menu addItemWithTitle:"Delete…" target:self action:@selector(showDelete)]);
-                moveMenuItems.push([menu addItemWithTitle:"Move…" target:nil action:nil]);
+                moveMenuItems.push([menu addItemWithTitle:"Move…" target:self action:@selector(showMove)]);
                 duplicateMenuItems.push([menu addItemWithTitle:"Duplicate" target:self action:@selector(duplicate)]);
                 renameMenuItems.push([menu addItemWithTitle:"Rename" target:self action:@selector(showRename)]);
             });
@@ -202,18 +202,24 @@
     [outlineView load];
 }
 
-- (void)revealItem:(id)item // private
+- (void)revealItems:(CPArray)items // private
 {
-    if (item.isEditable) {
-        [outlineView showItem:item];
+    // FIXME: Hack fixing wrong displaying of expanded items moved to a different level
+    items.forEach(
+        function (item) {
+            if ([outlineView isItemExpanded:item]) {
+                [outlineView collapseItem:item];
+                [outlineView expandItem:item];
+            }
+        });
+    if (items.length != 1) {
+        [outlineView selectItems:items];
         return;
     }
-    // FIXME: Condition should be more robust
-    var mainWindow = [CPApp mainWindow];
-    if ([mainWindow firstResponder] === mainWindow) {
-        [outlineView showItem:item];
+    var item = items[0];
+    [outlineView showItem:item];
+    if (!item.isEditable)
         [outlineView selectItems:[item]];
-    }
 }
 
 - (void)showNewFile // public
@@ -297,7 +303,12 @@
 
 - (void)duplicate // private
 {
-    [outlineView selectItems:[codeManager duplicateEntries:[outlineView selectedItems]]];
+    [codeManager duplicateEntries:[outlineView selectedItems]];
+}
+
+- (void)showMove // private
+{
+    [codeManager showMoveEntries:[outlineView selectedItems]];
 }
 
 @end

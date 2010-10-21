@@ -1,6 +1,8 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "Manager.j"
+@import "MovePanelController.j"
+@import "ReplacePanelController.j"
 
 @implementation Entry (CodeManager)
 
@@ -33,6 +35,11 @@ var getDuplicatePrefix = function (base) {
 - (CPString)imageName // public
 {
     return "File";
+}
+
+- (CPString)description // public
+{
+    return "file \"" + name + "\"";
 }
 
 - (CPArray)neighbours // public
@@ -81,6 +88,11 @@ var getDuplicatePrefix = function (base) {
 - (CPString)imageName // public
 {
     return "Folder";
+}
+
+- (CPString)description // public
+{
+    return "folder \"" + name + "\"";
 }
 
 - (unsigned)numberOfChildren // public
@@ -163,6 +175,24 @@ var entryNameIsCorrect = function (name) {
 };
 
 @implementation CodeManager : Manager
+{
+    MovePanelController movePanelController;
+    ReplacePanelController replacePanelController;
+    CPArray moveEntries;
+    unsigned moveEntriesIndex;
+    Folder moveFolder;
+}
+
+- (id)initWithApp:(App)anApp // public
+{
+    if (self = [super initWithApp:anApp]) {
+        movePanelController = [[MovePanelController alloc] initWithTarget:self action:@selector(moveToPath:)];
+        replacePanelController = [[ReplacePanelController alloc] initWithTarget:self
+                                                                  replaceAction:@selector(moveReplacing)
+                                                                     skipAction:@selector(moveSkipping)];
+    }
+    return self;
+}
 
 - (CPString)name // public
 {
@@ -202,10 +232,17 @@ var entryNameIsCorrect = function (name) {
 - (void)insertItem:(Entry)entry // protected
 {
     var neighbours = [entry neighbours];
-    for (var i = 0; i < neighbours.length; ++i)
-        if (neighbours[i].name > entry.name)
+    var count = 0;
+    for (var i = 0; i < neighbours.length; ++i) {
+        var neighbourName = neighbours[i].name;
+        if (neighbourName == entry.name) {
+            count = 1;
             break;
-    neighbours.splice(i, 0, entry);
+        } else if (neighbourName > entry.name) {
+            break;
+        }
+    }
+    neighbours.splice(i, count, entry);
 }
 
 - (void)removeItem:(Entry)entry // protected
@@ -253,9 +290,7 @@ var entryNameIsCorrect = function (name) {
 
 - (CPString)descriptionOfItems:(CPArray)entries // public
 {
-    return (entries.length == 1
-            ? ([entries[0] isKindOfClass:File] ? "file" : "folder") + " \"" + entries[0].name + "\""
-            : "selected " + entries.length + " entries");
+    return entries.length == 1 ? [entries[0] description] : "selected " + entries.length + " entries";
 }
 
 - (void)deleteItems:(CPArray)entries // public
@@ -280,7 +315,7 @@ var entryNameIsCorrect = function (name) {
     [request send:file.currentContent];
 }
 
-- (CPArray)duplicateEntries:(CPArray)entries // public
+- (void)duplicateEntries:(CPArray)entries // public
 {
     var newEntries = [];
     var pathPairs = [];
@@ -297,9 +332,9 @@ var entryNameIsCorrect = function (name) {
                        data:{action: "cp", pathPairs: pathPairs}
                    selector:@selector(didDuplicateEntriesTo:)
               errorSelector:@selector(didFailToDuplicateEntriesTo:)
-                   argument:newEntries];
+                       args:[newEntries]];
     [self notify];
-    return newEntries;
+    [self revealItems:newEntries];
 }
 
 - (void)didDuplicateEntriesTo:(CPArray)newEntries // private
@@ -314,9 +349,112 @@ var entryNameIsCorrect = function (name) {
     [self notify];
 }
 
-- (void)moveEntries:(CPArray)entries toFolder:(Folder)folder // public
+- (void)showMoveEntries:(CPArray)entries // public
 {
-    // TODO
+    moveEntries = entries;
+    [movePanelController showWindowWithDescription:[self descriptionOfItems:entries]];
+}
+
+- (void)moveToPath:(CPString)path // private
+{
+    var folder;
+    var parts = path.split("/");
+    if (parts[0] == "." || parts[0] == "..") {
+        folder = moveEntries[0].parentFolder;
+        for (var i = 1; i < moveEntries.length; ++i) {
+            if (moveEntries[i].parentFolder !== folder) {
+                [[[Alert alloc] initWithMessage:"The path cannot be relative because the entries are not in the same folder."
+                                        comment:"Please specify an absolute path."]
+                    showSheetForWindow:[movePanelController window]];
+                return;
+            }
+        }
+    } else {
+        folder = app.code;
+    }
+    for (var i = 0; i < parts.length; ++i) {
+        var part = parts[i];
+        if (!part || part == ".")
+            continue;
+        folder = part == ".." ? folder.parentFolder : [folder childWithName:part];
+        if (![folder isKindOfClass:Folder]) {
+            [[[Alert alloc] initWithMessage:"The path \"" + path + "\" is incorrect."
+                                    comment:"Please fix the destination folder path."]
+                showSheetForWindow:[movePanelController window]];
+            return;
+        }
+    }
+    [movePanelController close];
+    moveFolder = folder;
+    moveEntriesIndex = 0;
+    [self move];
+}
+
+- (void)move // private
+{
+    while (moveEntriesIndex < moveEntries.length) {
+        var srcEntry = moveEntries[moveEntriesIndex];
+        if (srcEntry.parentFolder === moveFolder) {
+            moveEntries.splice(moveEntriesIndex, 1);
+            continue;
+        }
+        var dstEntry = [moveFolder childWithName:srcEntry.name];
+        if (dstEntry) {
+            [replacePanelController showWindowWithDescription:[dstEntry description]];
+            return;
+        }
+        ++moveEntriesIndex;
+    }
+    if (!moveEntries.length)
+        return;
+    var dstPathPrefix = [moveFolder path];
+    if (dstPathPrefix)
+        dstPathPrefix += "/";
+    moveEntries.reverse();
+    var pathPairs = moveEntries.map(
+        function (srcEntry) {
+            srcEntry.isLoading = YES;
+            return [[srcEntry path], dstPathPrefix + srcEntry.name];
+        });
+    [self requestWithMethod:"POST"
+                        URL:[self URL]
+                       data:{action: "mv", pathPairs: pathPairs}
+                   selector:@selector(didMoveEntries:toFolder:)
+              errorSelector:@selector(didFailToMoveEntries:)
+                       args:[moveEntries, moveFolder]];
+    [self notify];
+    [self revealItems:moveEntries];
+}
+
+- (void)moveReplacing // private
+{
+    ++moveEntriesIndex;
+    [self move];
+}
+
+- (void)moveSkipping // private
+{
+    moveEntries.splice(moveEntriesIndex, 1);
+    [self move];
+}
+
+- (void)didMoveEntries:(CPArray)entries toFolder:(Folder)folder // private
+{
+    entries.forEach(
+        function (entry) {
+            delete entry.isLoading;
+            [self removeItem:entry];
+            [entry setParentFolder:folder];
+            [self insertItem:entry];
+        });
+    [self notify];
+    [self revealItems:entries];
+}
+
+- (void)didFailToMoveEntries:(CPArray)entries // private
+{
+    entries.forEach(function (entry) { delete entry.isLoading; });
+    [self notify];
 }
 
 @end
