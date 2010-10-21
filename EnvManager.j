@@ -101,7 +101,7 @@
 - (void)createItem:(Env)env withName:(CPString)name // protected
 {
     if (name && name != env.name && ![app hasEnvWithName:name])
-        [env setName:name];
+        [self changeNameOfItem:env to:name];
     [self createItem:env byRequestWithMethod:"POST" URL:[self URL] data:{name: env.name}]
 }
 

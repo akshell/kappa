@@ -88,13 +88,6 @@ var NotificationName = "ManagerNotification";
         [self createItem:item withName:name];
     }
     [self notify];
-}
-
-- (void)reinsertItem:(id)item // private
-{
-    [self removeItem:item];
-    [self insertItem:item];
-    [self notify];
     [self revealItems:[item]];
 }
 
@@ -138,13 +131,20 @@ var NotificationName = "ManagerNotification";
 - (void)didCreateItem:(id)item // private
 {
     delete item.isLoading;
-    [self reinsertItem:item];
+    [self notify];
 }
 
 - (void)didFailToCreateItem:(id)item // private
 {
     [self removeItem:item];
     [self notify];
+}
+
+- (void)changeNameOfItem:(id)item to:(CPString)name // protected
+{
+    [item setName:name];
+    [self removeItem:item];
+    [self insertItem:item];
 }
 
 - (void)renameItem:(id)item
@@ -155,7 +155,7 @@ byRequestWithMethod:(CPString)method
 {
     item.isLoading = YES;
     item.oldName = item.name;
-    [item setName:name];
+    [self changeNameOfItem:item to:name];
     [self requestWithMethod:method
                         URL:url
                        data:data
@@ -168,12 +168,12 @@ byRequestWithMethod:(CPString)method
 {
     delete item.isLoading;
     delete item.oldName;
-    [self reinsertItem:item];
+    [self notify];
 }
 
 - (void)didFailToRenameItem:(id)item // private
 {
-    [item setName:item.oldName];
+    [self changeNameOfItem:item to:item.oldName];
     delete item.isLoading;
     delete item.oldName;
     [self notify];

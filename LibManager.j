@@ -76,7 +76,6 @@ var parseManifest = function (content) {
     CodeManager codeManager;
     UseLibPanelController useLibPanelController;
     File manifestFile;
-    BOOL shouldRevealLastLib;
 }
 
 - (id)initWithCodeManager:(CodeManager)aCodeManager // public
@@ -178,10 +177,6 @@ var parseManifest = function (content) {
         newLibs.push(lib);
     }
     [self setLibs:newLibs];
-    if (shouldRevealLastLib) {
-        shouldRevealLastLib = NO;
-        [self revealItems:[newLibs[newLibs.length - 1]]];
-    }
 }
 
 - (void)showUseLib // public
@@ -245,7 +240,6 @@ var parseManifest = function (content) {
     }
     manifest.libs[lib.name] = lib.identifier;
     [manifestFile setCurrentContent:JSON.stringify(manifest, null, "  ")];
-    shouldRevealLastLib = YES;
     [codeManager saveFile:manifestFile];
 }
 
@@ -262,6 +256,7 @@ var parseManifest = function (content) {
 
 - (void)renameItem:(Lib)lib to:(CPString)name // protected
 {
+    lib.manager = self;
     var manifest = [self parseCurrentManifestContent];
     if (!manifest)
         return;
@@ -274,11 +269,11 @@ var parseManifest = function (content) {
     manifest.libs[name] = lib.identifier;
     delete manifest.libs[lib.name];
     [manifestFile setCurrentContent:JSON.stringify(manifest, null, "  ")];
+    [codeManager saveFile:manifestFile];
     lib.isLoading = YES;
     [lib setName:name];
-    [self notify];
-    shouldRevealLastLib = YES;
-    [codeManager saveFile:manifestFile];
+    [app.libs removeObject:lib];
+    app.libs.push(lib);
 }
 
 - (CPString)descriptionOfItems:(CPArray)libs // public
@@ -296,9 +291,9 @@ var parseManifest = function (content) {
             lib.isLoading = YES;
             delete manifest.libs[lib.name];
         });
-    [self notify];
     [manifestFile setCurrentContent:JSON.stringify(manifest, null, "  ")];
     [codeManager saveFile:manifestFile];
+    [self notify];
 }
 
 @end
