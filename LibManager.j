@@ -76,6 +76,7 @@ var parseManifest = function (content) {
     CodeManager codeManager;
     UseLibPanelController useLibPanelController;
     File manifestFile;
+    BOOL isProcessing;
 }
 
 - (id)initWithCodeManager:(CodeManager)aCodeManager // public
@@ -197,6 +198,8 @@ var parseManifest = function (content) {
 
 - (void)useLib:(Lib)lib // public
 {
+    if (isProcessing)
+        return;
     var manifest;
     if (manifestFile) {
         manifest = [self parseCurrentManifestContent];
@@ -219,9 +222,12 @@ var parseManifest = function (content) {
         [self doUseLib:lib withManifest:manifest];
         return;
     }
+    isProcessing = YES;
+    [[useLibPanelController window] setTitle:"Processing..."];
     var request = [[HTTPRequest alloc] initWithMethod:"GET" URL:[lib URL] target:self action:@selector(didGetLibTree:context:)];
+    [request setFinishAction:@selector(didLibTreeRequestFinished)];
+    [request setErrorMessageAction:@selector(didEndLibTreeRequestErrorSheet:)];
     [request setWindow:[useLibPanelController window]];
-    [request setErrorMessageAction:@selector(didEndErrorSheet:)];
     [request setContext:{lib: lib, manifest: manifest}];
     [request send];
 }
@@ -243,13 +249,19 @@ var parseManifest = function (content) {
     [codeManager saveFile:manifestFile];
 }
 
+- (void)didLibTreeRequestFinished // private
+{
+    isProcessing = NO;
+    [[useLibPanelController window] setTitle:"Use Library"];
+}
+
 - (void)didGetLibTree:(JSObject)tree context:(JSObject)context // private
 {
     libCode[context.lib.identifier] = [[Folder alloc] initWithTree:tree];
     [self doUseLib:context.lib manifest:context.manifest];
 }
 
-- (void)didEndErrorSheet:(Alert)sender // private
+- (void)didEndLibTreeRequestErrorSheet:(Alert)sender // private
 {
     [useLibPanelController didEndErrorSheet:sender];
 }

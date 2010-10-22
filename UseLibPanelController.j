@@ -1,9 +1,9 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "RequestPanelController.j"
+@import "PanelController.j"
 @import "Data.j"
 
-@implementation UseLibPanelController : RequestPanelController
+@implementation UseLibPanelController : PanelController
 {
     id target;
     SEL action;

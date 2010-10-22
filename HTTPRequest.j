@@ -5,6 +5,7 @@
 @implementation HTTPRequest : CPObject
 {
     JSObject request;
+    SEL finishAction @accessors;
     SEL errorAction @accessors;
     SEL errorMessageAction @accessors;
     JSObject context @accessors;
@@ -22,6 +23,8 @@
                 return;
             var isJSON = request.getResponseHeader("Content-Type") == "application/json; charset=utf-8";
             var data = isJSON ? JSON.parse(request.responseText) : request.responseText;
+            if (finishAction)
+                objj_msgSend(target, finishAction, data, context);
             if (request.status == 200 || request.status == 201) {
                 if (action)
                     objj_msgSend(target, action, data, context);
