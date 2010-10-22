@@ -41,16 +41,16 @@
 - (@action)submit:(id)sender // private
 {
     var password = [passwordField stringValue];
-    if ([confirmField stringValue] == password)
-        [self requestWithMethod:"POST"
-                            URL:"/signup"
-                           data:{name: [nameField stringValue], email: [emailField stringValue], password: password}];
-    else
+    if ([confirmField stringValue] == password) {
+        var data = {name: [nameField stringValue], email: [emailField stringValue], password: password};
+        [self requestWithMethod:"POST" URL:"/signup" data:data context:data];
+    } else {
         [[[Alert alloc] initWithMessage:"The passwords don't match."
                                 comment:"Please retype the password twice."
                                  target:self
                                  action:@selector(didEndMatchErrorSheet)]
                      showSheetForWindow:[self window]];
+    }
 }
 
 - (void)didEndMatchErrorSheet // private
@@ -66,10 +66,10 @@
     [[self window] makeFirstResponder:[sender message].indexOf("email") == -1 ? nameField : emailField];
 }
 
-- (void)didReceiveResponse:(JSObject)data // protected
+- (void)didReceiveResponse:(JSObject)data withContext:context // protected
 {
-    [DATA setUsername:[nameField stringValue]];
-    [DATA setEmail:[emailField stringValue]];
+    [DATA setUsername:context.name];
+    [DATA setEmail:context.email];
 }
 
 @end

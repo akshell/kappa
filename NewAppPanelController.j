@@ -32,12 +32,13 @@
 
 - (@action)submit:(id)sender // private
 {
-    [self requestWithMethod:"POST" URL:"/apps/" data:{name: [nameField stringValue]}];
+    var appName = [nameField stringValue];
+    [self requestWithMethod:"POST" URL:"/apps/" data:{name: appName} context:appName];
 }
 
-- (void)didReceiveResponse:(JSObject)data // protected
+- (void)didReceiveResponse:(JSObject)data withContext:(CPString)appName // protected
 {
-    objj_msgSend(target, action, [nameField stringValue]);
+    objj_msgSend(target, action, appName);
     [self close];
 }
 

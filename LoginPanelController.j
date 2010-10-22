@@ -40,12 +40,13 @@
 
 - (@action)submit:(id)sender // private
 {
-    [self requestWithMethod:"POST" URL:"/login" data:{name: [nameField stringValue], password: [passwordField stringValue]}];
+    var username = [nameField stringValue];
+    [self requestWithMethod:"POST" URL:"/login" data:{name: username, password: [passwordField stringValue]} context:username];
 }
 
-- (void)didReceiveResponse:(JSObject)data // protected
+- (void)didReceiveResponse:(JSObject)data withContext:(CPString)username // protected
 {
-    [DATA setUsername:[nameField stringValue]];
+    [DATA setUsername:username];
     [DATA setEmail:data.email];
     [DATA setAppNames:data.appNames config:data.config];
 }
