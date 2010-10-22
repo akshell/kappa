@@ -15,7 +15,7 @@
         replaceAction = aReplaceAction;
         skipAction = aSkipAction;
 
-        [self setWindow:[[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, 350, 130) styleMask:CPTitledWindowMask]];
+        [self setWindow:[[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, 350, 134) styleMask:CPTitledWindowMask]];
         [[self window] setDelegate:self];
         var contentView = [[self window] contentView];
         var imageView = [[CPImageView alloc] initWithFrame:CGRectMake(16, 16, 48, 48)];
@@ -28,18 +28,18 @@
         var commentLabel = [CPTextField labelWithTitle:"You cannot undo the replacement."];
         [commentLabel setFrameOrigin:CGPointMake(80, 56)];
         [contentView addSubview:commentLabel];
-        var replaceButton = [[CPButton alloc] initWithFrame:CGRectMake(263, 90, 71, 24)];
+        var replaceButton = [[CPButton alloc] initWithFrame:CGRectMake(259, 90, 71, 24)];
         [replaceButton setTitle:"Replace"];
         [replaceButton setTarget:self];
         [replaceButton setAction:@selector(replace)];
         [replaceButton setKeyEquivalent:CPCarriageReturnCharacter];
         [contentView addSubview:replaceButton];
-        var cancelButton = [[CPButton alloc] initWithFrame:CGRectMake(191, 90, 64, 24)];
+        var cancelButton = [[CPButton alloc] initWithFrame:CGRectMake(187, 90, 64, 24)];
         [cancelButton setTitle:"Cancel"];
         [cancelButton setTarget:self];
         [cancelButton setAction:@selector(close)];
         [contentView addSubview:cancelButton];
-        var skipButton = [[CPButton alloc] initWithFrame:CGRectMake(132, 90, 51, 24)];
+        var skipButton = [[CPButton alloc] initWithFrame:CGRectMake(128, 90, 51, 24)];
         [skipButton setTitle:"Skip"];
         [skipButton setTarget:self];
         [skipButton setAction:@selector(skip)];

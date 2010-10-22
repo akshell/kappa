@@ -59,12 +59,12 @@ var createLabel = function (text, y, isBold) {
     if (comment)
         commentLabel = createLabel(comment, CGRectGetMaxY([messageLabel frame]) + 8, NO);
     var okButtonY = MAX(CGRectGetMaxY([commentLabel || messageLabel frame]), 64) + 16;
-    var okButton = [[CPButton alloc] initWithFrame:CGRectMake(210, okButtonY, 60, 24)];
+    var okButton = [[CPButton alloc] initWithFrame:CGRectMake(206, okButtonY, 60, 24)];
     [okButton setTitle:"OK"];
     [okButton setTarget:self];
     [okButton setAction:@selector(confirm)];
     [okButton setKeyEquivalent:CPCarriageReturnCharacter];
-    panel = [[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, 286, okButtonY + 24 + 16) styleMask:styleMask];
+    panel = [[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, 286, okButtonY + 24 + 20) styleMask:styleMask];
     var contentView = [panel contentView];
     var imageView = [[CPImageView alloc] initWithFrame:CGRectMake(16, 16, 48, 48)];
     [imageView setImage:[[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:[self imagePath]]]];

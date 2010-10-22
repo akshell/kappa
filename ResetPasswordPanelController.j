@@ -35,7 +35,7 @@
 - (void)didReceiveResponse:(JSObject)data // protected
 {
     [[self window] close];
-    var panel = [[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, 318, 104) styleMask:CPTitledWindowMask];
+    var panel = [[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, 318, 108) styleMask:CPTitledWindowMask];
     var contentView = [panel contentView];
     var imageView = [[CPImageView alloc] initWithFrame:CGRectMake(16, 16, 48, 48)];
     [imageView setImage:[[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:"Info.png"]]];
@@ -45,7 +45,7 @@
     [label setFont:[CPFont boldSystemFontOfSize:12]];
     [label setStringValue:"An email containing confirmation URL has been sent."];
     [contentView addSubview:label];
-    var button = [[CPButton alloc] initWithFrame:CGRectMake(238, 64, 64, 24)];
+    var button = [[CPButton alloc] initWithFrame:CGRectMake(234, 64, 64, 24)];
     [button setTitle:"OK"];
     [button setKeyEquivalent:CPCarriageReturnCharacter];
     [button setTarget:self];
