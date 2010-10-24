@@ -5,7 +5,7 @@
 - (id)initWithWindow:(CPWindow)window // public
 {
     if (self = [super initWithWindow:window])
-        [DATA addObserver:self forKeyPath:"username" options:nil context:nil];
+        [DATA addObserver:self forKeyPath:"username"];
     return self;
 }
 

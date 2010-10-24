@@ -27,7 +27,7 @@ var NotificationName = "ManagerNotification";
     return self;
 }
 
-- (void)addObserver:(id)observer selector:(SEL)selector // public
+- (void)addChangeObserver:(id)observer selector:(SEL)selector // public
 {
     [[CPNotificationCenter defaultCenter] addObserver:observer selector:selector name:NotificationName object:self];
 }

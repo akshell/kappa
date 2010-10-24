@@ -32,9 +32,9 @@
 {
     if (self = [super init]) {
         app = anApp;
-        [app addObserver:self forKeyPath:"code" options:nil context:nil];
-        [app addObserver:self forKeyPath:"envs" options:nil context:nil];
-        [app addObserver:self forKeyPath:"libs" options:nil context:nil];
+        [app addObserver:self forKeyPath:"code"];
+        [app addObserver:self forKeyPath:"envs"];
+        [app addObserver:self forKeyPath:"libs"];
 
         codeManager = [[CodeManager alloc] initWithApp:app];
         envManager = [[EnvManager alloc] initWithApp:app];
@@ -42,7 +42,7 @@
         managers = [codeManager, envManager, libManager];
         managers.forEach(
             function (manager) {
-                [manager addObserver:self selector:@selector(didManagerChange:)];
+                [manager addChangeObserver:self selector:@selector(didManagerChange:)];
                 [manager setRevealTarget:self];
                 [manager setRevealAction:@selector(revealItems:)];
             });

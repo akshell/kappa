@@ -85,7 +85,7 @@ var parseManifest = function (content) {
         codeManager = aCodeManager;
         useLibPanelController =
             [[UseLibPanelController alloc] initWithTarget:self action:@selector(useLib:)];
-        [codeManager addObserver:self selector:@selector(codeDidChange)];
+        [codeManager addChangeObserver:self selector:@selector(codeDidChange)];
     }
     return self;
 }
@@ -123,7 +123,7 @@ var parseManifest = function (content) {
     [manifestFile removeObserver:self forKeyPath:"savedContent"];
     if ([entry isKindOfClass:File]) {
         manifestFile = entry;
-        [manifestFile addObserver:self forKeyPath:"savedContent" options:nil context:nil];
+        [manifestFile addObserver:self forKeyPath:"savedContent"];
         if (manifestFile.savedContent) {
             [self readManifest];
         } else {
@@ -240,7 +240,7 @@ var parseManifest = function (content) {
     if (!manifest) {
         manifest = {libs: {}};
         manifestFile = [[File alloc] initWithName:"manifest.json" parentFolder:app.code];
-        [manifestFile addObserver:self forKeyPath:"savedContent" options:nil context:nil];
+        [manifestFile addObserver:self forKeyPath:"savedContent"];
         [codeManager insertItem:manifestFile];
         [codeManager notify];
     }

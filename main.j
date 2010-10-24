@@ -6,6 +6,7 @@
 
 @import "AppController.j"
 @import "Data.j";
+@import "CPObject.j"
 @import "CPPanel.j"
 @import "CPMenu.j"
 @import "CPMenuItem.j"

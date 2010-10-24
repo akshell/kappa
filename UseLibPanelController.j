@@ -23,7 +23,7 @@
     if (self = [super initWithWindowCibName:"UseLibPanel"]) {
         target = aTarget;
         action = anAction;
-        [DATA addObserver:self forKeyPath:"app" options:nil context:nil];
+        [DATA addObserver:self forKeyPath:"app"];
     }
     return self;
 }

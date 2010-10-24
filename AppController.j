@@ -116,12 +116,12 @@
     [self fillAppMenus];
     [self showSidebar];
 
-    [DATA addObserver:self forKeyPath:"username" options:nil context:nil];
-    [DATA addObserver:self forKeyPath:"apps" options:nil context:nil];
-    [DATA addObserver:self forKeyPath:"app" options:nil context:"app"];
-    [DATA addObserver:self forKeyPath:"app.code" options:nil context:"app.code"];
-    [DATA addObserver:self forKeyPath:"app.envs" options:nil context:"app.envs"];
-    [DATA addObserver:self forKeyPath:"app.libs" options:nil context:"app.libs"];
+    [DATA addObserver:self forKeyPath:"username"];
+    [DATA addObserver:self forKeyPath:"apps"];
+    [DATA addObserver:self forKeyPath:"app" context:"app"];
+    [DATA addObserver:self forKeyPath:"app.code" context:"app.code"];
+    [DATA addObserver:self forKeyPath:"app.envs" context:"app.envs"];
+    [DATA addObserver:self forKeyPath:"app.libs" context:"app.libs"];
 }
 
 - (CPPopUpButton)appPopUpButton // private
