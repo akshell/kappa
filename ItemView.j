@@ -51,7 +51,7 @@ var makeImage = function (path) {
     if (!item)
         return;
     isLoading = item.isLoading;
-    [[self subviews][0] setImage:makeImage(isLoading ? "WhiteSpinner.gif" : [item imageName] + ".png")];
+    [[self subviews][0] setImage:makeImage(isLoading ? "WhiteSpinner.gif" : [[item class] imageName] + ".png")];
     if (!item.isEditable) {
         [[self subviews][1] setStringValue:[item name]];
         return;

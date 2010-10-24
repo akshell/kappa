@@ -4,7 +4,7 @@
 
 @implementation Env (EnvManager)
 
-- (CPString)imageName // public
++ (CPString)imageName // public
 {
     return "Env";
 }
@@ -37,7 +37,7 @@
     return "Environments";
 }
 
-- (CPString)imageName // public
++ (CPString)imageName // public
 {
     return "Envs";
 }

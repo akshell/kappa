@@ -32,7 +32,7 @@ var getDuplicatePrefix = function (base) {
     return NO;
 }
 
-- (CPString)imageName // public
++ (CPString)imageName // public
 {
     return "File";
 }
@@ -85,7 +85,7 @@ var getDuplicatePrefix = function (base) {
     return YES;
 }
 
-- (CPString)imageName // public
++ (CPString)imageName // public
 {
     return "Folder";
 }
@@ -199,7 +199,7 @@ var entryNameIsCorrect = function (name) {
     return "Code";
 }
 
-- (CPString)imageName // public
++ (CPString)imageName // public
 {
     return "Code";
 }
