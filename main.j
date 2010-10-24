@@ -14,6 +14,16 @@
 
 DATA = [Data new];
 
+window.onbeforeunload = function () {
+    if (!document.cookie)
+        return;
+    var request = new XMLHttpRequest();
+    request.open("PUT", "/config", false);
+    request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+    request.setRequestHeader("Content-Type", "application/json");
+    request.send(JSON.stringify([DATA encode]));
+};
+
 function main(args, namedArgs)
 {
     CPApplicationMain(args, namedArgs);

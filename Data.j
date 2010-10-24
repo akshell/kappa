@@ -176,13 +176,11 @@
 
 @implementation Data : CPObject
 {
-    BOOL isDirty;
     CPString username @accessors;
     CPString email @accessors;
     CPArray apps;
     unsigned appIndex;
     App app;
-    JSObject libs;
 }
 
 - (id)init // public
@@ -191,17 +189,6 @@
         username = window.USERNAME;
         email = window.EMAIL;
         [self setAppNames:window.APP_NAMES || [] config:window.CONFIG || {}];
-        libs = {};
-        isDirty = NO;
-        window.onbeforeunload = function () {
-            if (!isDirty)
-                return;
-            var request = new XMLHttpRequest();
-            request.open("PUT", "/config", false);
-            request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-            request.setRequestHeader("Content-Type", "application/json");
-            request.send(JSON.stringify({appIndex: appIndex}));
-        };
     }
     return self;
 }
@@ -216,13 +203,17 @@
 
 - (void)setAppIndex:(unsigned)anAppIndex // public
 {
-    isDirty = YES;
     appIndex = anAppIndex;
     if (app !== apps[appIndex]) {
         [self willChangeValueForKey:"app"];
         app = apps[appIndex] || nil;
         [self didChangeValueForKey:"app"];
     }
+}
+
+- (JSObject)encode // public
+{
+    return {appIndex: appIndex};
 }
 
 @end
