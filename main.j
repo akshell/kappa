@@ -2,6 +2,7 @@
 
 @import <Foundation/Foundation.j>
 @import <AppKit/AppKit.j>
+@import <AppKit/CPScrollView.j>
 
 @import "AppController.j"
 @import "Data.j";

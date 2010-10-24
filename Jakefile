@@ -56,16 +56,6 @@ task ("release", function()
     JAKE.subjake(["."], "build", ENV);
 });
 
-task ("run", ["debug"], function()
-{
-    OS.system(["open", FILE.join("Build", "Debug", "Akshell", "index.html")]);
-});
-
-task ("run-release", ["release"], function()
-{
-    OS.system(["open", FILE.join("Build", "Release", "Akshell", "index.html")]);
-});
-
 task ("deploy", ["release"], function()
 {
     FILE.mkdirs(FILE.join("Build", "Deployment", "Akshell"));

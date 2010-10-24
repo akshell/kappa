@@ -188,9 +188,9 @@
 - (id)init // public
 {
     if (self = [super init]) {
-        username = USERNAME;
-        email = EMAIL;
-        [self setAppNames:APP_NAMES config:CONFIG];
+        username = window.USERNAME;
+        email = window.EMAIL;
+        [self setAppNames:window.APP_NAMES || [] config:window.CONFIG || {}];
         libs = {};
         isDirty = NO;
         window.onbeforeunload = function () {
