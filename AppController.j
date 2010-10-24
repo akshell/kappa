@@ -37,10 +37,6 @@
     CPPopUpButton appPopUpButton;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// General
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification // private
 {
     sidebarControllerProxy = [[AppPropertyProxy alloc] initWithPropertyName:"sidebarController"];
@@ -167,6 +163,17 @@
     [self setAppItemsEnabled:DATA.apps.length];
 }
 
+- (void)setAppItemsEnabled:(BOOL)enabled // private
+{
+    var mainMenu = [CPApp mainMenu];
+    [[mainMenu itemAtIndex:2] setEnabled:enabled];
+    [[mainMenu itemAtIndex:3] setEnabled:enabled];
+    for (var i = 3; i < 9; ++i)
+        [[fileMenu itemAtIndex:i] doSetEnabled:enabled];
+    [[mainWindow toolbar] items].forEach(
+        function (item) { [item setEnabled:enabled]; });
+}
+
 - (void)showSidebar // private
 {
     if (DATA.app) {
@@ -214,20 +221,57 @@
     }
 }
 
-- (void)setAppItemsEnabled:(BOOL)enabled // private
+- (CPArray)toolbarAllowedItemIdentifiers:(CPToolbar)toolbar // private
 {
-    var mainMenu = [CPApp mainMenu];
-    [[mainMenu itemAtIndex:2] setEnabled:enabled];
-    [[mainMenu itemAtIndex:3] setEnabled:enabled];
-    for (var i = 3; i < 9; ++i)
-        [[fileMenu itemAtIndex:i] doSetEnabled:enabled];
-    [[mainWindow toolbar] items].forEach(
-        function (item) { [item setEnabled:enabled]; });
+    return [CPToolbarSpaceItemIdentifier, "App", "New", "Save", "Save All", "Eval", "Preview", "Git", "Diff", "Commit"];
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Menu target
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+- (CPArray)toolbarDefaultItemIdentifiers:(CPToolbar)toolbar // private
+{
+    return [
+        "App", CPToolbarSpaceItemIdentifier,
+        "New", "Save", "Save All", CPToolbarSpaceItemIdentifier,
+        "Eval", "Preview", "Git", CPToolbarSpaceItemIdentifier,
+        "Diff", "Commit"
+    ];
+}
+
+- (CPToolbarItem)toolbar:(CPToolbar)toolbar
+   itemForItemIdentifier:(CPString)itemIdentifier
+willBeInsertedIntoToolbar:(BOOL)flag // private
+{
+    var item = [[CPToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+    [item setLabel:itemIdentifier];
+    if (itemIdentifier == "App") {
+        var popUpButton = [[CPPopUpButton alloc] initWithFrame:CGRectMake(4, 8, 202, 24)];
+        [popUpButton setAutoresizingMask:CPViewWidthSizable];
+        [popUpButton setMenu:[appsMenu copy]];
+        if (DATA.apps.length)
+            [popUpButton selectItemAtIndex:DATA.appIndex];
+        var itemView = [[CPView alloc] initWithFrame:CGRectMake(0, 0, 206, 32)];
+        [itemView addSubview:popUpButton];
+        [item setView:itemView];
+        [item setMinSize:[itemView frameSize]];
+    } else {
+        var image = [[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:itemIdentifier + ".png"]];
+        [item setImage:image];
+        [item setMinSize:CGSizeMake(32, 32)];
+        switch (itemIdentifier) {
+        case "New":
+            [item setTarget:sidebarControllerProxy];
+            [item setAction:@selector(showNewFile)];
+            break;
+        }
+    }
+    return item;
+}
+
+- (unsigned)splitView:(CPSplitView)splitView constrainSplitPosition:(unsigned)position ofSubviewAt:(unsigned)index // private
+{
+    position = MIN(MAX(position, 150), [splitView frameSize].width - 500);
+    [[[mainWindow toolbar] items][0] setMinSize:CGSizeMake(position - 35, 32)];
+    return position;
+}
 
 - (void)logOut // private
 {
@@ -302,66 +346,6 @@
         [self setAppItemsEnabled:NO];
     }
     [DATA setAppIndex:0];
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Toolbar delegate
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (CPArray)toolbarAllowedItemIdentifiers:(CPToolbar)toolbar // private
-{
-    return [CPToolbarSpaceItemIdentifier, "App", "New", "Save", "Save All", "Eval", "Preview", "Git", "Diff", "Commit"];
-}
-
-- (CPArray)toolbarDefaultItemIdentifiers:(CPToolbar)toolbar // private
-{
-    return [
-        "App", CPToolbarSpaceItemIdentifier,
-        "New", "Save", "Save All", CPToolbarSpaceItemIdentifier,
-        "Eval", "Preview", "Git", CPToolbarSpaceItemIdentifier,
-        "Diff", "Commit"
-    ];
-}
-
-- (CPToolbarItem)toolbar:(CPToolbar)toolbar
-   itemForItemIdentifier:(CPString)itemIdentifier
-willBeInsertedIntoToolbar:(BOOL)flag // private
-{
-    var item = [[CPToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
-    [item setLabel:itemIdentifier];
-    if (itemIdentifier == "App") {
-        var popUpButton = [[CPPopUpButton alloc] initWithFrame:CGRectMake(4, 8, 202, 24)];
-        [popUpButton setAutoresizingMask:CPViewWidthSizable];
-        [popUpButton setMenu:[appsMenu copy]];
-        if (DATA.apps.length)
-            [popUpButton selectItemAtIndex:DATA.appIndex];
-        var itemView = [[CPView alloc] initWithFrame:CGRectMake(0, 0, 206, 32)];
-        [itemView addSubview:popUpButton];
-        [item setView:itemView];
-        [item setMinSize:[itemView frameSize]];
-    } else {
-        var image = [[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:itemIdentifier + ".png"]];
-        [item setImage:image];
-        [item setMinSize:CGSizeMake(32, 32)];
-        switch (itemIdentifier) {
-        case "New":
-            [item setTarget:sidebarControllerProxy];
-            [item setAction:@selector(showNewFile)];
-            break;
-        }
-    }
-    return item;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// SplitView delegate
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-- (unsigned)splitView:(CPSplitView)splitView constrainSplitPosition:(unsigned)position ofSubviewAt:(unsigned)index // private
-{
-    position = MIN(MAX(position, 150), [splitView frameSize].width - 500);
-    [[[mainWindow toolbar] items][0] setMinSize:CGSizeMake(position - 35, 32)];
-    return position;
 }
 
 @end
