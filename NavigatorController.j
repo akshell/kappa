@@ -5,19 +5,17 @@
 @import "EnvManager.j"
 @import "LibManager.j"
 
-@implementation SidebarController : CPObject
+@implementation NavigatorController : CPObject
 {
     App app;
     CodeManager codeManager;
     EnvManager envManager;
     LibManager libManager;
     CPArray managers;
-    CPScrollView scrollView;
     CPOutlineView outlineView;
-    CPButtonBar buttonBar;
     CPButton plusButton;
     CPButton minusButton;
-    CPMenu actionsMenu;
+    CPMenu actionsMenu @accessors(readonly);
     CPMenuItem newFileMenuItem;
     CPMenuItem newFolderMenuItem;
     CPMenuItem newEnvMenuItem;
@@ -28,7 +26,7 @@
     CPArray renameMenuItems;
 }
 
-- (id)initWithApp:(App)anApp // public
+- (id)initWithApp:(App)anApp view:(CPView)superview // public
 {
     if (self = [super init]) {
         app = anApp;
@@ -76,14 +74,17 @@
         [newFileMenuItem, newFolderMenuItem, newEnvMenuItem, useLibMenuItem].forEach(
             function (menuItem) { [menuItem setEnabled:NO]; });
 
-        buttonBar = [CPButtonBar new];
+        var superviewSize = [superview boundsSize];
+        var buttonBar = [[CPButtonBar alloc] initWithFrame:CGRectMake(0, superviewSize.height - 26, superviewSize.width, 26)];
         [buttonBar setAutoresizingMask:CPViewWidthSizable | CPViewMinYMargin];
         [buttonBar setButtons:[plusButton, minusButton, actionButton]];
+        [superview addSubview:buttonBar];
 
-        scrollView = [CPScrollView new];
+        var scrollView = [[CPScrollView alloc] initWithFrame:CGRectMake(0, 0, superviewSize.width, superviewSize.height - 26)];
         [scrollView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
         [scrollView setHasHorizontalScroller:NO];
         [scrollView setAutohidesScrollers:YES];
+        [superview addSubview:scrollView];
 
         outlineView = [CPOutlineView new];
         [outlineView setAllowsMultipleSelection:YES];
@@ -101,20 +102,9 @@
         [outlineView setDelegate:self];
         [outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
         [scrollView setDocumentView:outlineView];
+        [outlineView sizeLastColumnToFit];
     }
     return self;
-}
-
-- (void)showInView:(CPView)superview withActionsMenuItem:(CPMenuItem)actionsMenuItem // public
-{
-    var superviewSize = [superview boundsSize];
-    [buttonBar setFrame:CGRectMake(0, superviewSize.height - 26, superviewSize.width, 26)];
-    [scrollView setFrame:CGRectMake(0, 0, superviewSize.width, superviewSize.height - 26)];
-    [outlineView sizeLastColumnToFit];
-    [superview addSubview:scrollView];
-    [superview addSubview:buttonBar];
-    [[actionsMenuItem submenu] setSupermenu:nil];
-    [actionsMenuItem setSubmenu:actionsMenu];
 }
 
 - (BOOL)outlineView:(CPOutlineView)anOutlineview isItemExpandable:(id)item // private

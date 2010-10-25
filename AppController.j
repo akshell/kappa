@@ -1,8 +1,8 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "Data.j"
-@import "AppPropertyProxy.j"
-@import "SidebarController.j"
+@import "ContentController.j"
+@import "NavigatorController.j"
 @import "AboutPanelController.j"
 @import "KeyPanelController.j"
 @import "SignupPanelController.j"
@@ -13,11 +13,27 @@
 @import "ContactPanelController.j"
 @import "Confirm.j"
 
+@implementation NavigatorControllerProxy : CPObject
+
+- (CPMethodSignature)methodSignatureForSelector:(SEL)selector // protected
+{
+    return YES;
+}
+
+- (void)forwardInvocation:(CPInvocation)invocation // protected
+{
+    [invocation setTarget:[DATA.app.contentController navigatorController]];
+    [invocation invoke];
+}
+
+@end
+
 @implementation AppController : CPObject
 {
     @outlet CPWindow mainWindow;
     @outlet CPView sidebarView;
-    AppPropertyProxy sidebarControllerProxy;
+    @outlet CPView presentationView;
+    NavigatorControllerProxy navigatorControllerProxy;
     AboutPanelController aboutPanelController;
     KeyPanelController keyPanelController;
     ChangePasswordPanelController changePasswordPanelController;
@@ -39,7 +55,7 @@
 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification // private
 {
-    sidebarControllerProxy = [[AppPropertyProxy alloc] initWithPropertyName:"sidebarController"];
+    navigatorControllerProxy = [NavigatorControllerProxy new];
     aboutPanelController = [AboutPanelController new];
     keyPanelController = [KeyPanelController new];
     changePasswordPanelController = [ChangePasswordPanelController new];
@@ -61,8 +77,8 @@
 
     fileMenu = [CPMenu new];
     [fileMenu addItemWithTitle:"New App…" target:newAppPanelController action:@selector(showWindow:)];
-    newFileMenuItem = [fileMenu addItemWithTitle:"New File" target:sidebarControllerProxy action:@selector(showNewFile)];
-    newFolderMenuItem = [fileMenu addItemWithTitle:"New Folder" target:sidebarControllerProxy action:@selector(showNewFolder)];
+    newFileMenuItem = [fileMenu addItemWithTitle:"New File" target:navigatorControllerProxy action:@selector(showNewFile)];
+    newFolderMenuItem = [fileMenu addItemWithTitle:"New Folder" target:navigatorControllerProxy action:@selector(showNewFolder)];
     appsMenu = [CPMenu new];
     [[fileMenu addItemWithTitle:"Open App"] setSubmenu:appsMenu];
     [fileMenu addItem:[CPMenuItem separatorItem]];
@@ -74,8 +90,8 @@
     [[mainMenu addItemWithTitle:"File"] setSubmenu:fileMenu];
 
     var appMenu = [CPMenu new];
-    newEnvMenuItem = [appMenu addItemWithTitle:"New Environment" target:sidebarControllerProxy action:@selector(showNewEnv)];
-    useLibMenuItem = [appMenu addItemWithTitle:"Use Library…" target:sidebarControllerProxy action:@selector(showUseLib)];
+    newEnvMenuItem = [appMenu addItemWithTitle:"New Environment" target:navigatorControllerProxy action:@selector(showNewEnv)];
+    useLibMenuItem = [appMenu addItemWithTitle:"Use Library…" target:navigatorControllerProxy action:@selector(showUseLib)];
     [appMenu addItem:[CPMenuItem separatorItem]];
     [appMenu addItemWithTitle:"Diff…"];
     [appMenu addItemWithTitle:"Commit…"];
@@ -114,7 +130,7 @@
     [toolbar setDelegate:self];
     [mainWindow setToolbar:toolbar];
     [self fillAppMenus];
-    [self showSidebar];
+    [self showContent];
 
     [DATA addObserver:self forKeyPath:"username"];
     [DATA addObserver:self forKeyPath:"apps"];
@@ -174,12 +190,16 @@
         function (item) { [item setEnabled:enabled]; });
 }
 
-- (void)showSidebar // private
+- (void)showContent // private
 {
     if (DATA.app) {
-        if (!DATA.app.sidebarController)
-            DATA.app.sidebarController = [[SidebarController alloc] initWithApp:DATA.app];
-        [DATA.app.sidebarController showInView:sidebarView withActionsMenuItem:actionsMenuItem];
+        if (!DATA.app.contentController)
+            DATA.app.contentController = [[ContentController alloc] initWithApp:DATA.app
+                                                                    sidebarView:sidebarView
+                                                               presentationView:presentationView];
+        [DATA.app.contentController show];
+        [[actionsMenuItem submenu] setSupermenu:nil];
+        [actionsMenuItem setSubmenu:[navigatorControllerProxy actionsMenu]];
     } else {
         var sidebarSize = [sidebarView boundsSize];
         var buttonBar = [[CPButtonBar alloc] initWithFrame:CGRectMake(0, sidebarSize.height - 26, sidebarSize.width, 26)];
@@ -206,7 +226,7 @@
         break;
     case "app":
         [sidebarView setSubviews:[]];
-        [self showSidebar];
+        [self showContent];
         break;
     case "app.code":
         [newFileMenuItem doSetEnabled:DATA.app && DATA.app.code];
@@ -258,7 +278,7 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
         [item setMinSize:CGSizeMake(32, 32)];
         switch (itemIdentifier) {
         case "New":
-            [item setTarget:sidebarControllerProxy];
+            [item setTarget:navigatorControllerProxy];
             [item setAction:@selector(showNewFile)];
             break;
         }
