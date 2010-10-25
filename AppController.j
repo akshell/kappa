@@ -130,11 +130,10 @@
     [toolbar setDelegate:self];
     [mainWindow setToolbar:toolbar];
     [self fillAppMenus];
-    [self showContent];
 
     [DATA addObserver:self forKeyPath:"username"];
     [DATA addObserver:self forKeyPath:"apps"];
-    [DATA addObserver:self forKeyPath:"app" context:"app"];
+    [DATA addObserver:self forKeyPath:"app" options:CPKeyValueObservingOptionInitial context:"app"];
     [DATA addObserver:self forKeyPath:"app.code" context:"app.code"];
     [DATA addObserver:self forKeyPath:"app.envs" context:"app.envs"];
     [DATA addObserver:self forKeyPath:"app.libs" context:"app.libs"];
@@ -176,38 +175,6 @@
         else
             [[appPopUpButton itemAtIndex:0] setState:CPOnState];
     }
-    [self setAppItemsEnabled:DATA.apps.length];
-}
-
-- (void)setAppItemsEnabled:(BOOL)enabled // private
-{
-    var mainMenu = [CPApp mainMenu];
-    [[mainMenu itemAtIndex:2] setEnabled:enabled];
-    [[mainMenu itemAtIndex:3] setEnabled:enabled];
-    for (var i = 3; i < 9; ++i)
-        [[fileMenu itemAtIndex:i] doSetEnabled:enabled];
-    [[mainWindow toolbar] items].forEach(
-        function (item) { [item setEnabled:enabled]; });
-}
-
-- (void)showContent // private
-{
-    if (DATA.app) {
-        if (!DATA.app.contentController)
-            DATA.app.contentController = [[ContentController alloc] initWithApp:DATA.app
-                                                                    sidebarView:sidebarView
-                                                               presentationView:presentationView];
-        [DATA.app.contentController show];
-        [[actionsMenuItem submenu] setSupermenu:nil];
-        [actionsMenuItem setSubmenu:[navigatorControllerProxy actionsMenu]];
-    } else {
-        var sidebarSize = [sidebarView boundsSize];
-        var buttonBar = [[CPButtonBar alloc] initWithFrame:CGRectMake(0, sidebarSize.height - 26, sidebarSize.width, 26)];
-        var buttons = [[CPButtonBar plusButton], [CPButtonBar minusButton], [CPButtonBar actionPopupButton]];
-        buttons.forEach(function (button) { [button setEnabled:NO]; });
-        [buttonBar setButtons:buttons];
-        [sidebarView addSubview:buttonBar];
-    }
 }
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
@@ -226,11 +193,28 @@
         break;
     case "app":
         [sidebarView setSubviews:[]];
-        [self showContent];
+        if (DATA.app) {
+            if (!DATA.app.contentController)
+                DATA.app.contentController = [[ContentController alloc] initWithApp:DATA.app
+                                                                        sidebarView:sidebarView
+                                                                   presentationView:presentationView];
+            [DATA.app.contentController show];
+            [[actionsMenuItem submenu] setSupermenu:nil];
+            [actionsMenuItem setSubmenu:[navigatorControllerProxy actionsMenu]];
+        }
+        var mainMenu = [CPApp mainMenu];
+        for (var i = 2; i < 5; ++i)
+            [[mainMenu itemAtIndex:i] setEnabled:DATA.app];
+        for (var i = 3; i < 9; ++i)
+            [[fileMenu itemAtIndex:i] doSetEnabled:DATA.app];
+        var toolbarItems = [[mainWindow toolbar] items];
+        [0, 3, 4, 6, 7, 8, 10, 11].forEach(function (i) { [toolbarItems[i] setEnabled:DATA.app] });
         break;
     case "app.code":
-        [newFileMenuItem doSetEnabled:DATA.app && DATA.app.code];
-        [newFolderMenuItem doSetEnabled:DATA.app && DATA.app.code];
+        var isEnabled = DATA.app && DATA.app.code;
+        [newFileMenuItem doSetEnabled:isEnabled];
+        [newFolderMenuItem doSetEnabled:isEnabled];
+        [[[mainWindow toolbar] items][2] setEnabled:isEnabled];
         break;
     case "app.envs":
         [newEnvMenuItem doSetEnabled:DATA.app && DATA.app.envs];
@@ -262,6 +246,7 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
 {
     var item = [[CPToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
     [item setLabel:itemIdentifier];
+    [item setEnabled:NO];
     if (itemIdentifier == "App") {
         var popUpButton = [[CPPopUpButton alloc] initWithFrame:CGRectMake(4, 8, 202, 24)];
         [popUpButton setAutoresizingMask:CPViewWidthSizable];
@@ -332,8 +317,6 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
         else
             [appPopUpButton selectItemAtIndex:index];
         [[appsMenu itemAtIndex:DATA.appIndex] setState:CPOffState];
-    } else {
-        [self setAppItemsEnabled:YES];
     }
     [appsMenu insertItem:[item copy] atIndex:index];
     DATA.apps.splice(index, 0, [[App alloc] initWithName:appName]);
@@ -362,8 +345,6 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
             [appPopUpButton selectItemAtIndex:0];
         else
             [[appPopUpButton itemAtIndex:0] setState:CPOnState];
-    } else {
-        [self setAppItemsEnabled:NO];
     }
     [DATA setAppIndex:0];
 }
