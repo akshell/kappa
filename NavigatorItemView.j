@@ -47,7 +47,7 @@
     if (!item)
         return;
     isLoading = item.isLoading;
-    [[self subviews][0] setImage:[CPImage imageFromPath:isLoading ? "WhiteSpinner.gif" : [[item class] imageName] + ".png"]];
+    [[self subviews][0] setImage:[CPImage imageFromPath:isLoading ? "WhiteSpinner.gif" : [item imageName] + ".png"]];
     if (!item.isEditable) {
         [[self subviews][1] setStringValue:[item name]];
         return;

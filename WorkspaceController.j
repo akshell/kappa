@@ -4,7 +4,7 @@
 
 @implementation FileBuffer (WorkspaceController)
 
-+ (CPString)imageName // public
+- (CPString)imageName // public
 {
     return "File";
 }
@@ -13,7 +13,7 @@
 
 @implementation GitBuffer (WorkspaceController)
 
-+ (CPString)imageName // public
+- (CPString)imageName // public
 {
     return "GitSmall";
 }
@@ -22,7 +22,7 @@
 
 @implementation EvalBuffer (WorkspaceController)
 
-+ (CPString)imageName // public
+- (CPString)imageName // public
 {
     return "EvalSmall";
 }
@@ -31,7 +31,7 @@
 
 @implementation HelpBuffer (WorkspaceController)
 
-+ (CPString)imageName // public
+- (CPString)imageName // public
 {
     return "Help";
 }
@@ -40,7 +40,7 @@
 
 @implementation PreviewBuffer (WorkspaceController)
 
-+ (CPString)imageName // public
+- (CPString)imageName // public
 {
     return "PreviewSmall";
 }

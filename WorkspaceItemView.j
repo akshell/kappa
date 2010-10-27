@@ -15,7 +15,7 @@
 
 - (void)setObjectValue:(Buffer)buffer // public
 {
-    [[self subviews][0] setImage:[CPImage imageFromPath:[[buffer class] imageName] + ".png"]];
+    [[self subviews][0] setImage:[CPImage imageFromPath:[buffer imageName] + ".png"]];
     [[self subviews][1] setStringValue:[buffer name]];
 }
 

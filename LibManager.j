@@ -7,7 +7,7 @@ var libCode = {};
 
 @implementation Lib (LibManager)
 
-+ (CPString)imageName // public
+- (CPString)imageName // public
 {
     return "Lib";
 }
@@ -95,7 +95,7 @@ var parseManifest = function (content) {
     return "Libraries";
 }
 
-+ (CPString)imageName // public
+- (CPString)imageName // public
 {
     return "Libs";
 }
