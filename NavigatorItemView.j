@@ -1,6 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
-@implementation ItemController : CPObject
+@implementation NavigatorItemController : CPObject
 {
     id item;
 }
@@ -28,11 +28,7 @@
 
 @end
 
-var makeImage = function (path) {
-    return [[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:path]];
-};
-
-@implementation ItemView : CPView
+@implementation NavigatorItemView : CPView
 {
     BOOL isLoading;
 }
@@ -51,7 +47,7 @@ var makeImage = function (path) {
     if (!item)
         return;
     isLoading = item.isLoading;
-    [[self subviews][0] setImage:makeImage(isLoading ? "WhiteSpinner.gif" : [[item class] imageName] + ".png")];
+    [[self subviews][0] setImage:[CPImage imageFromPath:isLoading ? "WhiteSpinner.gif" : [[item class] imageName] + ".png"]];
     if (!item.isEditable) {
         [[self subviews][1] setStringValue:[item name]];
         return;
@@ -64,9 +60,9 @@ var makeImage = function (path) {
         return;
     }
     var textField = item.textField = [[CPTextField alloc] initWithFrame:textFieldFrame];
-    var itemController = [[ItemController alloc] initWithItem:item];
-    [textField setDelegate:itemController];
-    [textField setTarget:itemController];
+    var controller = [[NavigatorItemController alloc] initWithItem:item];
+    [textField setDelegate:controller];
+    [textField setTarget:controller];
     [textField setAction:@selector(submit:)];
     [textField setBordered:YES];
     [textField setBezeled:YES];
@@ -80,14 +76,14 @@ var makeImage = function (path) {
 - (BOOL)setThemeState:(CPThemeState)state // protected
 {
     if (state == CPThemeStateSelectedDataView && isLoading)
-        [[self subviews][0] setImage:makeImage("BlueSpinner.gif")];
+        [[self subviews][0] setImage:[CPImage imageFromPath:"BlueSpinner.gif"]];
     return [super setThemeState:state];
 }
 
 - (BOOL)unsetThemeState:(CPThemeState)state // protected
 {
     if (state == CPThemeStateSelectedDataView && isLoading)
-        [[self subviews][0] setImage:makeImage("WhiteSpinner.gif")];
+        [[self subviews][0] setImage:[CPImage imageFromPath:"WhiteSpinner.gif"]];
     return [super unsetThemeState:state];
 }
 

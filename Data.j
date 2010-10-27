@@ -26,6 +26,14 @@
     return self;
 }
 
+- (CPString)path // public
+{
+    var parts = [];
+    for (var entry = self; entry.name; entry = entry.parentFolder)
+        parts.unshift(entry.name);
+    return parts.join("/");
+}
+
 @end
 
 @implementation File : Entry
@@ -143,16 +151,266 @@
 
 @end
 
+var bufferSubclasses = {};
+
+@implementation Buffer : CPObject
+
++ (void)registerSubclass:(Class)subclass withTypeName:(CPString)typeName // protected
+{
+    bufferSubclasses[typeName] = subclass;
+    subclass.typeName = typeName;
+}
+
+- (JSObject)archive // public
+{
+    var archive = {type: [self class].typeName};
+    [self archiveTo:archive];
+    return archive;
+}
+
++ (Buffer)bufferOfApp:(App)app fromArchive:(JSObject)archive // public
+{
+    return [[bufferSubclasses[archive.type] alloc] initWithApp:app archive:archive];
+}
+
+@end
+
+@implementation FileBuffer : Buffer
+@end
+
+@implementation CodeFileBuffer : FileBuffer
+{
+    File file @accessors(readonly);
+}
+
+- (id)initWithFile:(File)aFile // public
+{
+    if (self = [super init])
+        file = aFile;
+    return self;
+}
+
+- (CPString)name // public
+{
+    return file.name;
+}
+
+- (void)archiveTo:(JSObject)archive // protected
+{
+    archive.path = [file path];
+}
+
+- (id)initWithApp:(App)app archive:(JSObject)archive // protected
+{
+    var parts = archive.path.split("/");
+    var folder = app.code;
+    for (var i = 0; i < parts.length - 1; ++i) {
+        folder = [folder childWithName:parts[i]];
+        if (![folder isKindOfClass:Folder])
+            return nil;
+    }
+    var aFile = [folder childWithName:parts[parts.length - 1]];
+    return [aFile isKindOfClass:File] ? [self initWithFile:aFile] : nil;
+}
+
+@end
+
+[Buffer registerSubclass:CodeFileBuffer withTypeName:"code file"];
+
+@implementation LibFileBuffer : FileBuffer
+{
+    Lib lib;
+    CPString path;
+}
+
+- (id)initWithLib:(Lib)aLib path:(CPString)aPath // public
+{
+    if (self = [super init]) {
+        lib = aLib;
+        path = aPath;
+    }
+    return self;
+}
+
+- (CPString)name // public
+{
+    return path.substring(path.lastIndexOf("/") + 1) + " (" + lib.name + ")";
+}
+
+- (void)archiveTo:(JSObject)archive // protected
+{
+    archive.lib = lib.name;
+    archive.path = path;
+}
+
+- (id)initWithApp:(App)app archive:(JSObject)archive // protected
+{
+    var aLib = [app libWithName:archive.lib];
+    return aLib ? [self initWithLib:aLib path:archive.path] : nil;
+}
+
+@end
+
+[Buffer registerSubclass:LibFileBuffer withTypeName:"lib file"];
+
+@implementation GitBuffer : Buffer
+
+- (CPString)name // public
+{
+    return "Git";
+}
+
+- (void)archiveTo:(JSObject)archive // protected
+{
+}
+
+- (id)initWithApp:(App)app archive:(JSObject)archive // protected
+{
+    return [super init];
+}
+
+@end
+
+[Buffer registerSubclass:GitBuffer withTypeName:"git"];
+
+@implementation EvalBuffer : Buffer
+{
+    Env env;
+}
+
+- (id)initWithEnv:(Env)anEnv // public
+{
+    if (self = [super init])
+        env = anEnv;
+    return self;
+}
+
+- (CPString)name // public
+{
+    return env.name;
+}
+
+- (void)archiveTo:(JSObject)archive // protected
+{
+    archive.env = env.name;
+}
+
+- (id)initWithApp:(App)app archive:(JSObject)archive // protected
+{
+    var anEnv = [app envWithName:archive.env];
+    return anEnv ? [self initWithEnv:anEnv] : nil;
+}
+
+@end
+
+[Buffer registerSubclass:EvalBuffer withTypeName:"eval"];
+
+@implementation WebBuffer : Buffer
+{
+    CPString url @accessors(property=URL);
+    CPString title @accessors;
+}
+
+- (id)initWithURL:(CPString)anURL title:(CPString)aTitle // public
+{
+    if (self = [super init]) {
+        url = anURL;
+        title = aTitle;
+    }
+    return self;
+}
+
+- (void)archiveTo:(JSObject)archive // protected
+{
+    archive.url = url;
+    archive.title = title;
+}
+
+- (id)initWithApp:(App)app archive:(JSObject)archive // protected
+{
+    return [self initWithURL:archive.url title:archive.title];
+}
+
+@end
+
+@implementation HelpBuffer : WebBuffer
+
+- (id)initWithURL:(CPString)anURL // public
+{
+    return [super initWithURL:anURL title:"Help"];
+}
+
+- (CPString)name // public
+{
+    return title;
+}
+
+@end
+
+[Buffer registerSubclass:HelpBuffer withTypeName:"help"];
+
+@implementation PreviewBuffer : WebBuffer
+{
+    Env env;
+}
+
+- (id)initWithApp:(App)app env:(Env)anEnv // public
+{
+    if (self = [super initWithURL:[app URLofEnv:anEnv] title:"Preview"])
+        env = anEnv;
+    return self;
+}
+
+- (CPString)name // public
+{
+    return title + " (" + env.name + ")";
+}
+
+- (void)archiveTo:(JSObject)archive // protected
+{
+    archive.env = env.name;
+    [super archiveTo:archive];
+}
+
+- (id)initWithApp:(App)app archive:(JSObject)archive // protected
+{
+    env = [app envWithName:archive.env];
+    return env ? [super initWithApp:app archive:archive] : nil;
+}
+
+@end
+
+[Buffer registerSubclass:PreviewBuffer withTypeName:"preview"];
+
 @implementation App : Entity
 {
+    JSObject oldArchive;
     Folder code @accessors;
     CPArray envs @accessors;
     CPArray libs @accessors;
+    CPArray buffers @accessors;
+}
+
+- (id)initWithName:(CPString)aName archive:(JSObject)archive // public
+{
+    if (self = [super initWithName:aName])
+        oldArchive = archive;
+    return self;
+}
+
+- (id)initWithName:(CPString)aName // public
+{
+    return [self initWithName:aName archive:{}];
 }
 
 - (CPString)URL // public
 {
     return "/apps/" + name + "/";
+}
+
+- (CPString)URLofEnv:(Env)env // public
+{
+    // TODO
 }
 
 - (Env)envWithName:(CPString)aName // public
@@ -170,6 +428,27 @@
         if (libs[i].name == aName)
             return libs[i];
     return nil;
+}
+
+- (void)setupBuffers // public
+{
+    buffers = [];
+    if (oldArchive.buffers) {
+        for (var i = 0; i < oldArchive.buffers.length; ++i) {
+            var buffer = [Buffer bufferOfApp:self fromArchive:oldArchive.buffers[i]];
+            if (buffer)
+                buffers.push(buffer);
+        }
+    } else {
+        var file = [code childWithName:"main.js"];
+        if ([file isKindOfClass:File])
+            buffers.push([[CodeFileBuffer alloc] initWithFile:file]);
+    }
+}
+
+- (JSObject)archive // public
+{
+    return {buffers: buffers ? buffers.map(function (buffer) { return [buffer archive]; }) : oldArchive.buffers};
 }
 
 @end
@@ -196,7 +475,8 @@
 - (void)setAppNames:(CPArray)appNames config:(JSObject)config // public
 {
     [self willChangeValueForKey:"apps"];
-    apps = appNames.map(function (name) { return [[App alloc] initWithName:name]; });
+    var appsArchive = config.apps || {};
+    apps = appNames.map(function (name) { return [[App alloc] initWithName:name archive:appsArchive[name] || {}]; });
     [self setAppIndex:config.appIndex && apps.length ? MIN(config.appIndex, apps.length - 1) : 0];
     [self didChangeValueForKey:"apps"];
 }
@@ -211,9 +491,11 @@
     }
 }
 
-- (JSObject)encode // public
+- (JSObject)archive // public
 {
-    return {appIndex: appIndex};
+    var archive = {appIndex: appIndex, apps: {}};
+    apps.forEach(function (app) { archive.apps[app.name] = [app archive]; });
+    return archive;
 }
 
 @end

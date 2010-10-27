@@ -4,18 +4,6 @@
 @import "MovePanelController.j"
 @import "ReplacePanelController.j"
 
-@implementation Entry (CodeManager)
-
-- (CPString)path // public
-{
-    var parts = [];
-    for (var entry = self; entry; entry = entry.parentFolder)
-        parts.unshift(entry.name);
-    return parts.join("/");
-}
-
-@end
-
 var getDuplicatePrefix = function (base) {
     if (base.substring(base.length - 5) == " copy")
         return base;

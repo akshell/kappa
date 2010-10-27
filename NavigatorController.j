@@ -1,6 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "ItemView.j"
+@import "NavigatorItemView.j"
 @import "CodeManager.j"
 @import "EnvManager.j"
 @import "LibManager.j"
@@ -94,7 +94,7 @@
         [outlineView setHeaderView:nil];
         [outlineView setCornerView:nil];
         var column = [CPTableColumn new];
-        [column setDataView:[ItemView new]];
+        [column setDataView:[NavigatorItemView new]];
         [outlineView addTableColumn:column];
         [outlineView setOutlineTableColumn:column];
         [outlineView setDataSource:self];
@@ -186,6 +186,7 @@
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
+    [app removeObserver:self forKeyPath:keyPath];
     var manager;
     switch (keyPath) {
     case "code":

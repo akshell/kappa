@@ -1,10 +1,12 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "NavigatorController.j"
+@import "WorkspaceController.j"
 
 @implementation ContentController : CPObject
 {
     NavigatorController navigatorController @accessors(readonly);
+    WorkspaceController workspaceController;
     CPView sidebarView;
     CPSplitView splitView;
 }
@@ -24,6 +26,7 @@
         [splitView addSubview:navigatorView];
         [splitView setPosition:[sidebarView boundsSize].height * 0.3 ofDividerAtIndex:0];
         navigatorController = [[NavigatorController alloc] initWithApp:app view:navigatorView];
+        workspaceController = [[WorkspaceController alloc] initWithApp:app view:workspaceView];
     }
     return self;
 }

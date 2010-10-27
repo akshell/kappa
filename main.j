@@ -11,6 +11,7 @@
 @import "CPMenu.j"
 @import "CPMenuItem.j"
 @import "CPOutlineView.j"
+@import "CPImage.j"
 
 DATA = [Data new];
 
@@ -21,7 +22,7 @@ window.onbeforeunload = function () {
     request.open("PUT", "/config", false);
     request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
     request.setRequestHeader("Content-Type", "application/json");
-    request.send(JSON.stringify([DATA encode]));
+    request.send(JSON.stringify([DATA archive]));
 };
 
 function main(args, namedArgs)
