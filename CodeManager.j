@@ -35,19 +35,6 @@ var getDuplicatePrefix = function (base) {
     return parentFolder.files;
 }
 
-- (void)didLoadContent:(CPString)content // public
-{
-    var isSaved = currentContent == savedContent;
-    [self setSavedContent:content];
-    if (isSaved)
-        [self setCurrentContent:content];
-}
-
-- (void)didSave:(CPString)data content:(CPString)content // public
-{
-    [self setSavedContent:content];
-}
-
 - (File)duplicate // public
 {
     var base, suffix;
@@ -286,21 +273,6 @@ var entryNameIsCorrect = function (name) {
     [self deleteItems:entries byRequestWithMethod:"POST" URL:[self URL]
                  data:{action: "rm", paths: entries.map(function (entry) { return [entry path]; })}];
     [self notify];
-}
-
-- (void)loadFile:(File)file // public
-{
-    [[[HTTPRequest alloc] initWithMethod:"GET" URL:[self URL] + [file path] target:file action:@selector(didLoadContent:)] send];
-}
-
-- (void)saveFile:(File)file // public
-{
-    var request = [[HTTPRequest alloc] initWithMethod:"PUT"
-                                                  URL:[self URL] + [file path]
-                                               target:file
-                                               action:@selector(didSave:content:)];
-    [request setContext:file.currentContent];
-    [request send:file.currentContent];
 }
 
 - (void)duplicateEntries:(CPArray)entries // public

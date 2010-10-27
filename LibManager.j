@@ -1,6 +1,7 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "Manager.j"
+@import "FileHandling.j"
 @import "UseLibPanelController.j"
 
 var libCode = {};
@@ -127,7 +128,7 @@ var parseManifest = function (content) {
         if (manifestFile.savedContent) {
             [self readManifest];
         } else {
-            [codeManager loadFile:manifestFile];
+            [app loadFile:manifestFile];
             isLoading = YES;
             [self notify];
         }
@@ -246,7 +247,7 @@ var parseManifest = function (content) {
     }
     manifest.libs[lib.name] = lib.identifier;
     [manifestFile setCurrentContent:JSON.stringify(manifest, null, "  ")];
-    [codeManager saveFile:manifestFile];
+    [app saveFile:manifestFile];
 }
 
 - (void)didLibTreeRequestFinished // private
@@ -281,7 +282,7 @@ var parseManifest = function (content) {
     manifest.libs[name] = lib.identifier;
     delete manifest.libs[lib.name];
     [manifestFile setCurrentContent:JSON.stringify(manifest, null, "  ")];
-    [codeManager saveFile:manifestFile];
+    [app saveFile:manifestFile];
     lib.isLoading = YES;
     [lib setName:name];
     [app.libs removeObject:lib];
@@ -304,7 +305,7 @@ var parseManifest = function (content) {
             delete manifest.libs[lib.name];
         });
     [manifestFile setCurrentContent:JSON.stringify(manifest, null, "  ")];
-    [codeManager saveFile:manifestFile];
+    [app saveFile:manifestFile];
     [self notify];
 }
 
