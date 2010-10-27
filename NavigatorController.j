@@ -99,7 +99,7 @@
         [outlineView addTableColumn:column];
         [outlineView setOutlineTableColumn:column];
         [outlineView setDataSource:self];
-        [outlineView expandItem:codeManager];
+        managers.forEach(function (manager) { [outlineView expandItem:manager]; });
         [outlineView setDelegate:self];
         [outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
         [scrollView setDocumentView:outlineView];
