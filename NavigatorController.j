@@ -1,5 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
+@import "BufferManager.j"
 @import "NavigatorItemView.j"
 @import "CodeManager.j"
 @import "EnvManager.j"
@@ -8,10 +9,11 @@
 @implementation NavigatorController : CPObject
 {
     App app;
+    BufferManager bufferManager;
     CodeManager codeManager;
     EnvManager envManager;
     LibManager libManager;
-    CPArray managers;
+    CPArray resourceManagers;
     CPOutlineView outlineView;
     CPButton plusButton;
     CPButton minusButton;
@@ -26,19 +28,19 @@
     CPArray renameMenuItems;
 }
 
-- (id)initWithApp:(App)anApp view:(CPView)superview // public
+- (id)initWithApp:(App)anApp view:(CPView)superview bufferManager:(BufferManager)aBufferManager // public
 {
     if (self = [super init]) {
         app = anApp;
-        [app addObserver:self forKeyPath:"code"];
-        [app addObserver:self forKeyPath:"envs"];
-        [app addObserver:self forKeyPath:"libs"];
+        bufferManager = aBufferManager;
+
+        ["code", "envs", "libs"].forEach(function (keyPath) { [app addObserver:self forKeyPath:keyPath]; });
 
         codeManager = [[CodeManager alloc] initWithApp:app];
         envManager = [[EnvManager alloc] initWithApp:app];
         libManager = [[LibManager alloc] initWithCodeManager:codeManager];
-        managers = [codeManager, envManager, libManager];
-        managers.forEach(
+        resourceManagers = [codeManager, envManager, libManager];
+        resourceManagers.forEach(
             function (manager) {
                 [manager addChangeObserver:self selector:@selector(didManagerChange:)];
                 [manager setRevealTarget:self];
@@ -99,7 +101,7 @@
         [outlineView addTableColumn:column];
         [outlineView setOutlineTableColumn:column];
         [outlineView setDataSource:self];
-        managers.forEach(function (manager) { [outlineView expandItem:manager]; });
+        resourceManagers.forEach(function (manager) { [outlineView expandItem:manager]; });
         [outlineView setDelegate:self];
         [outlineView selectRowIndexes:[CPIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
         [scrollView setDocumentView:outlineView];
@@ -115,12 +117,12 @@
 
 - (int)outlineView:(CPOutlineView)anOutlineview numberOfChildrenOfItem:(id)item // private
 {
-    return item ? [item numberOfChildren] : managers.length;
+    return item ? [item numberOfChildren] : resourceManagers.length;
 }
 
 - (id)outlineView:(CPOutlineView)anOutlineview child:(int)index ofItem:(id)item // private
 {
-    return item ? [item childAtIndex:index] : managers[index];
+    return item ? [item childAtIndex:index] : resourceManagers[index];
 }
 
 - (id)outlineView:(CPOutlineView)anOutlineview objectValueForTableColumn:(CPTableColumn)tableColumn byItem:(id)item // private

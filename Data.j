@@ -430,20 +430,19 @@ var bufferSubclasses = {};
     return nil;
 }
 
-- (void)setupBuffers // public
+- (CPArray)oldBuffers // public
 {
-    buffers = [];
-    if (oldArchive.buffers) {
-        for (var i = 0; i < oldArchive.buffers.length; ++i) {
-            var buffer = [Buffer bufferOfApp:self fromArchive:oldArchive.buffers[i]];
-            if (buffer)
-                buffers.push(buffer);
-        }
-    } else {
+    if (!oldArchive.buffers) {
         var file = [code childWithName:"main.js"];
-        if ([file isKindOfClass:File])
-            buffers.push([[CodeFileBuffer alloc] initWithFile:file]);
+        return [file isKindOfClass:File] ? [[[CodeFileBuffer alloc] initWithFile:file]] : [];
     }
+    var oldBuffers = [];
+    for (var i = 0; i < oldArchive.buffers.length; ++i) {
+        var buffer = [Buffer bufferOfApp:self fromArchive:oldArchive.buffers[i]];
+        if (buffer)
+            oldBuffers.push(buffer);
+    }
+    return oldBuffers;
 }
 
 - (JSObject)archive // public

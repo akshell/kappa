@@ -1,5 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
+@import "BufferManager.j"
 @import "NavigatorController.j"
 @import "WorkspaceController.j"
 
@@ -25,8 +26,9 @@
         var navigatorView = [CPView new];
         [splitView addSubview:navigatorView];
         [splitView setPosition:[sidebarView boundsSize].height * 0.3 ofDividerAtIndex:0];
-        navigatorController = [[NavigatorController alloc] initWithApp:app view:navigatorView];
-        workspaceController = [[WorkspaceController alloc] initWithApp:app view:workspaceView];
+        var bufferManager = [[BufferManager alloc] initWithApp:app];
+        navigatorController = [[NavigatorController alloc] initWithApp:app view:navigatorView bufferManager:bufferManager];
+        workspaceController = [[WorkspaceController alloc] initWithApp:app view:workspaceView bufferManager:bufferManager];
     }
     return self;
 }

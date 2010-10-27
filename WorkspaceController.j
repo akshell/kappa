@@ -1,5 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
+@import "BufferManager.j"
 @import "WorkspaceItemView.j"
 
 @implementation FileBuffer (WorkspaceController)
@@ -50,15 +51,17 @@
 @implementation WorkspaceController : CPObject
 {
     App app;
+    BufferManager bufferManager;
     CPTableView tableView;
     CPImageView spinnerImageView;
 }
 
-- (id)initWithApp:(App)anApp view:(CPView)superview // public
+- (id)initWithApp:(App)anApp view:(CPView)superview bufferManager:(BufferManager)aBufferManager // public
 {
     if (self = [super init]) {
         app = anApp;
-        ["code", "envs", "libs"].forEach(function (keyPath) { [app addObserver:self forKeyPath:keyPath]; });
+        bufferManager = aBufferManager;
+        [app addObserver:self forKeyPath:"buffers"];
         var scrollView = [[CPScrollView alloc] initWithFrame:[superview bounds]];
         [scrollView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
         [scrollView setHasHorizontalScroller:NO];
@@ -90,10 +93,9 @@
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
-    [app removeObserver:self forKeyPath:keyPath];
-    if (!(app.code && app.envs && app.libs))
+    if (keyPath != "buffers")
         return;
-    [app setupBuffers];
+    [app removeObserver:self forKeyPath:keyPath];
     [spinnerImageView removeFromSuperview];
     [tableView setDataSource:self];
     [tableView setHidden:NO];
