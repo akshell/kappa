@@ -69,11 +69,12 @@
         [tableView setAllowsEmptySelection:NO];
         [tableView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
         [tableView setColumnAutoresizingStyle:CPTableViewLastColumnOnlyAutoresizingStyle];
-        [tableView setHeaderView:nil];
-        [tableView setCornerView:nil];
         [tableView setSelectionHighlightStyle:CPTableViewSelectionHighlightStyleSourceList];
         var column = [CPTableColumn new];
         [column setDataView:[WorkspaceItemView new]];
+        [[column headerView] setStringValue:"Workspace"];
+        [[column headerView] setValue:[[column headerView] valueForThemeAttribute:"background-color"]
+                    forThemeAttribute:"background-color"];
         [tableView addTableColumn:column];
         [scrollView setDocumentView:tableView];
         [tableView sizeLastColumnToFit];

@@ -91,10 +91,11 @@
         [outlineView setAllowsEmptySelection:NO];
         [outlineView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
         [outlineView setColumnAutoresizingStyle:CPTableViewLastColumnOnlyAutoresizingStyle];
-        [outlineView setHeaderView:nil];
-        [outlineView setCornerView:nil];
         var column = [CPTableColumn new];
         [column setDataView:[NavigatorItemView new]];
+        [[column headerView] setStringValue:"Navigator"];
+        [[column headerView] setValue:[[column headerView] valueForThemeAttribute:"background-color"]
+                    forThemeAttribute:"background-color"];
         [outlineView addTableColumn:column];
         [outlineView setOutlineTableColumn:column];
         [outlineView setDataSource:self];
