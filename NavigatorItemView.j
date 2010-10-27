@@ -47,7 +47,7 @@
     if (!item)
         return;
     isLoading = item.isLoading;
-    [[self subviews][0] setImage:[CPImage imageFromPath:isLoading ? "WhiteSpinner.gif" : [item imageName] + ".png"]];
+    [[self subviews][0] setImage:[CPImage imageFromPath:isLoading ? "WhiteSpinner16.gif" : [item imageName] + ".png"]];
     if (!item.isEditable) {
         [[self subviews][1] setStringValue:[item name]];
         return;
@@ -76,14 +76,14 @@
 - (BOOL)setThemeState:(CPThemeState)state // protected
 {
     if (state == CPThemeStateSelectedDataView && isLoading)
-        [[self subviews][0] setImage:[CPImage imageFromPath:"BlueSpinner.gif"]];
+        [[self subviews][0] setImage:[CPImage imageFromPath:"BlueSpinner16.gif"]];
     return [super setThemeState:state];
 }
 
 - (BOOL)unsetThemeState:(CPThemeState)state // protected
 {
     if (state == CPThemeStateSelectedDataView && isLoading)
-        [[self subviews][0] setImage:[CPImage imageFromPath:"WhiteSpinner.gif"]];
+        [[self subviews][0] setImage:[CPImage imageFromPath:"WhiteSpinner16.gif"]];
     return [super unsetThemeState:state];
 }
 

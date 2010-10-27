@@ -258,7 +258,7 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
         [item setView:itemView];
         [item setMinSize:[itemView frameSize]];
     } else {
-        var image = [[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:itemIdentifier + ".png"]];
+        var image = [CPImage imageFromPath:itemIdentifier.replace(" ", "") + "32.png"];
         [item setImage:image];
         [item setMinSize:CGSizeMake(32, 32)];
         switch (itemIdentifier) {

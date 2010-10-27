@@ -38,7 +38,7 @@
     var panel = [[CPPanel alloc] initWithContentRect:CGRectMake(0, 0, 318, 108) styleMask:CPTitledWindowMask];
     var contentView = [panel contentView];
     var imageView = [[CPImageView alloc] initWithFrame:CGRectMake(16, 16, 48, 48)];
-    [imageView setImage:[[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:"Info.png"]]];
+    [imageView setImage:[[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:"Info48.png"]]];
     [contentView addSubview:imageView];
     var label = [[CPTextField alloc] initWithFrame:CGRectMake(80, 16, 222, 48)];
     [label setLineBreakMode:CPLineBreakByWordWrapping];

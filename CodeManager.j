@@ -22,7 +22,7 @@ var getDuplicatePrefix = function (base) {
 
 - (CPString)imageName // public
 {
-    return "File";
+    return "File16";
 }
 
 - (CPString)description // public
@@ -75,7 +75,7 @@ var getDuplicatePrefix = function (base) {
 
 - (CPString)imageName // public
 {
-    return "Folder";
+    return "Folder16";
 }
 
 - (CPString)description // public
@@ -189,7 +189,7 @@ var entryNameIsCorrect = function (name) {
 
 - (CPString)imageName // public
 {
-    return "Code";
+    return "Code16";
 }
 
 - (unsigned)numberOfChildren // public

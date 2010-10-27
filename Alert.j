@@ -78,7 +78,7 @@ var createLabel = function (text, y, isBold) {
 
 - (CPString)imagePath // protected
 {
-    return "Error.png";
+    return "Error48.png";
 }
 
 - (void)confirm // protected

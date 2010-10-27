@@ -6,7 +6,7 @@
 
 - (CPString)imageName // public
 {
-    return "File";
+    return "File16";
 }
 
 @end
@@ -15,7 +15,7 @@
 
 - (CPString)imageName // public
 {
-    return "GitSmall";
+    return "Git16";
 }
 
 @end
@@ -24,7 +24,7 @@
 
 - (CPString)imageName // public
 {
-    return "EvalSmall";
+    return "Eval16";
 }
 
 @end
@@ -33,7 +33,7 @@
 
 - (CPString)imageName // public
 {
-    return "Help";
+    return "Help16";
 }
 
 @end
@@ -42,7 +42,7 @@
 
 - (CPString)imageName // public
 {
-    return "PreviewSmall";
+    return "Preview16";
 }
 
 @end
@@ -81,7 +81,7 @@
         spinnerImageView =
             [[CPImageView alloc] initWithFrame:CGRectMake(superviewSize.width / 2 - 16, superviewSize.height / 2 - 16, 32, 32)];
         [spinnerImageView setAutoresizingMask:CPViewMinXMargin | CPViewMaxXMargin | CPViewMinYMargin | CPViewMaxYMargin];
-        [spinnerImageView setImage:[CPImage imageFromPath:"BigWhiteSpinner.gif"]];
+        [spinnerImageView setImage:[CPImage imageFromPath:"WhiteSpinner32.gif"]];
         [superview addSubview:spinnerImageView];
     }
     return self;

@@ -9,7 +9,7 @@ var libCode = {};
 
 - (CPString)imageName // public
 {
-    return "Lib";
+    return "Lib16";
 }
 
 - (BOOL)isExpandable // public
@@ -97,7 +97,7 @@ var parseManifest = function (content) {
 
 - (CPString)imageName // public
 {
-    return "Libs";
+    return "Libs16";
 }
 
 - (unsigned)numberOfChildren // public

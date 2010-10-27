@@ -20,7 +20,7 @@
 
 - (CPString)imagePath // protected
 {
-    return "Caution.png";
+    return "Caution48.png";
 }
 
 - (void)confirm // protected

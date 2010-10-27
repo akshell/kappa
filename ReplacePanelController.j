@@ -19,7 +19,7 @@
         [[self window] setDelegate:self];
         var contentView = [[self window] contentView];
         var imageView = [[CPImageView alloc] initWithFrame:CGRectMake(16, 16, 48, 48)];
-        [imageView setImage:[[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:"Caution.png"]]];
+        [imageView setImage:[[CPImage alloc] initWithContentsOfFile:[[CPBundle mainBundle] pathForResource:"Caution48.png"]]];
         [contentView addSubview:imageView];
         messageLabel = [[CPTextField alloc] initWithFrame:CGRectMake(80, 16, 254, 40)];
         [messageLabel setLineBreakMode:CPLineBreakByWordWrapping];
