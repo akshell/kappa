@@ -1,6 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "Manager.j"
+@import "ResourceManager.j"
 @import "MovePanelController.j"
 @import "ReplacePanelController.j"
 
@@ -149,7 +149,7 @@ var entryNameIsCorrect = function (name) {
     return YES;
 };
 
-@implementation CodeManager : Manager
+@implementation CodeManager : ResourceManager
 {
     MovePanelController movePanelController;
     ReplacePanelController replacePanelController;

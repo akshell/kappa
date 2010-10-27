@@ -1,13 +1,12 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "Data.j"
+@import "BaseManager.j"
 @import "HTTPRequest.j"
 
 var NotificationName = "ManagerNotification";
 
-@implementation Manager : CPObject
+@implementation ResourceManager : BaseManager
 {
-    App app;
     BOOL isLoading;
     id revealTarget @accessors;
     SEL revealAction @accessors;
@@ -15,8 +14,7 @@ var NotificationName = "ManagerNotification";
 
 - (id)initWithApp:(App)anApp // public
 {
-    if (self = [super init]) {
-        app = anApp;
+    if (self = [super initWithApp:anApp]) {
         isLoading = YES;
         if ([self respondsToSelector:@selector(URL)]) {
             var request = [[HTTPRequest alloc] initWithMethod:"GET" URL:[self URL] target:self action:@selector(didReceiveRepr:)];
@@ -25,16 +23,6 @@ var NotificationName = "ManagerNotification";
         }
     }
     return self;
-}
-
-- (void)addChangeObserver:(id)observer selector:(SEL)selector // public
-{
-    [[CPNotificationCenter defaultCenter] addObserver:observer selector:selector name:NotificationName object:self];
-}
-
-- (void)notify // protected
-{
-    [[CPNotificationCenter defaultCenter] postNotificationName:NotificationName object:self];
 }
 
 - (BOOL)isExpandable // public
