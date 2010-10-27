@@ -80,7 +80,7 @@
         [tableView sizeLastColumnToFit];
         var superviewSize = [superview boundsSize];
         spinnerImageView =
-            [[CPImageView alloc] initWithFrame:CGRectMake(superviewSize.width / 2 - 16, superviewSize.height / 2 - 16, 32, 32)];
+            [[CPImageView alloc] initWithFrame:CGRectMake(superviewSize.width / 2 - 16, superviewSize.height / 2 - 4, 32, 32)];
         [spinnerImageView setAutoresizingMask:CPViewMinXMargin | CPViewMaxXMargin | CPViewMinYMargin | CPViewMaxYMargin];
         [spinnerImageView setImage:[CPImage imageFromPath:"WhiteSpinner32.gif"]];
         [superview addSubview:spinnerImageView];
