@@ -161,6 +161,18 @@
         function (pair) {
             pair[0].forEach(function (menuItem) { [menuItem doSetEnabled:pair[1]]; });
         });
+    if (items.length == 1 && [items[0] isKindOfClass:File]) {
+        var file = items[0];
+        var buffer;
+        if (firstManager === codeManager) {
+            buffer = [[CodeFileBuffer alloc] initWithFile:file];
+        } else {
+            for (var entry = file; entry.parentFolder.parentFolder; entry = entry.parentFolder)
+                ;
+            buffer = [[LibFileBuffer alloc] initWithLib:[outlineView parentForItem:entry] path:[file path]];
+        }
+        [bufferManager openBuffer:buffer];
+    }
 }
 
 - (void)outlineViewItemWillExpand:(CPNotification)notification // private

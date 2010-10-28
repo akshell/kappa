@@ -155,6 +155,20 @@ var bufferSubclasses = {};
 
 @implementation Buffer : CPObject
 
+- (BOOL)isModified // public
+{
+    return NO;
+}
+
+- (BOOL)isEqual:(id)other // public
+{
+    if (self === other)
+        return YES;
+    if ([self class] !== [other class])
+        return NO;
+    return [self isEqualToSameClassBuffer:other];
+}
+
 + (void)registerSubclass:(Class)subclass withTypeName:(CPString)typeName // protected
 {
     bufferSubclasses[typeName] = subclass;
@@ -193,6 +207,16 @@ var bufferSubclasses = {};
 - (CPString)name // public
 {
     return file.name;
+}
+
+- (BOOL)isModified // public
+{
+    return file.currentContent != file.savedContent;
+}
+
+- (BOOL)isEqualToSameClassBuffer:(CodeFileBuffer)other // protected
+{
+    return file === other.file;
 }
 
 - (void)archiveTo:(JSObject)archive // protected
@@ -237,6 +261,11 @@ var bufferSubclasses = {};
     return path.substring(path.lastIndexOf("/") + 1) + " (" + lib.name + ")";
 }
 
+- (BOOL)isEqualToSameClassBuffer:(LibFileBuffer)other // protected
+{
+    return lib === other.lib && path == other.path;
+}
+
 - (void)archiveTo:(JSObject)archive // protected
 {
     archive.lib = lib.name;
@@ -258,6 +287,11 @@ var bufferSubclasses = {};
 - (CPString)name // public
 {
     return "Git";
+}
+
+- (BOOL)isEqualToSameClassBuffer:(GitFileBuffer)other // protected
+{
+    return YES;
 }
 
 - (void)archiveTo:(JSObject)archive // protected
@@ -290,6 +324,11 @@ var bufferSubclasses = {};
     return env.name;
 }
 
+- (BOOL)isEqualToSameClassBuffer:(EvalBuffer)other // protected
+{
+    return env === other.env;
+}
+
 - (void)archiveTo:(JSObject)archive // protected
 {
     archive.env = env.name;
@@ -318,6 +357,11 @@ var bufferSubclasses = {};
         title = aTitle;
     }
     return self;
+}
+
+- (BOOL)isEqualToSameClassBuffer:(WebBuffer)other // protected
+{
+    return url == other.url;
 }
 
 - (void)archiveTo:(JSObject)archive // protected
@@ -388,7 +432,9 @@ var bufferSubclasses = {};
     Folder code @accessors;
     CPArray envs @accessors;
     CPArray libs @accessors;
-    CPArray buffers @accessors;
+    CPArray buffers @accessors; // private setter
+    unsigned bufferIndex;
+    Buffer buffer @accessors; // private setter
 }
 
 - (id)initWithName:(CPString)aName archive:(JSObject)archive // public
@@ -430,24 +476,36 @@ var bufferSubclasses = {};
     return nil;
 }
 
-- (CPArray)oldBuffers // public
+- (CPArray)setupBuffers // public
 {
-    if (!oldArchive.buffers) {
+    var restoredBuffers = [];
+    if (oldArchive.buffers) {
+        for (var i = 0; i < oldArchive.buffers.length; ++i) {
+            var buffer = [Buffer bufferOfApp:self fromArchive:oldArchive.buffers[i]];
+            if (buffer)
+                restoredBuffers.push(buffer);
+        }
+    } else {
         var file = [code childWithName:"main.js"];
-        return [file isKindOfClass:File] ? [[[CodeFileBuffer alloc] initWithFile:file]] : [];
+        if (file)
+            restoredBuffers.push([[CodeFileBuffer alloc] initWithFile:file]);
     }
-    var oldBuffers = [];
-    for (var i = 0; i < oldArchive.buffers.length; ++i) {
-        var buffer = [Buffer bufferOfApp:self fromArchive:oldArchive.buffers[i]];
-        if (buffer)
-            oldBuffers.push(buffer);
-    }
-    return oldBuffers;
+    [self setBuffers:restoredBuffers];
+    [self setBufferIndex:oldArchive.bufferIndex ? MIN(oldArchive.bufferIndex, buffers.length - 1) : 0];
+}
+
+- (void)setBufferIndex:(unsigned)aBufferIndex // public
+{
+    bufferIndex = aBufferIndex;
+    if (buffer !== buffers[bufferIndex])
+        [self setBuffer:buffers[bufferIndex]];
 }
 
 - (JSObject)archive // public
 {
-    return {buffers: buffers ? buffers.map(function (buffer) { return [buffer archive]; }) : oldArchive.buffers};
+    return (buffers
+            ? {buffers: buffers.map(function (buffer) { return [buffer archive]; }), bufferIndex: bufferIndex}
+            : oldArchive);
 }
 
 @end
@@ -458,7 +516,7 @@ var bufferSubclasses = {};
     CPString email @accessors;
     CPArray apps;
     unsigned appIndex;
-    App app;
+    App app @accessors; // private setter
 }
 
 - (id)init // public
@@ -483,11 +541,8 @@ var bufferSubclasses = {};
 - (void)setAppIndex:(unsigned)anAppIndex // public
 {
     appIndex = anAppIndex;
-    if (app !== apps[appIndex]) {
-        [self willChangeValueForKey:"app"];
-        app = apps[appIndex] || nil;
-        [self didChangeValueForKey:"app"];
-    }
+    if (app !== apps[appIndex])
+        [self setApp:apps[appIndex] || nil];
 }
 
 - (JSObject)archive // public

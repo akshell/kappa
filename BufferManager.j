@@ -15,7 +15,31 @@
 {
     [app removeObserver:self forKeyPath:keyPath];
     if (app.code && app.envs && app.libs)
-        [app setBuffers:[app oldBuffers]];
+        [app setupBuffers];
+}
+
+- (void)openBuffer:(Buffer)buffer // public
+{
+    for (var i = 0; i < app.buffers.length; ++i) {
+        if ([app.buffers[i] isEqual:buffer]) {
+            [app setBufferIndex:i];
+            return;
+        }
+    }
+    app.buffers.push(buffer);
+    [self notify];
+    [app setBufferIndex:app.buffers.length - 1];
+}
+
+- (void)closeBuffer:(Buffer)buffer // public
+{
+    var index = app.buffers.indexOf(buffer);
+    if (index == -1)
+        return;
+    app.buffers.splice(index, 1);
+    [self notify];
+    if (index < app.bufferIndex || app.bufferIndex == app.buffers.length)
+        [app setBufferIndex:app.bufferIndex - 1];
 }
 
 @end

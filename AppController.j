@@ -55,6 +55,8 @@
 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification // private
 {
+    [mainWindow setAcceptsMouseMovedEvents:YES];
+
     navigatorControllerProxy = [NavigatorControllerProxy new];
     aboutPanelController = [AboutPanelController new];
     keyPanelController = [KeyPanelController new];

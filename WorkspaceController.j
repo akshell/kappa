@@ -62,6 +62,8 @@
         app = anApp;
         bufferManager = aBufferManager;
         [app addObserver:self forKeyPath:"buffers"];
+        [app addObserver:self forKeyPath:"bufferIndex"];
+        [bufferManager addChangeObserver:self selector:@selector(didBuffersChange)];
         var scrollView = [[CPScrollView alloc] initWithFrame:[superview bounds]];
         [scrollView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
         [scrollView setHasHorizontalScroller:NO];
@@ -93,12 +95,19 @@
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
-    if (keyPath != "buffers")
-        return;
-    [app removeObserver:self forKeyPath:keyPath];
-    [spinnerImageView removeFromSuperview];
-    [tableView setDataSource:self];
-    [tableView setHidden:NO];
+    switch (keyPath) {
+    case "buffers":
+        [app removeObserver:self forKeyPath:keyPath];
+        [spinnerImageView removeFromSuperview];
+        [tableView setDataSource:self];
+        [tableView setDelegate:self];
+        [tableView setHidden:NO];
+        break;
+    case "bufferIndex":
+        [tableView scrollRectToVisible:[tableView frameOfDataViewAtColumn:0 row:app.bufferIndex]];
+        [tableView selectRowIndexes:[CPIndexSet indexSetWithIndex:app.bufferIndex] byExtendingSelection:NO];
+        break;
+    }
 }
 
 - (unsigned)numberOfRowsInTableView:(CPTableView)aTableView // private
@@ -108,7 +117,17 @@
 
 - (id)tableView:(CPTableView)aTableView objectValueForTableColumn:(unsigned)column row:(unsigned)row // private
 {
-    return app.buffers[row];
+    return [[WorkspaceItemController alloc] initWithBufferManager:bufferManager buffer:app.buffers[row]];
+}
+
+- (void)tableViewSelectionDidChange:(id)sender // private
+{
+    [app setBufferIndex:[tableView selectedRow]];
+}
+
+- (void)didBuffersChange // private
+{
+    [tableView reloadData];
 }
 
 @end
