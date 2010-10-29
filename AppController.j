@@ -214,6 +214,7 @@
                 });
         }
         appMenuItems.forEach(function (menuItem) { [menuItem doSetEnabled:DATA.app]; });
+        [[[mainWindow toolbar] items][0] setEnabled:DATA.app];
         break;
     case "app.code":
         var isEnabled = DATA.app && DATA.app.code;
