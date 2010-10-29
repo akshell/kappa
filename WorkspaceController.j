@@ -48,6 +48,8 @@
 
 @end
 
+var DocsURL = "http://www.akshell.com/docs/0.3/";
+
 @implementation WorkspaceController : CPObject
 {
     App app;
@@ -128,6 +130,26 @@
 - (void)didBuffersChange // private
 {
     [tableView reloadData];
+}
+
+- (void)openGit // public
+{
+    [bufferManager openBuffer:[GitBuffer new]];
+}
+
+- (void)openGettingStarted // public
+{
+    [bufferManager openBuffer:[[HelpBuffer alloc] initWithURL:DocsURL + "intro/" title:"Getting Started"]];
+}
+
+- (void)openUserGuide // public
+{
+    [bufferManager openBuffer:[[HelpBuffer alloc] initWithURL:DocsURL + "guide/" title:"User Guide"]];
+}
+
+- (void)openReference // public
+{
+    [bufferManager openBuffer:[[HelpBuffer alloc] initWithURL:DocsURL + "ref/" title:"Reference"]];
 }
 
 @end

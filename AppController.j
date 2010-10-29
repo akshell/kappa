@@ -1,8 +1,8 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "Data.j"
+@import "Proxy.j"
 @import "ContentController.j"
-@import "NavigatorController.j"
 @import "AboutPanelController.j"
 @import "KeyPanelController.j"
 @import "SignupPanelController.j"
@@ -13,27 +13,13 @@
 @import "ContactPanelController.j"
 @import "Confirm.j"
 
-@implementation NavigatorControllerProxy : CPObject
-
-- (CPMethodSignature)methodSignatureForSelector:(SEL)selector // protected
-{
-    return YES;
-}
-
-- (void)forwardInvocation:(CPInvocation)invocation // protected
-{
-    [invocation setTarget:[DATA.app.contentController navigatorController]];
-    [invocation invoke];
-}
-
-@end
-
 @implementation AppController : CPObject
 {
     @outlet CPWindow mainWindow;
     @outlet CPView sidebarView;
     @outlet CPView presentationView;
-    NavigatorControllerProxy navigatorControllerProxy;
+    Proxy navigatorControllerProxy;
+    Proxy workspaceControllerProxy;
     AboutPanelController aboutPanelController;
     KeyPanelController keyPanelController;
     ChangePasswordPanelController changePasswordPanelController;
@@ -50,6 +36,10 @@
     CPMenuItem actionsMenuItem;
     CPMenuItem newEnvMenuItem;
     CPMenuItem useLibMenuItem;
+    CPMenuItem evalMenuItem;
+    CPMenuItem previewMenuItem;
+    CPArray appMenuItems;
+    CPArray bufferMenuItems;
     CPPopUpButton appPopUpButton;
 }
 
@@ -57,7 +47,10 @@
 {
     [mainWindow setAcceptsMouseMovedEvents:YES];
 
-    navigatorControllerProxy = [NavigatorControllerProxy new];
+    navigatorControllerProxy =
+        [[Proxy alloc] initWithFunction:function () { return [DATA.app.contentController navigatorController]; }];
+    workspaceControllerProxy =
+        [[Proxy alloc] initWithFunction:function () { return [DATA.app.contentController workspaceController]; }];
     aboutPanelController = [AboutPanelController new];
     keyPanelController = [KeyPanelController new];
     changePasswordPanelController = [ChangePasswordPanelController new];
@@ -69,6 +62,9 @@
 
     var mainMenu = [CPApp mainMenu];
     [mainMenu removeAllItems];
+
+    appMenuItems = [];
+    bufferMenuItems = [];
 
     var akshellMenu = [CPMenu new];
     [akshellMenu addItemWithTitle:"About Akshell" target:aboutPanelController action:@selector(showWindow:)];
@@ -82,13 +78,15 @@
     newFileMenuItem = [fileMenu addItemWithTitle:"New File" target:navigatorControllerProxy action:@selector(showNewFile)];
     newFolderMenuItem = [fileMenu addItemWithTitle:"New Folder" target:navigatorControllerProxy action:@selector(showNewFolder)];
     appsMenu = [CPMenu new];
-    [[fileMenu addItemWithTitle:"Open App"] setSubmenu:appsMenu];
+    var appsMenuItem = [fileMenu addItemWithTitle:"Open App"];
+    [appsMenuItem setSubmenu:appsMenu];
     [fileMenu addItem:[CPMenuItem separatorItem]];
     [fileMenu addItemWithTitle:"Close File \"xxx\""];
     [fileMenu addItemWithTitle:"Save"];
     [fileMenu addItemWithTitle:"Save All"];
     actionsMenuItem = [fileMenu addItemWithTitle:"Actions"];
     [actionsMenuItem setSubmenu:[CPMenu new]];
+    appMenuItems.push(appsMenuItem, actionsMenuItem);
     [[mainMenu addItemWithTitle:"File"] setSubmenu:fileMenu];
 
     var appMenu = [CPMenu new];
@@ -100,29 +98,34 @@
     [appMenu addItem:[CPMenuItem separatorItem]];
     [appMenu addItemWithTitle:"Manage Domains…"];
     [appMenu addItemWithTitle:"Publish App…"];
-    [appMenu addItemWithTitle:"Delete App…" target:self action:@selector(showDeleteApp)];
+    appMenuItems.push([appMenu addItemWithTitle:"Delete App…" target:self action:@selector(showDeleteApp)]);
     [[mainMenu addItemWithTitle:"App"] setSubmenu:appMenu];
 
     var viewMenu = [CPMenu new];
-    [[viewMenu addItemWithTitle:"Eval"] setSubmenu:[CPMenu new]];
-    [[viewMenu addItemWithTitle:"Preview"] setSubmenu:[CPMenu new]];
-    [viewMenu addItemWithTitle:"Git"];
+    evalMenuItem = [viewMenu addItemWithTitle:"Eval"];
+    [evalMenuItem setSubmenu:[CPMenu new]];
+    previewMenuItem = [viewMenu addItemWithTitle:"Preview"];
+    [previewMenuItem setSubmenu:[CPMenu new]];
+    bufferMenuItems.push(
+        evalMenuItem, previewMenuItem,
+        [viewMenu addItemWithTitle:"Git" target:workspaceControllerProxy action:@selector(openGit)]);
     [[mainMenu addItemWithTitle:"View"] setSubmenu:viewMenu];
 
     var helpMenu = [CPMenu new];
-    [helpMenu addItemWithTitle:"Getting Started"];
-    [helpMenu addItemWithTitle:"User Guide"];
-    [helpMenu addItemWithTitle:"Reference"];
+    bufferMenuItems.push(
+        [helpMenu addItemWithTitle:"Getting Started" target:workspaceControllerProxy action:@selector(openGettingStarted)],
+        [helpMenu addItemWithTitle:"User Guide" target:workspaceControllerProxy action:@selector(openUserGuide)],
+        [helpMenu addItemWithTitle:"Reference" target:workspaceControllerProxy action:@selector(openReference)]);
     [helpMenu addItem:[CPMenuItem separatorItem]];
     [helpMenu addItemWithTitle:"Contact…" target:contactPanelController action:@selector(showWindow:)];
     [helpMenu addItemWithTitle:"Blog"];
     [helpMenu addItemWithTitle:"Twitter"];
     [[mainMenu addItemWithTitle:"Help"] setSubmenu:helpMenu];
 
-    [akshellMenu, fileMenu, appMenu, helpMenu].forEach(
+    [akshellMenu, fileMenu, appMenu, viewMenu, helpMenu].forEach(
         function (menu) { [menu setAutoenablesItems:NO]; });
 
-    [newFileMenuItem, newFolderMenuItem, newEnvMenuItem, useLibMenuItem].forEach(
+    appMenuItems.concat(bufferMenuItems, newFileMenuItem, newFolderMenuItem, newEnvMenuItem, useLibMenuItem).forEach(
         function (menuItem) { [menuItem setEnabled:NO]; });
 
     [mainMenu addItem:[CPMenuItem separatorItem]];
@@ -136,9 +139,8 @@
     [DATA addObserver:self forKeyPath:"username"];
     [DATA addObserver:self forKeyPath:"apps"];
     [DATA addObserver:self forKeyPath:"app" options:CPKeyValueObservingOptionInitial context:"app"];
-    [DATA addObserver:self forKeyPath:"app.code" context:"app.code"];
-    [DATA addObserver:self forKeyPath:"app.envs" context:"app.envs"];
-    [DATA addObserver:self forKeyPath:"app.libs" context:"app.libs"];
+    ["app.code", "app.envs", "app.libs", "app.buffers"].forEach(
+        function (keyPath) { [DATA addObserver:self forKeyPath:keyPath context:keyPath]; });
 }
 
 - (CPPopUpButton)appPopUpButton // private
@@ -201,16 +203,17 @@
                                                                         sidebarView:sidebarView
                                                                    presentationView:presentationView];
             [DATA.app.contentController show];
-            [[actionsMenuItem submenu] setSupermenu:nil];
-            [actionsMenuItem setSubmenu:[navigatorControllerProxy actionsMenu]];
+            [
+                [actionsMenuItem, @selector(actionsMenu)],
+                [evalMenuItem, @selector(evalMenu)],
+                [previewMenuItem, @selector(previewMenu)]
+            ].forEach(
+                function (pair) {
+                    [[pair[0] submenu] setSupermenu:nil];
+                    [pair[0] setSubmenu:objj_msgSend(navigatorControllerProxy, pair[1])];
+                });
         }
-        var mainMenu = [CPApp mainMenu];
-        for (var i = 2; i < 5; ++i)
-            [[mainMenu itemAtIndex:i] setEnabled:DATA.app];
-        for (var i = 3; i < 9; ++i)
-            [[fileMenu itemAtIndex:i] doSetEnabled:DATA.app];
-        var toolbarItems = [[mainWindow toolbar] items];
-        [0, 3, 4, 6, 7, 8, 10, 11].forEach(function (i) { [toolbarItems[i] setEnabled:DATA.app] });
+        appMenuItems.forEach(function (menuItem) { [menuItem doSetEnabled:DATA.app]; });
         break;
     case "app.code":
         var isEnabled = DATA.app && DATA.app.code;
@@ -224,6 +227,11 @@
     case "app.libs":
         [useLibMenuItem doSetEnabled:DATA.app && DATA.app.libs];
         break;
+    case "app.buffers":
+        var isEnabled = DATA.app && DATA.app.buffers;
+        var toolbarItems = [[mainWindow toolbar] items];
+        [6, 7, 8].forEach(function (i) { [toolbarItems[i] setEnabled:isEnabled] });
+        bufferMenuItems.forEach(function (menuItem) { [menuItem doSetEnabled:isEnabled]; });
     }
 }
 
@@ -263,11 +271,15 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
         var image = [CPImage imageFromPath:itemIdentifier.replace(" ", "") + "32.png"];
         [item setImage:image];
         [item setMinSize:CGSizeMake(32, 32)];
-        switch (itemIdentifier) {
-        case "New":
-            [item setTarget:navigatorControllerProxy];
-            [item setAction:@selector(showNewFile)];
-            break;
+        var pair = {
+            New: [navigatorControllerProxy, @selector(showNewFile)],
+            Eval: [navigatorControllerProxy, @selector(openEval)],
+            Preview: [navigatorControllerProxy, @selector(openPreview)],
+            Git: [workspaceControllerProxy, @selector(openGit)]
+        }[itemIdentifier];
+        if (pair) {
+            [item setTarget:pair[0]];
+            [item setAction:pair[1]];
         }
     }
     return item;

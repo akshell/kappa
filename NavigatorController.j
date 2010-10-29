@@ -18,6 +18,8 @@
     CPButton plusButton;
     CPButton minusButton;
     CPMenu actionsMenu @accessors(readonly);
+    CPMenu evalMenu @accessors(readonly);
+    CPMenu previewMenu @accessors(readonly);
     CPMenuItem newFileMenuItem;
     CPMenuItem newFolderMenuItem;
     CPMenuItem newEnvMenuItem;
@@ -61,6 +63,8 @@
         useLibMenuItem = [actionButtonMenu addItemWithTitle:"Use Library…" target:self action:@selector(showUseLib)];
         [actionButtonMenu addItem:[CPMenuItem separatorItem]];
         actionsMenu = [CPMenu new];
+        evalMenu = [CPMenu new];
+        previewMenu = [CPMenu new];
         deleteMenuItems = [];
         moveMenuItems = [];
         duplicateMenuItems = [];
@@ -228,8 +232,19 @@
 
 - (void)didManagerChange:(CPNotification)notification // private
 {
-    [outlineView reloadItem:[notification object] reloadChildren:YES];
+    var manager = [notification object];
+    [outlineView reloadItem:manager reloadChildren:YES];
     [outlineView load];
+    if (manager !== envManager)
+        return;
+    [[evalMenu, @selector(openEval:)], [previewMenu, @selector(openPreview:)]].forEach(
+        function (pair) {
+            [pair[0] removeAllItems];
+            app.envs.forEach(
+                function (env) {
+                    [[pair[0] addItemWithTitle:env.name target:self action:pair[1]] setTag:env];
+                });
+        });
 }
 
 - (void)revealItems:(CPArray)items // private
@@ -339,6 +354,32 @@
 - (void)showMove // private
 {
     [codeManager showMoveEntries:[outlineView selectedItems]];
+}
+
+- (void)openEval:(CPMenuItem)sender // private
+{
+    [bufferManager openBuffer:[[EvalBuffer alloc] initWithEnv:[sender tag]]];
+}
+
+- (void)openPreview:(CPMenuItem)sender // private
+{
+    [bufferManager openBuffer:[[PreviewBuffer alloc] initWithApp:app env:[sender tag]]];
+}
+
+- (Env)currentEnv // private
+{
+    var items = [outlineView selectedItems];
+    return items.length == 1 && [items[0] isKindOfClass:Env] ? items[0] : app.envs[MIN(1, app.envs.length - 1)];
+}
+
+- (void)openEval // public
+{
+    [bufferManager openBuffer:[[EvalBuffer alloc] initWithEnv:[self currentEnv]]];
+}
+
+- (void)openPreview // public
+{
+    [bufferManager openBuffer:[[PreviewBuffer alloc] initWithApp:app env:[self currentEnv]]];
 }
 
 @end

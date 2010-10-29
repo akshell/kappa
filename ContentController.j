@@ -7,7 +7,7 @@
 @implementation ContentController : CPObject
 {
     NavigatorController navigatorController @accessors(readonly);
-    WorkspaceController workspaceController;
+    WorkspaceController workspaceController @accessors(readonly);
     CPView sidebarView;
     CPSplitView splitView;
 }
