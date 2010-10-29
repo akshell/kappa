@@ -139,7 +139,7 @@
     [DATA addObserver:self forKeyPath:"username"];
     [DATA addObserver:self forKeyPath:"apps"];
     [DATA addObserver:self forKeyPath:"app" options:CPKeyValueObservingOptionInitial context:"app"];
-    ["app.code", "app.envs", "app.libs", "app.buffers"].forEach(
+    ["app.code", "app.envs", "app.libs", "app.buffers", "app.buffer"].forEach(
         function (keyPath) { [DATA addObserver:self forKeyPath:keyPath context:keyPath]; });
 }
 
@@ -233,6 +233,20 @@
         var toolbarItems = [[mainWindow toolbar] items];
         [6, 7, 8].forEach(function (i) { [toolbarItems[i] setEnabled:isEnabled] });
         bufferMenuItems.forEach(function (menuItem) { [menuItem doSetEnabled:isEnabled]; });
+        break;
+    case "app.buffer":
+        var image;
+        var title;
+        if (DATA.app && DATA.app.buffer) {
+            image = [CPImage imageFromPath:[DATA.app.buffer imageName] + ".png"];
+            title = /* HAIR SPACE */ " " + [DATA.app.buffer name];
+        } else {
+            image = nil;
+            title = "";
+        }
+        [CPMenu setMenuBarIconImage:image];
+        [CPMenu setMenuBarTitle:title];
+        break;
     }
 }
 
