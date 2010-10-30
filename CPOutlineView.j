@@ -25,7 +25,10 @@
 {
     var indexSet = [CPIndexSet new];
     items.forEach(function (item) { [indexSet addIndex:[self rowForItem:item]]; });
-    [self selectRowIndexes:indexSet byExtendingSelection:NO];
+    if ([indexSet isEqualToIndexSet:_selectedRowIndexes])
+        [self _noteSelectionDidChange];
+    else
+        [self selectRowIndexes:indexSet byExtendingSelection:NO];
 }
 
 - (void)showItem:(id)item // public
