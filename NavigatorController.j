@@ -225,9 +225,15 @@
 
 - (void)revealItems:(CPArray)items // private
 {
-    // FIXME: Hack fixing wrong displaying of expanded items moved to a different level
+    // XXX: Hacks fixing expanding
     items.forEach(
         function (item) {
+            if ([item isKindOfClass:Entry]) {
+                var folders = [];
+                for (var folder = item.parentFolder; folder.parentFolder; folder = folder.parentFolder)
+                    folders.unshift(folder);
+                folders.forEach(function (folder) { [outlineView expandItem:folder]; });
+            }
             if ([outlineView isItemExpanded:item]) {
                 [outlineView collapseItem:item];
                 [outlineView expandItem:item];
