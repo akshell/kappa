@@ -141,6 +141,8 @@ var parseManifest = function (content) {
 - (void)setLibs:(CPArray)libs // private
 {
     isLoading = NO;
+    if (app.libs)
+        app.libs.forEach(function (lib) { [lib noteDeleted]; });
     [app setLibs:libs];
     [self notify];
 }

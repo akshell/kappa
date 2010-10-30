@@ -207,17 +207,17 @@ var entryNameIsCorrect = function (name) {
 - (void)insertItem:(Entry)entry // protected
 {
     var neighbours = [entry neighbours];
-    var count = 0;
     for (var i = 0; i < neighbours.length; ++i) {
-        var neighbourName = neighbours[i].name;
-        if (neighbourName == entry.name) {
-            count = 1;
+        var neighbour = neighbours[i];
+        if (neighbour.name > entry.name)
             break;
-        } else if (neighbourName > entry.name) {
-            break;
+        if (neighbour.name == entry.name) {
+            neighbours.splice(i, 1, entry);
+            [neighbour noteDeleted];
+            return;
         }
     }
-    neighbours.splice(i, count, entry);
+    neighbours.splice(i, 0, entry);
 }
 
 - (void)removeItem:(Entry)entry // protected

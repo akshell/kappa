@@ -1,6 +1,84 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "BaseManager.j"
+@import "EntityDeleting.j"
+
+@implementation Buffer (BufferManager)
+
+- (void)setManager:(BufferManager)aManager // public
+{
+    self.manager = aManager;
+    [[self prepare] addDeleteObserver:self selector:@selector(close)];
+}
+
+- (Entity)prepare // protected
+{
+    return nil;
+}
+
+- (void)close // private
+{
+    [manager closeBuffer:self];
+}
+
+- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
+{
+    [manager notify];
+    [self didChangeValueForKey:"name"];
+}
+
+@end
+
+@implementation CodeFileBuffer (BufferManager)
+
+- (Entity)prepare // protected
+{
+    [file addObserver:self forKeyPath:"name"];
+    return file;
+}
+
+@end
+
+@implementation LibFileBuffer (BufferManager)
+
+- (Entity)prepare // protected
+{
+    [lib addObserver:self forKeyPath:"name"];
+    return lib;
+}
+
+@end
+
+@implementation EvalBuffer (BufferManager)
+
+- (Entity)prepare // protected
+{
+    [env addObserver:self forKeyPath:"name"];
+    return env;
+}
+
+@end
+
+@implementation WebBuffer (BufferManager)
+
+- (Entity)prepare // protected
+{
+    [self addObserver:self forKeyPath:"title"];
+    return nil;
+}
+
+@end
+
+@implementation PreviewBuffer (BufferManager)
+
+- (Entity)prepare // protected
+{
+    [super prepare];
+    [env addObserver:self forKeyPath:"name"];
+    return env;
+}
+
+@end
 
 @implementation BufferManager : BaseManager
 
@@ -14,8 +92,10 @@
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
     [app removeObserver:self forKeyPath:keyPath];
-    if (app.code && app.envs && app.libs)
+    if (app.code && app.envs && app.libs) {
         [app setupBuffers];
+        app.buffers.forEach(function (buffer) { [buffer setManager:self]; });
+    }
 }
 
 - (void)openBuffer:(Buffer)buffer // public
@@ -26,6 +106,7 @@
             return;
         }
     }
+    [buffer setManager:self];
     app.buffers.push(buffer);
     [self notify];
     [app setBufferIndex:app.buffers.length - 1];

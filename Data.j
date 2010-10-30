@@ -481,9 +481,9 @@ var bufferSubclasses = {};
     var restoredBuffers = [];
     if (oldArchive.buffers) {
         for (var i = 0; i < oldArchive.buffers.length; ++i) {
-            var buffer = [Buffer bufferOfApp:self fromArchive:oldArchive.buffers[i]];
-            if (buffer)
-                restoredBuffers.push(buffer);
+            var restoredBuffer = [Buffer bufferOfApp:self fromArchive:oldArchive.buffers[i]];
+            if (restoredBuffer)
+                restoredBuffers.push(restoredBuffer);
         }
     } else {
         var file = [code childWithName:"main.js"];

@@ -2,6 +2,7 @@
 
 @import "BaseManager.j"
 @import "HTTPRequest.j"
+@import "EntityDeleting.j"
 
 var NotificationName = "ManagerNotification";
 
@@ -125,6 +126,7 @@ var NotificationName = "ManagerNotification";
 - (void)didFailToCreateItem:(id)item // private
 {
     [self removeItem:item];
+    [item noteDeleted];
     [self notify];
 }
 
@@ -180,7 +182,11 @@ byRequestWithMethod:(CPString)method
 
 - (void)didDeleteItems:(CPArray)items // private
 {
-    items.forEach(function (item) { [self removeItem:item]; });
+    items.forEach(
+        function (item) {
+            [self removeItem:item];
+            [item noteDeleted];
+        });
     [self notify];
 }
 
