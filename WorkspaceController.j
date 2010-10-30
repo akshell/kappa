@@ -4,6 +4,7 @@
 @import "WorkspaceItemView.j"
 
 var DocsURL = "http://www.akshell.com/docs/0.3/";
+var DragType = "WorkspaceDragType";
 
 @implementation WorkspaceController : CPObject
 {
@@ -32,6 +33,8 @@ var DocsURL = "http://www.akshell.com/docs/0.3/";
         [tableView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
         [tableView setColumnAutoresizingStyle:CPTableViewLastColumnOnlyAutoresizingStyle];
         [tableView setSelectionHighlightStyle:CPTableViewSelectionHighlightStyleSourceList];
+        [tableView registerForDraggedTypes:[DragType]];
+        [tableView setDraggingDestinationFeedbackStyle:CPTableViewDropAbove];
         var column = [CPTableColumn new];
         [column setDataView:[WorkspaceItemView new]];
         [[column headerView] setStringValue:"Workspace"];
@@ -80,6 +83,33 @@ var DocsURL = "http://www.akshell.com/docs/0.3/";
 - (void)tableViewSelectionDidChange:(id)sender // private
 {
     [app setBufferIndex:[tableView selectedRow]];
+}
+
+- (BOOL)tableView:(CPTableView)aTableView
+writeRowsWithIndexes:(CPIndexSet)rowIndexes
+     toPasteboard:(CPPasteboard)pasteboard // private
+{
+    [pasteboard declareTypes:[DragType] owner:self];
+    [pasteboard setData:rowIndexes forType:DragType];
+    return YES;
+}
+
+- (CPDragOperation)tableView:(CPTableView)aTableView
+                validateDrop:(id)info
+                 proposedRow:(CPInteger)row
+       proposedDropOperation:(CPTableViewDropOperation)operation // private
+{
+    [tableView setDropRow:row dropOperation:CPTableViewDropAbove];
+    return CPDragOperationMove;
+}
+
+- (BOOL)tableView:(CPTableView)aTableView
+       acceptDrop:(id)info
+              row:(int)row
+    dropOperation:(CPTableViewDropOperation)operation // private
+{
+    [bufferManager moveBufferWithIndex:[[[info draggingPasteboard] dataForType:DragType] firstIndex] to:row];
+    return YES;
 }
 
 - (void)didBuffersChange // private

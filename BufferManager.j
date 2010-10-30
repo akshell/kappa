@@ -123,4 +123,23 @@
         [app setBufferIndex:app.bufferIndex - 1];
 }
 
+- (void)moveBufferWithIndex:(unsigned)srcIndex to:(unsigned)dstIndex // public
+{
+    var buffer = app.buffers[srcIndex];
+    app.buffers.splice(srcIndex, 1);
+    if (srcIndex < dstIndex)
+        --dstIndex;
+    app.buffers.splice(dstIndex, 0, buffer);
+    [self notify];
+    if (app.bufferIndex == srcIndex) {
+        [app setBufferIndex:dstIndex];
+    } else if (app.bufferIndex > srcIndex) {
+        if (app.bufferIndex <= dstIndex)
+            [app setBufferIndex:app.bufferIndex - 1];
+    } else {
+        if (app.bufferIndex >= dstIndex)
+            [app setBufferIndex:app.bufferIndex + 1];
+    }
+}
+
 @end
