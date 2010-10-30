@@ -238,7 +238,7 @@
         var image;
         var title;
         if (DATA.app && DATA.app.buffer) {
-            image = [CPImage imageFromPath:[DATA.app.buffer imageName] + ".png"];
+            image = [CPImage imageFromPath:[DATA.app.buffer imageName] + "16.png"];
             title = /* HAIR SPACE */ " " + [DATA.app.buffer name];
         } else {
             image = nil;

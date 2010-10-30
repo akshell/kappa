@@ -6,7 +6,7 @@
 
 - (CPString)imageName // public
 {
-    return "Env16";
+    return "Env";
 }
 
 - (BOOL)isExpandable // public
@@ -39,7 +39,7 @@
 
 - (CPString)imageName // public
 {
-    return "Envs16";
+    return "Envs";
 }
 
 - (unsigned)numberOfChildren // public

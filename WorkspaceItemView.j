@@ -2,6 +2,51 @@
 
 @import "WorkspaceItemController.j"
 
+@implementation FileBuffer (WorkspaceItemView)
+
+- (CPString)imageName // public
+{
+    return "File";
+}
+
+@end
+
+@implementation GitBuffer (WorkspaceItemView)
+
+- (CPString)imageName // public
+{
+    return "Git";
+}
+
+@end
+
+@implementation EvalBuffer (WorkspaceItemView)
+
+- (CPString)imageName // public
+{
+    return "Eval";
+}
+
+@end
+
+@implementation HelpBuffer (WorkspaceItemView)
+
+- (CPString)imageName // public
+{
+    return "Help";
+}
+
+@end
+
+@implementation PreviewBuffer (WorkspaceItemView)
+
+- (CPString)imageName // public
+{
+    return "Preview";
+}
+
+@end
+
 @implementation CloseButton : CPControl
 {
     BOOL isModified;
@@ -104,7 +149,7 @@
     [[self closeButton] setTarget:controller];
     var buffer = [controller buffer];
     [[self closeButton] setModified:[buffer isModified]];
-    [[self subviews][2] setImage:[CPImage imageFromPath:[buffer imageName] + ".png"]];
+    [[self subviews][2] setImage:[CPImage imageFromPath:[buffer imageName] + "16.png"]];
     [[self subviews][3] setStringValue:[buffer name]];
 }
 

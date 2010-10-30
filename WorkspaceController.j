@@ -3,51 +3,6 @@
 @import "BufferManager.j"
 @import "WorkspaceItemView.j"
 
-@implementation FileBuffer (WorkspaceController)
-
-- (CPString)imageName // public
-{
-    return "File16";
-}
-
-@end
-
-@implementation GitBuffer (WorkspaceController)
-
-- (CPString)imageName // public
-{
-    return "Git16";
-}
-
-@end
-
-@implementation EvalBuffer (WorkspaceController)
-
-- (CPString)imageName // public
-{
-    return "Eval16";
-}
-
-@end
-
-@implementation HelpBuffer (WorkspaceController)
-
-- (CPString)imageName // public
-{
-    return "Help16";
-}
-
-@end
-
-@implementation PreviewBuffer (WorkspaceController)
-
-- (CPString)imageName // public
-{
-    return "Preview16";
-}
-
-@end
-
 var DocsURL = "http://www.akshell.com/docs/0.3/";
 
 @implementation WorkspaceController : CPObject
