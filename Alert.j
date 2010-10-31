@@ -2,8 +2,7 @@
 
 var createLabel = function (text, y, isBold) {
     var font = isBold ? [CPFont boldSystemFontOfSize:12] : [CPFont systemFontOfSize:12];
-    var size = [text sizeWithFont:font inWidth:190];
-    var label = [[CPTextField alloc] initWithFrame:CGRectMake(80, y, size.width, size.height + 4)];
+    var label = [[CPTextField alloc] initWithFrame:CGRectMake(80, y, 190, [text sizeWithFont:font inWidth:188].height + 4)];
     [label setFont:font];
     [label setLineBreakMode:CPLineBreakByWordWrapping];
     [label setStringValue:text];
