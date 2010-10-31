@@ -2,7 +2,7 @@
 
 @import "Data.j"
 @import "Proxy.j"
-@import "ContentController.j"
+@import "SidebarController.j"
 @import "AboutPanelController.j"
 @import "KeyPanelController.j"
 @import "SignupPanelController.j"
@@ -48,9 +48,9 @@
     [mainWindow setAcceptsMouseMovedEvents:YES];
 
     navigatorControllerProxy =
-        [[Proxy alloc] initWithFunction:function () { return [DATA.app.contentController navigatorController]; }];
+        [[Proxy alloc] initWithFunction:function () { return [DATA.app.sidebarController navigatorController]; }];
     workspaceControllerProxy =
-        [[Proxy alloc] initWithFunction:function () { return [DATA.app.contentController workspaceController]; }];
+        [[Proxy alloc] initWithFunction:function () { return [DATA.app.sidebarController workspaceController]; }];
     aboutPanelController = [AboutPanelController new];
     keyPanelController = [KeyPanelController new];
     changePasswordPanelController = [ChangePasswordPanelController new];
@@ -198,11 +198,9 @@
     case "app":
         [sidebarView setSubviews:[]];
         if (DATA.app) {
-            if (!DATA.app.contentController)
-                DATA.app.contentController = [[ContentController alloc] initWithApp:DATA.app
-                                                                        sidebarView:sidebarView
-                                                                   presentationView:presentationView];
-            [DATA.app.contentController show];
+            if (!DATA.app.sidebarController)
+                DATA.app.sidebarController = [[SidebarController alloc] initWithApp:DATA.app view:sidebarView];
+            [DATA.app.sidebarController show];
             [
                 [actionsMenuItem, @selector(actionsMenu)],
                 [evalMenuItem, @selector(evalMenu)],

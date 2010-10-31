@@ -4,28 +4,26 @@
 @import "NavigatorController.j"
 @import "WorkspaceController.j"
 
-@implementation ContentController : CPObject
+@implementation SidebarController : CPObject
 {
+    CPView superview;
+    CPSplitView splitView;
     NavigatorController navigatorController @accessors(readonly);
     WorkspaceController workspaceController @accessors(readonly);
-    CPView sidebarView;
-    CPSplitView splitView;
 }
 
-- (id)initWithApp:(App)app
-      sidebarView:(CPView)aSidebarView
- presentationView:(CPView)aPresentationView // public
+- (id)initWithApp:(App)app view:(CPView)aSuperview // public
 {
     if (self = [super init]) {
-        sidebarView = aSidebarView;
-        splitView = [[CPSplitView alloc] initWithFrame:[sidebarView bounds]];
+        superview = aSuperview;
+        splitView = [[CPSplitView alloc] initWithFrame:[superview bounds]];
         [splitView setVertical:NO];
         [splitView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
         var workspaceView = [CPView new];
         [splitView addSubview:workspaceView];
         var navigatorView = [CPView new];
         [splitView addSubview:navigatorView];
-        [splitView setPosition:[sidebarView boundsSize].height * 0.3 ofDividerAtIndex:0];
+        [splitView setPosition:[superview boundsSize].height * 0.3 ofDividerAtIndex:0];
         var bufferManager = [[BufferManager alloc] initWithApp:app];
         navigatorController = [[NavigatorController alloc] initWithApp:app view:navigatorView bufferManager:bufferManager];
         workspaceController = [[WorkspaceController alloc] initWithApp:app view:workspaceView bufferManager:bufferManager];
@@ -35,8 +33,8 @@
 
 - (void)show // public
 {
-    [splitView setFrame:[sidebarView bounds]];
-    [sidebarView addSubview:splitView];
+    [splitView setFrame:[superview bounds]];
+    [superview addSubview:splitView];
 }
 
 @end
