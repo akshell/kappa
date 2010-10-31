@@ -6,6 +6,8 @@
 @import "EnvManager.j"
 @import "LibManager.j"
 
+var DragType = "NavigatorDragType";
+
 @implementation NavigatorController : CPObject
 {
     App app;
@@ -97,6 +99,7 @@
         [outlineView setAllowsEmptySelection:NO];
         [outlineView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
         [outlineView setColumnAutoresizingStyle:CPTableViewLastColumnOnlyAutoresizingStyle];
+        [outlineView registerForDraggedTypes:[DragType]];
         var column = [CPTableColumn new];
         [column setDataView:[NavigatorItemView new]];
         [[column headerView] setStringValue:"Navigator"];
@@ -132,6 +135,40 @@
 - (id)outlineView:(CPOutlineView)anOutlineview objectValueForTableColumn:(CPTableColumn)tableColumn byItem:(id)item // private
 {
     return item;
+}
+
+- (BOOL)outlineView:(CPOutlineView)anOutlineview writeItems:(CPArray)items toPasteboard:(CPPasteboard)pasteboard // private
+{
+    for (var i = 0; i < items.length; ++i)
+        if (![items[i] isKindOfClass:Entry])
+            return NO;
+    [pasteboard declareTypes:[DragType] owner:self];
+    [pasteboard setData:items forType:DragType];
+    return YES;
+}
+
+- (CPDragOperation)outlineView:(CPOutlineView)anOutlineview
+                  validateDrop:(id)info
+                  proposedItem:(id)item
+            proposedChildIndex:(unsigned)index // private
+{
+    if (index != -1)
+        return CPDragOperationNone;
+    if (item === codeManager)
+        return CPDragOperationMove;
+    if (![item isKindOfClass:Folder])
+        return CPDragOperationNone;
+    var entries = [[info draggingPasteboard] dataForType:DragType];
+    for (var folder = item; folder.parentFolder; folder = folder.parentFolder)
+        if (entries.indexOf(folder) != -1)
+            return CPDragOperationNone;
+    return CPDragOperationMove;
+}
+
+- (BOOL)outlineView:(CPOutlineView)anOutlineview acceptDrop:(id)info item:(id)item childIndex:(unsigned)index // private
+{
+    [codeManager moveEntries:[[info draggingPasteboard] dataForType:DragType] toFolder:item === codeManager ? app.code : item];
+    return YES;
 }
 
 - (void)outlineViewSelectionDidChange:(id)sender // private

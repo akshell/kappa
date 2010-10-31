@@ -344,7 +344,23 @@ var entryNameIsCorrect = function (name) {
             return;
         }
     }
+    moveFolder = folder;
+    for (; folder.parentFolder; folder = folder.parentFolder) {
+        if (moveEntries.indexOf(folder) != -1) {
+            [[[Alert alloc] initWithMessage:"The " + [folder description] + " cannot be moved into itself."
+                                    comment:"Please correct the move operation."]
+                showSheetForWindow:[movePanelController window]];
+            return;
+        }
+    }
     [movePanelController close];
+    moveEntriesIndex = 0;
+    [self move];
+}
+
+- (void)moveEntries:(CPArray)entries toFolder:(Folder)folder // public
+{
+    moveEntries = entries;
     moveFolder = folder;
     moveEntriesIndex = 0;
     [self move];
@@ -354,16 +370,6 @@ var entryNameIsCorrect = function (name) {
 {
     while (moveEntriesIndex < moveEntries.length) {
         var srcEntry = moveEntries[moveEntriesIndex];
-        if ([srcEntry isKindOfClass:Folder]) {
-            for (var folder = moveFolder; folder; folder = folder.parentFolder) {
-                if (folder === srcEntry) {
-                    [[[Alert alloc] initWithMessage:"The folder \"" + srcEntry.name + "\" cannot be moved into itself."
-                                            comment:"Please correct the move operation."]
-                        showPanel];
-                    return;
-                }
-            }
-        }
         if (srcEntry.parentFolder === moveFolder) {
             moveEntries.splice(moveEntriesIndex, 1);
             continue;

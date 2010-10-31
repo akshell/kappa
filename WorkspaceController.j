@@ -80,11 +80,6 @@ var DragType = "WorkspaceDragType";
     return [[WorkspaceItemController alloc] initWithBufferManager:bufferManager buffer:app.buffers[row]];
 }
 
-- (void)tableViewSelectionDidChange:(id)sender // private
-{
-    [app setBufferIndex:[tableView selectedRow]];
-}
-
 - (BOOL)tableView:(CPTableView)aTableView
 writeRowsWithIndexes:(CPIndexSet)rowIndexes
      toPasteboard:(CPPasteboard)pasteboard // private
@@ -110,6 +105,11 @@ writeRowsWithIndexes:(CPIndexSet)rowIndexes
 {
     [bufferManager moveBufferWithIndex:[[[info draggingPasteboard] dataForType:DragType] firstIndex] to:row];
     return YES;
+}
+
+- (void)tableViewSelectionDidChange:(id)sender // private
+{
+    [app setBufferIndex:[tableView selectedRow]];
 }
 
 - (void)didBuffersChange // private
