@@ -258,7 +258,7 @@ var bufferSubclasses = {};
 
 - (CPString)name // public
 {
-    return path.substring(path.lastIndexOf("/") + 1) + " (" + lib.name + ")";
+    return path.substring(path.lastIndexOf("/") + 1) + " – " + lib.name; // EN DASH
 }
 
 - (BOOL)isEqualToSameClassBuffer:(LibFileBuffer)other // protected
@@ -407,7 +407,7 @@ var bufferSubclasses = {};
 
 - (CPString)name // public
 {
-    return title + " (" + env.name + ")";
+    return title + " – " + env.name; // EN DASH
 }
 
 - (void)archiveTo:(JSObject)archive // protected

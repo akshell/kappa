@@ -247,6 +247,7 @@
         }
         [CPMenu setMenuBarIconImage:image];
         [CPMenu setMenuBarTitle:title];
+        document.title = "Akshell";
         break;
     }
 }
