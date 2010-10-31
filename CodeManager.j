@@ -354,6 +354,16 @@ var entryNameIsCorrect = function (name) {
 {
     while (moveEntriesIndex < moveEntries.length) {
         var srcEntry = moveEntries[moveEntriesIndex];
+        if ([srcEntry isKindOfClass:Folder]) {
+            for (var folder = moveFolder; folder; folder = folder.parentFolder) {
+                if (folder === srcEntry) {
+                    [[[Alert alloc] initWithMessage:"The folder \"" + srcEntry.name + "\" cannot be moved into itself."
+                                            comment:"Please correct the move operation."]
+                        showPanel];
+                    return;
+                }
+            }
+        }
         if (srcEntry.parentFolder === moveFolder) {
             moveEntries.splice(moveEntriesIndex, 1);
             continue;
