@@ -47,10 +47,8 @@
 {
     [mainWindow setAcceptsMouseMovedEvents:YES];
 
-    navigatorControllerProxy =
-        [[Proxy alloc] initWithFunction:function () { return [DATA.app.sidebarController navigatorController]; }];
-    workspaceControllerProxy =
-        [[Proxy alloc] initWithFunction:function () { return [DATA.app.sidebarController workspaceController]; }];
+    navigatorControllerProxy = [[Proxy alloc] initWithObject:DATA keyPath:"app.navigatorController"];
+    workspaceControllerProxy = [[Proxy alloc] initWithObject:DATA keyPath:"app.workspaceController"];
     aboutPanelController = [AboutPanelController new];
     keyPanelController = [KeyPanelController new];
     changePasswordPanelController = [ChangePasswordPanelController new];

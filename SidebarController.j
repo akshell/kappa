@@ -8,8 +8,6 @@
 {
     CPView superview;
     CPSplitView splitView;
-    NavigatorController navigatorController @accessors(readonly);
-    WorkspaceController workspaceController @accessors(readonly);
 }
 
 - (id)initWithApp:(App)app view:(CPView)aSuperview // public
@@ -25,8 +23,8 @@
         [splitView addSubview:navigatorView];
         [splitView setPosition:[superview boundsSize].height * 0.3 ofDividerAtIndex:0];
         var bufferManager = [[BufferManager alloc] initWithApp:app];
-        navigatorController = [[NavigatorController alloc] initWithApp:app view:navigatorView bufferManager:bufferManager];
-        workspaceController = [[WorkspaceController alloc] initWithApp:app view:workspaceView bufferManager:bufferManager];
+        app.navigatorController = [[NavigatorController alloc] initWithApp:app view:navigatorView bufferManager:bufferManager];
+        app.workspaceController = [[WorkspaceController alloc] initWithApp:app view:workspaceView bufferManager:bufferManager];
     }
     return self;
 }

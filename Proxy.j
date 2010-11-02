@@ -2,13 +2,16 @@
 
 @implementation Proxy : CPObject
 {
-    Function func;
+    id object;
+    CPString keyPath;
 }
 
-- (id)initWithFunction:(Function)aFunc // public
+- (id)initWithObject:(id)anObject keyPath:(CPString)aKeyPath // public
 {
-    if (self = [super init])
-        func = aFunc;
+    if (self = [super init]) {
+        object = anObject;
+        keyPath = aKeyPath;
+    }
     return self;
 }
 
@@ -19,7 +22,7 @@
 
 - (void)forwardInvocation:(CPInvocation)invocation // protected
 {
-    [invocation setTarget:func()];
+    [invocation setTarget:[object valueForKeyPath:keyPath]];
     [invocation invoke];
 }
 
