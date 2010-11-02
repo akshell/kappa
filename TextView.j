@@ -88,7 +88,7 @@
     [self propagate];
 }
 
-- (void)mouseDown:(CPEvent)event // public
+- (void)mouseUp:(CPEvent)event // public
 {
     [self propagate];
 }
