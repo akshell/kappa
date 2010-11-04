@@ -12,6 +12,7 @@
 @import "CPMenuItem.j"
 @import "CPOutlineView.j"
 @import "CPImage.j"
+@import "CPToolbar.j"
 
 DATA = [Data new];
 

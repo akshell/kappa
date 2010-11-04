@@ -13,6 +13,33 @@
 @import "ContactPanelController.j"
 @import "Confirm.j"
 
+@implementation Buffer (AppController)
+
+- (CPArray)toolbarItemIdentifiers // public
+{
+    return [CPToolbarFlexibleSpaceItemIdentifier];
+}
+
+@end
+
+@implementation CodeFileBuffer (AppController)
+
+- (CPArray)toolbarItemIdentifiers // public
+{
+    return ["New", "Save", "Save All", CPToolbarSpaceItemIdentifier, "Diff", "Commit", CPToolbarFlexibleSpaceItemIdentifier];
+}
+
+@end
+
+@implementation WebBuffer (AppController)
+
+- (CPArray)toolbarItemIdentifiers // public
+{
+    return ["Back", "Forward", "Reload", "URL", CPToolbarSpaceItemIdentifier];
+}
+
+@end
+
 @implementation AppController : CPObject
 {
     @outlet CPWindow mainWindow;
@@ -41,6 +68,7 @@
     CPArray appMenuItems;
     CPArray bufferMenuItems;
     CPPopUpButton appPopUpButton;
+    JSObject toolbarItems;
 }
 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification // private
@@ -127,71 +155,50 @@
         function (menuItem) { [menuItem setEnabled:NO]; });
 
     [mainMenu addItem:[CPMenuItem separatorItem]];
-    [self addUserMenus];
 
+    toolbarItems = {};
     var toolbar = [CPToolbar new];
     [toolbar setDelegate:self];
     [mainWindow setToolbar:toolbar];
-    [self fillAppMenus];
 
-    [DATA addObserver:self forKeyPath:"username"];
-    [DATA addObserver:self forKeyPath:"apps"];
-    [DATA addObserver:self forKeyPath:"app" options:CPKeyValueObservingOptionInitial context:"app"];
-    ["app.code", "app.envs", "app.libs", "app.buffers", "app.buffer", "app.buffer.name"].forEach(
-        function (keyPath) { [DATA addObserver:self forKeyPath:keyPath context:keyPath]; });
-}
-
-- (CPPopUpButton)appPopUpButton // private
-{
-    return [[[[mainWindow toolbar] items][0] view] subviews][0];
-}
-
-- (void)addUserMenus // private
-{
-    var mainMenu = [CPApp mainMenu];
-    if (DATA.username) {
-        [passwordMenuItem setTitle:"Change Password…"];
-        [passwordMenuItem setTarget:changePasswordPanelController];
-        [mainMenu addItemWithTitle:"Log Out (" + DATA.username + ")" target:self action:@selector(logOut)];
-    } else {
-        [passwordMenuItem setTitle:"Reset Password…"];
-        [passwordMenuItem setTarget:resetPasswordPanelController];
-        [mainMenu addItemWithTitle:"Sign Up" target:signupPanelController action:@selector(showWindow:)];
-        [mainMenu addItemWithTitle:"Log In" target:loginPanelController action:@selector(showWindow:)];
-    }
-}
-
-- (void)fillAppMenus // private
-{
-    var appPopUpButton = [self appPopUpButton];
-    DATA.apps.forEach(
-        function (app) {
-            var item = [[CPMenuItem alloc] initWithTitle:app.name action:@selector(switchApp:) keyEquivalent:nil];
-            [appsMenu addItem:[item copy]];
-            [appPopUpButton addItem:item];
+    ["username", "apps", "app", "app.code", "app.envs", "app.libs", "app.buffers", "app.buffer", "app.buffer.name"].forEach(
+        function (keyPath) {
+            [DATA addObserver:self forKeyPath:keyPath options:CPKeyValueObservingOptionInitial context:keyPath];
         });
-    if (DATA.apps.length) {
-        [[appsMenu itemAtIndex:DATA.appIndex] setState:CPOnState];
-        if (DATA.appIndex)
-            [appPopUpButton selectItemAtIndex:DATA.appIndex];
-        else
-            [[appPopUpButton itemAtIndex:0] setState:CPOnState];
-    }
 }
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
-    switch (context || keyPath) {
+    switch (context) {
     case "username":
         var mainMenu = [CPApp mainMenu];
         for (var index = [mainMenu numberOfItems]; ![[mainMenu itemAtIndex:--index] isSeparatorItem];)
             [mainMenu removeItemAtIndex:index];
-        [self addUserMenus];
+        if (DATA.username) {
+            [passwordMenuItem setTitle:"Change Password…"];
+            [passwordMenuItem setTarget:changePasswordPanelController];
+            [mainMenu addItemWithTitle:"Log Out (" + DATA.username + ")" target:self action:@selector(logOut)];
+        } else {
+            [passwordMenuItem setTitle:"Reset Password…"];
+            [passwordMenuItem setTarget:resetPasswordPanelController];
+            [mainMenu addItemWithTitle:"Sign Up" target:signupPanelController action:@selector(showWindow:)];
+            [mainMenu addItemWithTitle:"Log In" target:loginPanelController action:@selector(showWindow:)];
+        }
         break;
     case "apps":
         [appsMenu removeAllItems];
-        [[self appPopUpButton] removeAllItems];
-        [self fillAppMenus];
+        [appPopUpButton removeAllItems];
+        [appsMenu, [appPopUpButton menu]].forEach(
+            function (menu) {
+                DATA.apps.forEach(function (app) { [menu addItemWithTitle:app.name target:self action:@selector(switchApp:)]; });
+            });
+        if (DATA.apps.length) {
+            [[appsMenu itemAtIndex:DATA.appIndex] setState:CPOnState];
+            if (DATA.appIndex)
+                [appPopUpButton selectItemAtIndex:DATA.appIndex];
+            else
+                [[appPopUpButton itemAtIndex:0] setState:CPOnState];
+        }
         break;
     case "app":
         [sidebarView setSubviews:[]];
@@ -210,13 +217,12 @@
                 });
         }
         appMenuItems.forEach(function (menuItem) { [menuItem doSetEnabled:DATA.app]; });
-        [[[mainWindow toolbar] items][0] setEnabled:DATA.app];
+        [toolbarItems["App"] setEnabled:DATA.app]
         break;
     case "app.code":
         var isEnabled = DATA.app && DATA.app.code;
         [newFileMenuItem doSetEnabled:isEnabled];
         [newFolderMenuItem doSetEnabled:isEnabled];
-        [[[mainWindow toolbar] items][2] setEnabled:isEnabled];
         break;
     case "app.envs":
         [newEnvMenuItem doSetEnabled:DATA.app && DATA.app.envs];
@@ -226,11 +232,12 @@
         break;
     case "app.buffers":
         var isEnabled = DATA.app && DATA.app.buffers;
-        var toolbarItems = [[mainWindow toolbar] items];
-        [6, 7, 8].forEach(function (i) { [toolbarItems[i] setEnabled:isEnabled] });
+        ["Edit", "Eval", "Preview", "Git", "Help"].forEach(function (name) { [toolbarItems[name] setEnabled:isEnabled]; });
         bufferMenuItems.forEach(function (menuItem) { [menuItem doSetEnabled:isEnabled]; });
         break;
     case "app.buffer":
+        [[mainWindow toolbar] reloadChangedToolbarItems];
+        // FALL THROUGH
     case "app.buffer.name":
         var image;
         var title;
@@ -248,39 +255,49 @@
     }
 }
 
-- (CPArray)toolbarAllowedItemIdentifiers:(CPToolbar)toolbar // private
-{
-    return [CPToolbarSpaceItemIdentifier, "App", "New", "Save", "Save All", "Eval", "Preview", "Git", "Diff", "Commit"];
-}
-
 - (CPArray)toolbarDefaultItemIdentifiers:(CPToolbar)toolbar // private
 {
-    return [
-        "App", CPToolbarSpaceItemIdentifier,
-        "New", "Save", "Save All", CPToolbarSpaceItemIdentifier,
-        "Eval", "Preview", "Git", CPToolbarSpaceItemIdentifier,
-        "Diff", "Commit"
-    ];
+    var itemIdentifiers = ["App", CPToolbarSpaceItemIdentifier];
+    if (DATA.app && DATA.app.buffer)
+        itemIdentifiers = itemIdentifiers.concat([DATA.app.buffer toolbarItemIdentifiers]);
+    else
+        itemIdentifiers.push(CPToolbarFlexibleSpaceItemIdentifier);
+    itemIdentifiers.push("Edit", "Eval", "Preview", "Git", "Help");
+    return itemIdentifiers;
 }
 
 - (CPToolbarItem)toolbar:(CPToolbar)toolbar
    itemForItemIdentifier:(CPString)itemIdentifier
 willBeInsertedIntoToolbar:(BOOL)flag // private
 {
-    var item = [[CPToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
+    var item = toolbarItems[itemIdentifier] = [[CPToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
     [item setLabel:itemIdentifier];
-    [item setEnabled:NO];
-    if (itemIdentifier == "App") {
-        var popUpButton = [[CPPopUpButton alloc] initWithFrame:CGRectMake(4, 8, 202, 24)];
-        [popUpButton setAutoresizingMask:CPViewWidthSizable];
-        [popUpButton setMenu:[appsMenu copy]];
+    switch (itemIdentifier) {
+    case "App":
+        appPopUpButton = [[CPPopUpButton alloc] initWithFrame:CGRectMake(4, 8, 202, 24)];
+        [appPopUpButton setAutoresizingMask:CPViewWidthSizable];
         if (DATA.apps.length)
-            [popUpButton selectItemAtIndex:DATA.appIndex];
+            [appPopUpButton selectItemAtIndex:DATA.appIndex];
         var itemView = [[CPView alloc] initWithFrame:CGRectMake(0, 0, 206, 32)];
-        [itemView addSubview:popUpButton];
+        [itemView addSubview:appPopUpButton];
+        [item setView:itemView];
+        var size = [itemView frameSize];
+        [item setMinSize:size];
+        [item setMaxSize:size];
+        break;
+    case "URL":
+        var textField = [[CPTextField alloc] initWithFrame:CGRectMake(0, 4, 100, 30)];
+        [textField setBordered:YES];
+        [textField setBezeled:YES];
+        [textField setEditable:YES];
+        [textField setAutoresizingMask:CPViewWidthSizable];
+        var itemView = [[CPView alloc] initWithFrame:CGRectMake(0, 0, 100, 32)];
+        [itemView addSubview:textField];
         [item setView:itemView];
         [item setMinSize:[itemView frameSize]];
-    } else {
+        [item setMaxSize:CGSizeMake(10000, 32)];
+        break;
+    default:
         var image = [CPImage imageFromPath:itemIdentifier.replace(" ", "") + "32.png"];
         [item setImage:image];
         [item setMinSize:CGSizeMake(32, 32)];
@@ -300,8 +317,10 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
 
 - (unsigned)splitView:(CPSplitView)splitView constrainSplitPosition:(unsigned)position ofSubviewAt:(unsigned)index // private
 {
-    position = MIN(MAX(position, 150), [splitView frameSize].width - 500);
-    [[[mainWindow toolbar] items][0] setMinSize:CGSizeMake(position - 35, 32)];
+    position = MIN(MAX(position, 150), [splitView frameSize].width - 600);
+    var size = CGSizeMake(position - 35, 32);
+    [toolbarItems["App"] setMinSize:size];
+    [toolbarItems["App"] setMaxSize:size];
     return position;
 }
 
@@ -324,7 +343,7 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
         return;
     [[appsMenu itemAtIndex:DATA.appIndex] setState:CPOffState];
     [[appsMenu itemAtIndex:index] setState:CPOnState];
-    [[self appPopUpButton] selectItemAtIndex:index];
+    [appPopUpButton selectItemAtIndex:index];
     [DATA setAppIndex:index];
 }
 
@@ -336,7 +355,6 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
             break;
     var item = [[CPMenuItem alloc] initWithTitle:appName action:@selector(switchApp:) keyEquivalent:nil];
     [item setState:CPOnState];
-    var appPopUpButton = [self appPopUpButton];
     [[appPopUpButton menu] insertItem:item atIndex:index];
     if (DATA.apps.length) {
         if (index == DATA.appIndex)
@@ -363,7 +381,6 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
 {
     [[[HTTPRequest alloc] initWithMethod:"DELETE" URL:[DATA.app URL]] send];
     [appsMenu removeItemAtIndex:DATA.appIndex];
-    var appPopUpButton = [self appPopUpButton];
     [appPopUpButton removeItemAtIndex:DATA.appIndex];
     DATA.apps.splice(DATA.appIndex, 1);
     if (DATA.apps.length) {
