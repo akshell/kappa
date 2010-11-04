@@ -11,8 +11,8 @@ var ENV = require("system").env,
 
 app ("Akshell", function(task)
 {
-    task.setBuildIntermediatesPath(FILE.join("Build", "Akshell.build", configuration));
-    task.setBuildPath(FILE.join("Build", configuration));
+    task.setBuildIntermediatesPath("Build/Intermediate/" + configuration);
+    task.setBuildPath("Build/" + configuration);
 
     task.setProductName("Akshell");
     task.setIdentifier("com.akshell");
@@ -20,7 +20,7 @@ app ("Akshell", function(task)
     task.setAuthor("Anton Korenyushkin");
     task.setEmail("support @nospam@ akshell.com");
     task.setSummary("Akshell");
-    task.setSources((new FileList("**/*.j")).exclude(FILE.join("Build", "**")));
+    task.setSources((new FileList("**/*.j")).exclude("Build/**"));
     task.setResources(new FileList("Resources/**"));
     task.setInfoPlistPath("Info.plist");
 
@@ -33,7 +33,7 @@ app ("Akshell", function(task)
 function printResults(configuration)
 {
     print("----------------------------");
-    print(configuration+" app built at path: "+FILE.join("Build", configuration, "Akshell"));
+    print(configuration+" app built at path: Build/" + configuration + "/Akshell");
     print("----------------------------");
 }
 
@@ -58,7 +58,7 @@ task ("release", function()
 
 task ("deploy", ["release"], function()
 {
-    FILE.mkdirs(FILE.join("Build", "Deployment", "Akshell"));
-    OS.system(["press", "-f", FILE.join("Build", "Release", "Akshell"), FILE.join("Build", "Deployment", "Akshell")]);
+    FILE.mkdirs("Build/Deployment/Akshell");
+    OS.system(["press", "-f", "-F", "../../../../cappuccino/Build/Release", "Build/Release/Akshell", "Build/Deployment/Akshell"]);
     printResults("Deployment");
 });
