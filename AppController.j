@@ -56,6 +56,7 @@
     ContactPanelController contactPanelController;
     NewAppPanelController newAppPanelController;
     CPMenuItem passwordMenuItem;
+    CPMenuItem logOutMenuItem;
     CPMenu fileMenu;
     CPMenu appsMenu;
     CPMenuItem newFileMenuItem;
@@ -96,7 +97,9 @@
     [akshellMenu addItemWithTitle:"About Akshell" target:aboutPanelController action:@selector(showWindow:)];
     [akshellMenu addItem:[CPMenuItem separatorItem]];
     [akshellMenu addItemWithTitle:"SSH Public Key" target:keyPanelController action:@selector(showWindow:)];
-    passwordMenuItem = [akshellMenu addItemWithTitle:"" action:@selector(showWindow:) keyEquivalent:nil];
+    passwordMenuItem = [akshellMenu addItemWithTitle:"" target:nil action:@selector(showWindow:)];
+    [akshellMenu addItem:[CPMenuItem separatorItem]];
+    logOutMenuItem = [akshellMenu addItemWithTitle:"Log Out" target:self action:@selector(logOut)];
     [[mainMenu addItemWithTitle:"Akshell"] setSubmenu:akshellMenu];
 
     fileMenu = [CPMenu new];
@@ -174,10 +177,13 @@
         var mainMenu = [CPApp mainMenu];
         for (var index = [mainMenu numberOfItems]; ![[mainMenu itemAtIndex:--index] isSeparatorItem];)
             [mainMenu removeItemAtIndex:index];
+        [logOutMenuItem doSetEnabled:DATA.username];
         if (DATA.username) {
             [passwordMenuItem setTitle:"Change Password…"];
             [passwordMenuItem setTarget:changePasswordPanelController];
-            [mainMenu addItemWithTitle:"Log Out (" + DATA.username + ")" target:self action:@selector(logOut)];
+            var image = [CPImage imageFromPath:"User16.png"];
+            [image setSize:CGSizeMake(16, 16)];
+            [[mainMenu addItemWithTitle:DATA.username] setImage:image];
         } else {
             [passwordMenuItem setTitle:"Reset Password…"];
             [passwordMenuItem setTarget:resetPasswordPanelController];
