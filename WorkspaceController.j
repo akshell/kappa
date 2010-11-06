@@ -77,7 +77,7 @@ var DragType = "WorkspaceDragType";
 
 - (id)tableView:(CPTableView)aTableView objectValueForTableColumn:(unsigned)column row:(unsigned)row // private
 {
-    return [[WorkspaceItemController alloc] initWithBufferManager:bufferManager buffer:app.buffers[row]];
+    return app.buffers[row];
 }
 
 - (BOOL)tableView:(CPTableView)aTableView

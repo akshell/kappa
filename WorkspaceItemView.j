@@ -1,7 +1,5 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "WorkspaceItemController.j"
-
 @implementation FileBuffer (WorkspaceItemView)
 
 - (CPString)imageName // public
@@ -144,10 +142,9 @@
     return [self subviews][1];
 }
 
-- (void)setObjectValue:(WorkspaceItemController)controller // public
+- (void)setObjectValue:(Buffer)buffer // public
 {
-    [[self closeButton] setTarget:controller];
-    var buffer = [controller buffer];
+    [[self closeButton] setTarget:buffer];
     [[self closeButton] setModified:[buffer isModified]];
     [[self subviews][2] setImage:[CPImage imageFromPath:[buffer imageName] + "16.png"]];
     [[self subviews][3] setStringValue:[buffer name]];
