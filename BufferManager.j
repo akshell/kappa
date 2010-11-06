@@ -81,21 +81,46 @@
 @end
 
 @implementation BufferManager : BaseManager
+{
+    unsigned lastVisitTag;
+}
 
 - (id)initWithApp:(App)anApp // public
 {
-    if (self = [super initWithApp:anApp])
-        ["code", "envs", "libs"].forEach(function (keyPath) { [app addObserver:self forKeyPath:keyPath]; });
+    if (self = [super initWithApp:anApp]) {
+        lastVisitTag = 0;
+        ["code", "envs", "libs", "buffers", "buffer"].forEach(function (keyPath) { [app addObserver:self forKeyPath:keyPath]; });
+    }
     return self;
 }
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
-    [app removeObserver:self forKeyPath:keyPath];
-    if (app.code && app.envs && app.libs) {
-        [app setupBuffers];
-        app.buffers.forEach(function (buffer) { [buffer setManager:self]; });
+    switch (keyPath) {
+    case "buffers":
+        for (var i = 0; i < app.buffers.length; ++i) {
+            var buffer = app.buffers[i];
+            [buffer setManager:self];
+            buffer.visitTag = -i;
+        }
+        break;
+    case "buffer":
+        if (app.buffer)
+            app.buffer.visitTag = ++lastVisitTag;
+        break;
+    default:
+        [app removeObserver:self forKeyPath:keyPath];
+        if (app.code && app.envs && app.libs)
+            [app setupBuffers];
     }
+}
+
+- (void)openNewBuffer:(Buffer)buffer // public
+{
+    [buffer setManager:self];
+    app.buffers.push(buffer);
+    [self notify];
+    [app setBufferIndex:app.buffers.length - 1];
 }
 
 - (void)openBuffer:(Buffer)buffer // public
@@ -106,10 +131,24 @@
             return;
         }
     }
-    [buffer setManager:self];
-    app.buffers.push(buffer);
-    [self notify];
-    [app setBufferIndex:app.buffers.length - 1];
+    [self openNewBuffer:buffer];
+}
+
+- (BOOL)openBufferOfClass:(Class)bufferClass // public
+{
+    var foundBuffer;
+    var foundBufferIndex;
+    for (var i = 0; i < app.buffers.length; ++i) {
+        var buffer = app.buffers[i];
+        if ([buffer isKindOfClass:bufferClass] && (!foundBuffer || foundBuffer.visitTag < buffer.visitTag)) {
+            foundBuffer = buffer;
+            foundBufferIndex = i;
+        }
+    }
+    if (!foundBuffer)
+        return NO;
+    [app setBufferIndex:foundBufferIndex];
+    return YES;
 }
 
 - (void)closeBuffer:(Buffer)buffer // public

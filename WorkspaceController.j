@@ -117,9 +117,41 @@ writeRowsWithIndexes:(CPIndexSet)rowIndexes
     [tableView reloadData];
 }
 
+- (void)openEdit // public
+{
+    if ([bufferManager openBufferOfClass:FileBuffer])
+        return;
+    var entry = [app.code childWithName:"main.js"];
+    if ([entry isKindOfClass:File])
+        [bufferManager openNewBuffer:[[CodeFileBuffer alloc] initWithFile:entry]];
+}
+
+- (Env)defaultEnv // private
+{
+    return app.envs[app.envs.length > 1 ? 1 : 0];
+}
+
+- (void)openEval // public
+{
+    if (![bufferManager openBufferOfClass:EvalBuffer])
+        [bufferManager openNewBuffer:[[EvalBuffer alloc] initWithEnv:[self defaultEnv]]];
+}
+
+- (void)openPreview // public
+{
+    if (![bufferManager openBufferOfClass:PreviewBuffer])
+        [bufferManager openNewBuffer:[[PreviewBuffer alloc] initWithApp:app env:[self defaultEnv]]];
+}
+
 - (void)openGit // public
 {
     [bufferManager openBuffer:[GitBuffer new]];
+}
+
+- (void)openHelp // public
+{
+    if (![bufferManager openBufferOfClass:HelpBuffer])
+        [self openGettingStarted];
 }
 
 - (void)openGettingStarted // public

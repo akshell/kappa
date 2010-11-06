@@ -385,20 +385,4 @@ var DragType = "NavigatorDragType";
     [bufferManager openBuffer:[[PreviewBuffer alloc] initWithApp:app env:[sender tag]]];
 }
 
-- (Env)currentEnv // private
-{
-    var items = [outlineView selectedItems];
-    return items.length == 1 && [items[0] isKindOfClass:Env] ? items[0] : app.envs[MIN(1, app.envs.length - 1)];
-}
-
-- (void)openEval // public
-{
-    [bufferManager openBuffer:[[EvalBuffer alloc] initWithEnv:[self currentEnv]]];
-}
-
-- (void)openPreview // public
-{
-    [bufferManager openBuffer:[[PreviewBuffer alloc] initWithApp:app env:[self currentEnv]]];
-}
-
 @end

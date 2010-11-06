@@ -22,6 +22,15 @@
 
 @end
 
+@implementation FileBuffer (AppController)
+
+- (CPString)selectedToolbarItemIdentifier // public
+{
+    return "Edit";
+}
+
+@end
+
 @implementation CodeFileBuffer (AppController)
 
 - (CPArray)toolbarItemIdentifiers // public
@@ -31,11 +40,47 @@
 
 @end
 
+@implementation GitBuffer (AppController)
+
+- (CPString)selectedToolbarItemIdentifier // public
+{
+    return "Git";
+}
+
+@end
+
+@implementation EvalBuffer (AppController)
+
+- (CPString)selectedToolbarItemIdentifier // public
+{
+    return "Eval";
+}
+
+@end
+
 @implementation WebBuffer (AppController)
 
 - (CPArray)toolbarItemIdentifiers // public
 {
     return ["Back", "Forward", "Reload", "URL", CPToolbarSpaceItemIdentifier];
+}
+
+@end
+
+@implementation PreviewBuffer (AppController)
+
+- (CPString)selectedToolbarItemIdentifier // public
+{
+    return "Preview";
+}
+
+@end
+
+@implementation HelpBuffer (AppController)
+
+- (CPString)selectedToolbarItemIdentifier // public
+{
+    return "Help";
 }
 
 @end
@@ -70,6 +115,7 @@
     CPArray bufferMenuItems;
     CPPopUpButton appPopUpButton;
     JSObject toolbarItems;
+    CPToolbar toolbar;
 }
 
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification // private
@@ -160,7 +206,7 @@
     [mainMenu addItem:[CPMenuItem separatorItem]];
 
     toolbarItems = {};
-    var toolbar = [CPToolbar new];
+    toolbar = [CPToolbar new];
     [toolbar setDelegate:self];
     [mainWindow setToolbar:toolbar];
 
@@ -242,7 +288,8 @@
         bufferMenuItems.forEach(function (menuItem) { [menuItem doSetEnabled:isEnabled]; });
         break;
     case "app.buffer":
-        [[mainWindow toolbar] reloadChangedToolbarItems];
+        [toolbar reloadChangedToolbarItems];
+        [toolbar setSelectedItemIdentifier:DATA.app && DATA.app.buffer && [DATA.app.buffer selectedToolbarItemIdentifier]];
         // FALL THROUGH
     case "app.buffer.name":
         var image;
@@ -261,7 +308,7 @@
     }
 }
 
-- (CPArray)toolbarDefaultItemIdentifiers:(CPToolbar)toolbar // private
+- (CPArray)toolbarDefaultItemIdentifiers:(CPToolbar)aToolbar // private
 {
     var itemIdentifiers = ["App", CPToolbarSpaceItemIdentifier];
     if (DATA.app && DATA.app.buffer)
@@ -272,7 +319,7 @@
     return itemIdentifiers;
 }
 
-- (CPToolbarItem)toolbar:(CPToolbar)toolbar
+- (CPToolbarItem)toolbar:(CPToolbar)aToolbar
    itemForItemIdentifier:(CPString)itemIdentifier
 willBeInsertedIntoToolbar:(BOOL)flag // private
 {
@@ -309,9 +356,11 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
         [item setMinSize:CGSizeMake(32, 32)];
         var pair = {
             New: [navigatorControllerProxy, @selector(showNewFile)],
-            Eval: [navigatorControllerProxy, @selector(openEval)],
-            Preview: [navigatorControllerProxy, @selector(openPreview)],
-            Git: [workspaceControllerProxy, @selector(openGit)]
+            Edit: [workspaceControllerProxy, @selector(openEdit)],
+            Eval: [workspaceControllerProxy, @selector(openEval)],
+            Preview: [workspaceControllerProxy, @selector(openPreview)],
+            Git: [workspaceControllerProxy, @selector(openGit)],
+            Help: [workspaceControllerProxy, @selector(openHelp)]
         }[itemIdentifier];
         if (pair) {
             [item setTarget:pair[0]];
