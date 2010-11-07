@@ -1,6 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "ResourceManager.j"
+@import "EntityManager.j"
 @import "FileHandling.j"
 @import "UseLibPanelController.j"
 
@@ -72,7 +72,7 @@ var parseManifest = function (content) {
     return typeof(manifest) == "object" && typeof(manifest.libs) == "object" ? manifest : nil;
 };
 
-@implementation LibManager : ResourceManager
+@implementation LibManager : EntityManager
 {
     CodeManager codeManager;
     UseLibPanelController useLibPanelController;

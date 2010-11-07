@@ -1,6 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "ResourceManager.j"
+@import "EntityManager.j"
 
 @implementation Env (EnvManager)
 
@@ -30,7 +30,7 @@
 
 @end
 
-@implementation EnvManager : ResourceManager
+@implementation EnvManager : EntityManager
 
 - (CPString)name // public
 {
