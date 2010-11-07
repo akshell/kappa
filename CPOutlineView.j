@@ -37,7 +37,7 @@
 }
 
 // XXX: Monkey patching cappuccino
-- (void)expandItem:(id)anItem expandChildren:(BOOL)shouldExpandChildren
+- (void)expandItem:(id)anItem expandChildren:(BOOL)shouldExpandChildren // public
 {
     var itemInfo = null;
     if (!anItem)
@@ -63,7 +63,7 @@
 }
 
 // XXX: Monkey patching cappuccino
-- (void)collapseItem:(id)anItem
+- (void)collapseItem:(id)anItem // public
 {
     if (!anItem)
         return;
@@ -85,6 +85,12 @@
         });
     [self selectItems:selectedItems];
     [self _noteItemDidCollapse:anItem];
+}
+
+- (void)_updateSelectionWithMouseAtRow:(CPInteger)row // protected
+{
+    [super _updateSelectionWithMouseAtRow:row];
+    [_outlineViewDelegate outlineView:self didClickItem:[self itemAtRow:row]];
 }
 
 @end

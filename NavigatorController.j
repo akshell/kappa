@@ -202,17 +202,23 @@ var DragType = "NavigatorDragType";
         function (pair) {
             pair[0].forEach(function (menuItem) { [menuItem doSetEnabled:pair[1]]; });
         });
-    if (items.length == 1 && [items[0] isKindOfClass:File]) {
-        var file = items[0];
-        var buffer;
-        if (firstManager === codeManager) {
-            buffer = [[CodeFileBuffer alloc] initWithFile:file];
-        } else {
-            for (var entry = file; entry.parentFolder.parentFolder; entry = entry.parentFolder)
-                ;
-            buffer = [[LibFileBuffer alloc] initWithLib:[outlineView parentForItem:entry] path:[file path]];
-        }
-        [bufferManager openBuffer:buffer];
+}
+
+- (void)outlineView:(CPOutlineView)anOutlineView didClickItem:(id)item // private
+{
+    if ([[outlineView selectedRowIndexes] count] != 1)
+        return;
+    if ([item isKindOfClass:File]) {
+        for (var entry = item; entry.parentFolder.parentFolder; entry = entry.parentFolder)
+            ;
+        var baseItem = [outlineView parentForItem:entry];
+        [bufferManager openBuffer:(baseItem === codeManager
+                                   ? [[CodeFileBuffer alloc] initWithFile:item]
+                                   : [[LibFileBuffer alloc] initWithLib:baseItem path:[item path]])];
+    } else if ([item isKindOfClass:Env]) {
+        [bufferManager openBuffer:([outlineView mouseDownFlags] & CPAlternateKeyMask
+                                   ? [[EvalBuffer alloc] initWithEnv:item]
+                                   : [[PreviewBuffer alloc] initWithApp:app env:item])];
     }
 }
 
