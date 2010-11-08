@@ -169,4 +169,9 @@ writeRowsWithIndexes:(CPIndexSet)rowIndexes
     [bufferManager openBuffer:[[HelpBuffer alloc] initWithURL:DocsURL + "ref/" title:"Reference"]];
 }
 
+- (void)closeCurrentBuffer // public
+{
+    [bufferManager closeBuffer:app.buffer];
+}
+
 @end

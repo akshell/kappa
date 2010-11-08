@@ -106,6 +106,7 @@
     CPMenu appsMenu;
     CPMenuItem newFileMenuItem;
     CPMenuItem newFolderMenuItem;
+    CPMenuItem closeMenuItem;
     CPMenuItem actionsMenuItem;
     CPMenuItem newEnvMenuItem;
     CPMenuItem useLibMenuItem;
@@ -156,7 +157,7 @@
     var appsMenuItem = [fileMenu addItemWithTitle:"Open App"];
     [appsMenuItem setSubmenu:appsMenu];
     [fileMenu addItem:[CPMenuItem separatorItem]];
-    [fileMenu addItemWithTitle:"Close File \"xxx\""];
+    closeMenuItem = [fileMenu addItemWithTitle:"Close" target:workspaceControllerProxy action:@selector(closeCurrentBuffer)];
     [fileMenu addItemWithTitle:"Save"];
     [fileMenu addItemWithTitle:"Save All"];
     actionsMenuItem = [fileMenu addItemWithTitle:"Actions"];
@@ -289,7 +290,9 @@
         break;
     case "app.buffer":
         [toolbar reloadChangedToolbarItems];
-        [toolbar setSelectedItemIdentifier:DATA.app && DATA.app.buffer && [DATA.app.buffer selectedToolbarItemIdentifier]];
+        var hasBuffer = DATA.app && DATA.app.buffer;
+        [toolbar setSelectedItemIdentifier:hasBuffer && [DATA.app.buffer selectedToolbarItemIdentifier]];
+        [closeMenuItem doSetEnabled:hasBuffer];
         // FALL THROUGH
     case "app.buffer.name":
         var image;
