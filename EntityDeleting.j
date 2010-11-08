@@ -11,6 +11,11 @@ var NotificationName = "DeleteNotification";
     [[CPNotificationCenter defaultCenter] addObserver:observer selector:selector name:NotificationName object:self];
 }
 
+- (void)removeDeleteObserver:(id)observer // public
+{
+    [[CPNotificationCenter defaultCenter] removeObserver:observer name:NotificationName object:self];
+}
+
 - (void)noteDeleted // public
 {
     [[CPNotificationCenter defaultCenter] postNotificationName:NotificationName object:self];

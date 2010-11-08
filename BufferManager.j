@@ -5,35 +5,22 @@
 
 @implementation Buffer (BufferManager)
 
-- (void)setManager:(BufferManager)aManager // public
-{
-    self.manager = aManager;
-    [[self prepare] addDeleteObserver:self selector:@selector(close)];
-}
-
-- (Entity)prepare // protected
+- (Entity)entity // public
 {
     return nil;
 }
 
-- (void)close // private
+- (void)close // public
 {
     [manager closeBuffer:self];
-}
-
-- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
-{
-    [manager notify];
-    [self didChangeValueForKey:"name"];
 }
 
 @end
 
 @implementation CodeFileBuffer (BufferManager)
 
-- (Entity)prepare // protected
+- (Entity)entity // public
 {
-    [file addObserver:self forKeyPath:"name"];
     return file;
 }
 
@@ -41,9 +28,8 @@
 
 @implementation LibFileBuffer (BufferManager)
 
-- (Entity)prepare // protected
+- (Entity)entity // public
 {
-    [lib addObserver:self forKeyPath:"name"];
     return lib;
 }
 
@@ -51,30 +37,17 @@
 
 @implementation EvalBuffer (BufferManager)
 
-- (Entity)prepare // protected
+- (Entity)entity // public
 {
-    [env addObserver:self forKeyPath:"name"];
     return env;
-}
-
-@end
-
-@implementation WebBuffer (BufferManager)
-
-- (Entity)prepare // protected
-{
-    [self addObserver:self forKeyPath:"title"];
-    return nil;
 }
 
 @end
 
 @implementation PreviewBuffer (BufferManager)
 
-- (Entity)prepare // protected
+- (Entity)entity // public
 {
-    [super prepare];
-    [env addObserver:self forKeyPath:"name"];
     return env;
 }
 
@@ -94,13 +67,23 @@
     return self;
 }
 
+- (id)observeBuffer:(Buffer)buffer // private
+{
+    buffer.manager = self;
+    [buffer addObserver:self forKeyPath:"name"];
+    [[buffer entity] addDeleteObserver:buffer selector:@selector(close)];
+}
+
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
     switch (keyPath) {
+    case "name":
+        [self notify];
+        break;
     case "buffers":
         for (var i = 0; i < app.buffers.length; ++i) {
             var buffer = app.buffers[i];
-            [buffer setManager:self];
+            [self observeBuffer:buffer];
             buffer.visitTag = -i;
         }
         break;
@@ -117,7 +100,7 @@
 
 - (void)openNewBuffer:(Buffer)buffer // public
 {
-    [buffer setManager:self];
+    [self observeBuffer:buffer];
     app.buffers.push(buffer);
     [self notify];
     [app setBufferIndex:app.buffers.length - 1];
@@ -156,6 +139,8 @@
     var index = app.buffers.indexOf(buffer);
     if (index == -1)
         return;
+    [buffer removeObserver:self forKeyPath:"name"];
+    [[buffer entity] removeDeleteObserver:buffer];
     app.buffers.splice(index, 1);
     [self notify];
     if (index < app.bufferIndex || app.bufferIndex == app.buffers.length)

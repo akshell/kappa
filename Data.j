@@ -187,6 +187,11 @@ var bufferSubclasses = {};
     return [[bufferSubclasses[archive.type] alloc] initWithApp:app archive:archive];
 }
 
+- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
+{
+    [self didChangeValueForKey:"name"];
+}
+
 @end
 
 @implementation FileBuffer : Buffer
@@ -199,8 +204,10 @@ var bufferSubclasses = {};
 
 - (id)initWithFile:(File)aFile // public
 {
-    if (self = [super init])
+    if (self = [super init]) {
         file = aFile;
+        [file addObserver:self forKeyPath:"name"];
+    }
     return self;
 }
 
@@ -252,6 +259,7 @@ var bufferSubclasses = {};
     if (self = [super init]) {
         lib = aLib;
         path = aPath;
+        [lib addObserver:self forKeyPath:"name"];
     }
     return self;
 }
@@ -314,8 +322,10 @@ var bufferSubclasses = {};
 
 - (id)initWithEnv:(Env)anEnv // public
 {
-    if (self = [super init])
+    if (self = [super init]) {
         env = anEnv;
+        [env addObserver:self forKeyPath:"name"];
+    }
     return self;
 }
 
@@ -347,7 +357,7 @@ var bufferSubclasses = {};
 @implementation WebBuffer : Buffer
 {
     CPString url @accessors(property=URL);
-    CPString title @accessors;
+    CPString title @accessors(readonly);
 }
 
 - (id)initWithURL:(CPString)anURL title:(CPString)aTitle // public
@@ -357,6 +367,12 @@ var bufferSubclasses = {};
         title = aTitle;
     }
     return self;
+}
+
+- (void)setTitle:(CPString)aTitle // public
+{
+    title = aTitle;
+    [self didChangeValueForKey:"name"];
 }
 
 - (BOOL)isEqualToSameClassBuffer:(WebBuffer)other // protected
@@ -400,8 +416,10 @@ var bufferSubclasses = {};
 
 - (id)initWithApp:(App)app env:(Env)anEnv // public
 {
-    if (self = [super initWithURL:[app URLofEnv:anEnv] title:"Preview"])
+    if (self = [super initWithURL:[app URLofEnv:anEnv] title:"Preview"]) {
         env = anEnv;
+        [env addObserver:self forKeyPath:"name"];
+    }
     return self;
 }
 
@@ -419,6 +437,7 @@ var bufferSubclasses = {};
 - (id)initWithApp:(App)app archive:(JSObject)archive // protected
 {
     env = [app envWithName:archive.env];
+    [env addObserver:self forKeyPath:"name"];
     return env ? [super initWithApp:app archive:archive] : nil;
 }
 
