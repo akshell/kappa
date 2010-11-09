@@ -356,7 +356,7 @@ var DragType = "NavigatorDragType";
 {
     var items = [outlineView selectedItems];
     var description = [[outlineView rootForItem:items[0]] descriptionOfItems:items];
-    [[[Confirm alloc] initWithMessage:"Are you sure want to delete the " + description + "?"
+    [[[Confirm alloc] initWithMessage:"Are you sure you want to delete the " + description + "?"
                               comment:"You cannot undo this action."
                                target:self
                                action:@selector(doDelete)]

@@ -469,7 +469,7 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
 
 - (void)showDeleteApp // private
 {
-    [[[Confirm alloc] initWithMessage:"Are you sure want to delete the app \"" + DATA.app.name + "\"?"
+    [[[Confirm alloc] initWithMessage:"Are you sure you want to delete the app \"" + DATA.app.name + "\"?"
                               comment:"You cannot undo this action."
                                target:self
                                action:@selector(deleteApp)]
