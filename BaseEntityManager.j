@@ -6,7 +6,7 @@
 
 var NotificationName = "ManagerNotification";
 
-@implementation EntityManager : BaseManager
+@implementation BaseEntityManager : BaseManager
 {
     BOOL isLoading;
     id revealTarget @accessors;

@@ -1,6 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "EntityManager.j"
+@import "BaseEntityManager.j"
 @import "MovePanelController.j"
 @import "ReplacePanelController.j"
 
@@ -149,7 +149,7 @@ var entryNameIsCorrect = function (name) {
     return YES;
 };
 
-@implementation CodeManager : EntityManager
+@implementation CodeManager : BaseEntityManager
 {
     MovePanelController movePanelController;
     ReplacePanelController replacePanelController;

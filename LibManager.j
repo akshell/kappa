@@ -1,6 +1,6 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "EntityManager.j"
+@import "BaseEntityManager.j"
 @import "FileHandling.j"
 @import "UseLibPanelController.j"
 
@@ -63,7 +63,7 @@ var libCode = {};
 
 @end
 
-@implementation LibManager : EntityManager
+@implementation LibManager : BaseEntityManager
 {
     CodeManager codeManager;
     UseLibPanelController useLibPanelController;
