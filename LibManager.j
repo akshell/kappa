@@ -117,12 +117,12 @@ var libCode = {};
     if ([entry isKindOfClass:File]) {
         manifestFile = entry;
         [manifestFile addObserver:self forKeyPath:"content"];
-        if (manifestFile.content) {
-            [self readManifest];
-        } else {
+        if (manifestFile.content === nil) {
             [app loadFile:manifestFile];
             isLoading = YES;
             [self notify];
+        } else {
+            [self readManifest];
         }
     } else {
         manifestFile = nil;

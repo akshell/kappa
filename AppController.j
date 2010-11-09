@@ -1,7 +1,9 @@
 // (c) 2010 by Anton Korenyushkin
 
+@import "Multiview.j"
 @import "Data.j"
 @import "Proxy.j"
+@import "Confirm.j"
 @import "SidebarController.j"
 @import "AboutPanelController.j"
 @import "KeyPanelController.j"
@@ -11,7 +13,8 @@
 @import "ResetPasswordPanelController.j"
 @import "NewAppPanelController.j"
 @import "ContactPanelController.j"
-@import "Confirm.j"
+@import "CodeFileController.j"
+@import "LibFileController.j"
 
 @implementation Buffer (AppController)
 
@@ -38,6 +41,20 @@
     return ["New", "Save", "Save All", CPToolbarSpaceItemIdentifier, "Diff", "Commit", CPToolbarFlexibleSpaceItemIdentifier];
 }
 
+- (Class)presentationControllerClass // public
+{
+    return CodeFileController;
+}
+
+@end
+
+@implementation LibFileBuffer (AppController)
+
+- (Class)presentationControllerClass // public
+{
+    return LibFileController;
+}
+
 @end
 
 @implementation GitBuffer (AppController)
@@ -45,6 +62,11 @@
 - (CPString)selectedToolbarItemIdentifier // public
 {
     return "Git";
+}
+
+- (Class)presentationControllerClass // public
+{
+    return nil;
 }
 
 @end
@@ -56,6 +78,11 @@
     return "Eval";
 }
 
+- (Class)presentationControllerClass // public
+{
+    return nil;
+}
+
 @end
 
 @implementation WebBuffer (AppController)
@@ -63,6 +90,11 @@
 - (CPArray)toolbarItemIdentifiers // public
 {
     return ["Back", "Forward", "Reload", "URL", CPToolbarSpaceItemIdentifier];
+}
+
+- (Class)presentationControllerClass // public
+{
+    return nil;
 }
 
 @end
@@ -89,7 +121,7 @@
 {
     @outlet CPWindow mainWindow;
     @outlet CPView sidebarView;
-    @outlet CPView presentationView;
+    @outlet Multiview presentationMultiview;
     Proxy navigatorControllerProxy;
     Proxy workspaceControllerProxy;
     AboutPanelController aboutPanelController;
@@ -293,6 +325,15 @@
         var hasBuffer = DATA.app && DATA.app.buffer;
         [toolbar setSelectedItemIdentifier:hasBuffer && [DATA.app.buffer selectedToolbarItemIdentifier]];
         [closeMenuItem doSetEnabled:hasBuffer];
+        if (hasBuffer) {
+            var buffer = DATA.app.buffer;
+            if (!buffer.presentationController)
+                buffer.presentationController = [[[buffer presentationControllerClass] alloc] initWithApp:DATA.app buffer:buffer];
+            [presentationMultiview showView:[buffer.presentationController view]];
+            [buffer.presentationController focus];
+        } else {
+            [presentationMultiview showView:nil];
+        }
         // FALL THROUGH
     case "app.buffer.name":
         var image;
