@@ -48,7 +48,7 @@ var getDuplicatePrefix = function (base) {
     }
     return [[File alloc] initWithName:[parentFolder uniqueChildNameWithPrefix:getDuplicatePrefix(base) suffix:suffix]
                          parentFolder:parentFolder
-                              content:savedContent];
+                              content:content];
 }
 
 @end
@@ -128,7 +128,7 @@ var getDuplicatePrefix = function (base) {
                            folders:folders.map(function (folder) { return [folder cloneTo:newFolder]; })
                              files:files.map(function (file) { return [[File alloc] initWithName:file.name
                                                                                     parentFolder:newFolder
-                                                                                         content:file.savedContent]; })];
+                                                                                         content:file.content]; })];
 }
 
 @end

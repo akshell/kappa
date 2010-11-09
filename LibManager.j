@@ -63,20 +63,12 @@ var libCode = {};
 
 @end
 
-var parseManifest = function (content) {
-    try {
-        var manifest = JSON.parse(content);
-    } catch (error) {
-        return nil;
-    }
-    return typeof(manifest) == "object" && typeof(manifest.libs) == "object" ? manifest : nil;
-};
-
 @implementation LibManager : EntityManager
 {
     CodeManager codeManager;
     UseLibPanelController useLibPanelController;
     File manifestFile;
+    JSObject manifest;
     BOOL isProcessing;
 }
 
@@ -121,11 +113,11 @@ var parseManifest = function (content) {
     var entry = [app.code childWithName:"manifest.json"];
     if (entry === manifestFile && app.libs)
         return;
-    [manifestFile removeObserver:self forKeyPath:"savedContent"];
+    [manifestFile removeObserver:self forKeyPath:"content"];
     if ([entry isKindOfClass:File]) {
         manifestFile = entry;
-        [manifestFile addObserver:self forKeyPath:"savedContent"];
-        if (manifestFile.savedContent) {
+        [manifestFile addObserver:self forKeyPath:"content"];
+        if (manifestFile.content) {
             [self readManifest];
         } else {
             [app loadFile:manifestFile];
@@ -147,16 +139,31 @@ var parseManifest = function (content) {
     [self notify];
 }
 
+- (BOOL)manifestIsCorrect // private
+{
+    return manifest && typeof(manifest) == "object" && manifest.libs && typeof(manifest.libs) == "object";
+}
+
+- (void)saveManifest // private
+{
+    [app saveFile:manifestFile content:JSON.stringify(manifest, null, "  ")];
+}
+
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
-    if (keyPath == "savedContent")
+    if (keyPath == "content")
         [self readManifest];
 }
 
 - (void)readManifest // private
 {
-    var manifest = parseManifest(manifestFile.savedContent);
-    if (!manifest) {
+    try {
+        manifest = JSON.parse(manifestFile.content);
+    } catch (error) {
+        [self setLibs:[]];
+        return;
+    }
+    if (![self manifestIsCorrect]) {
         [self setLibs:[]];
         return;
     }
@@ -188,26 +195,16 @@ var parseManifest = function (content) {
     [useLibPanelController showWindow:nil];
 }
 
-- (JSObject)parseCurrentManifestContent // private
-{
-    var manifest = parseManifest(manifestFile.currentContent);
-    if (manifest)
-        return manifest;
-    [[[Alert alloc] initWithMessage:"The file \"manifest.json\" is incorrect."
-                            comment:"Please fix the manifest file."]
-        showPanel];
-    return nil;
-}
-
 - (void)useLib:(Lib)lib // public
 {
     if (isProcessing)
         return;
-    var manifest;
     if (manifestFile) {
-        manifest = [self parseCurrentManifestContent];
-        if (!manifest) {
+        if (![self manifestIsCorrect]) {
             [useLibPanelController close];
+            [[[Alert alloc] initWithMessage:"The file \"manifest.json\" is incorrect."
+                                    comment:"Please fix the manifest file."]
+                showPanel];
             return;
         }
         if (manifest.libs.hasOwnProperty(lib.name)) {
@@ -218,38 +215,35 @@ var parseManifest = function (content) {
                 showSheetForWindow:[useLibPanelController window]];
             return;
         }
-    } else {
-        manifest = nil;
     }
     if (libCode.hasOwnProperty(lib.idenitifier)) {
-        [self doUseLib:lib withManifest:manifest];
+        [self doUseLib:lib];
         return;
     }
     isProcessing = YES;
     [[useLibPanelController window] setTitle:"Processing..."];
-    var request = [[HTTPRequest alloc] initWithMethod:"GET" URL:[lib URL] target:self action:@selector(didGetLibTree:context:)];
+    var request = [[HTTPRequest alloc] initWithMethod:"GET" URL:[lib URL] target:self action:@selector(didGetTree:ofLib:)];
     [request setFinishAction:@selector(didLibTreeRequestFinished)];
     [request setErrorMessageAction:@selector(didEndLibTreeRequestErrorSheet:)];
     [request setWindow:[useLibPanelController window]];
-    [request setContext:{lib: lib, manifest: manifest}];
+    [request setContext:lib];
     [request send];
 }
 
-- (void)doUseLib:(Lib)lib manifest:(JSObject)manifest // private
+- (void)doUseLib:(Lib)lib // private
 {
     isLoading = YES;
     [self notify];
     [useLibPanelController close];
-    if (!manifest) {
+    if (!manifestFile) {
         manifest = {libs: {}};
         manifestFile = [[File alloc] initWithName:"manifest.json" parentFolder:app.code];
-        [manifestFile addObserver:self forKeyPath:"savedContent"];
+        [manifestFile addObserver:self forKeyPath:"content"];
         [codeManager insertItem:manifestFile];
         [codeManager notify];
     }
     manifest.libs[lib.name] = lib.identifier;
-    [manifestFile setCurrentContent:JSON.stringify(manifest, null, "  ")];
-    [app saveFile:manifestFile];
+    [self saveManifest];
 }
 
 - (void)didLibTreeRequestFinished // private
@@ -258,10 +252,10 @@ var parseManifest = function (content) {
     [[useLibPanelController window] setTitle:"Use Library"];
 }
 
-- (void)didGetLibTree:(JSObject)tree context:(JSObject)context // private
+- (void)didGetTree:(JSObject)tree ofLib:(Lib)lib // private
 {
-    libCode[context.lib.identifier] = [[Folder alloc] initWithTree:tree];
-    [self doUseLib:context.lib manifest:context.manifest];
+    libCode[lib.identifier] = [[Folder alloc] initWithTree:tree];
+    [self doUseLib:lib];
 }
 
 - (void)didEndLibTreeRequestErrorSheet:(Alert)sender // private
@@ -272,9 +266,6 @@ var parseManifest = function (content) {
 - (void)renameItem:(Lib)lib to:(CPString)name // protected
 {
     lib.manager = self;
-    var manifest = [self parseCurrentManifestContent];
-    if (!manifest)
-        return;
     if (manifest.libs.hasOwnProperty(name)) {
         [[[Alert alloc] initWithMessage:"The alias \"" + name + "\" is already taken."
                                 comment:"Please choose another alias."]
@@ -283,8 +274,7 @@ var parseManifest = function (content) {
     }
     manifest.libs[name] = lib.identifier;
     delete manifest.libs[lib.name];
-    [manifestFile setCurrentContent:JSON.stringify(manifest, null, "  ")];
-    [app saveFile:manifestFile];
+    [self saveManifest];
     lib.isLoading = YES;
     [lib setName:name];
     [app.libs removeObject:lib];
@@ -298,16 +288,12 @@ var parseManifest = function (content) {
 
 - (void)deleteItems:(CPArray)libs // public
 {
-    var manifest = [self parseCurrentManifestContent];
-    if (!manifest)
-        return;
     libs.forEach(
         function (lib) {
             lib.isLoading = YES;
             delete manifest.libs[lib.name];
         });
-    [manifestFile setCurrentContent:JSON.stringify(manifest, null, "  ")];
-    [app saveFile:manifestFile];
+    [self saveManifest];
     [self notify];
 }
 

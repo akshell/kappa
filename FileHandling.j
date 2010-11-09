@@ -15,35 +15,27 @@
     [[[HTTPRequest alloc] initWithMethod:"GET"
                                      URL:[self URLOfFile:file]
                                   target:file
-                                  action:@selector(didLoadContent:)]
+                                  action:@selector(setContent:)]
         send];
 }
 
-- (void)saveFile:(File)file // public
+- (void)saveFile:(File)file content:(CPString)newContent // public
 {
     var request = [[HTTPRequest alloc] initWithMethod:"PUT"
                                                   URL:[self URLOfFile:file]
                                                target:file
                                                action:@selector(didSave:content:)];
-    [request setContext:file.currentContent];
-    [request send:file.currentContent];
+    [request setContext:newContent];
+    [request send:newContent];
 }
 
 @end
 
 @implementation File (FileHandling)
 
-- (void)didLoadContent:(CPString)content // public
+- (void)didSave:(CPString)data content:(CPString)newContent // public
 {
-    var isSaved = currentContent == savedContent;
-    [self setSavedContent:content];
-    if (isSaved)
-        [self setCurrentContent:content];
-}
-
-- (void)didSave:(CPString)data content:(CPString)content // public
-{
-    [self setSavedContent:content];
+    [self setContent:newContent];
 }
 
 @end

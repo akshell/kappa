@@ -38,14 +38,13 @@
 
 @implementation File : Entry
 {
-    CPString currentContent @accessors;
-    CPString savedContent @accessors;
+    CPString content @accessors;
 }
 
-- (id)initWithName:(CPString)aName parentFolder:(Folder)aParentFolder content:(CPString)content // public
+- (id)initWithName:(CPString)aName parentFolder:(Folder)aParentFolder content:(CPString)aContent // public
 {
     if (self = [self initWithName:aName parentFolder:aParentFolder])
-        savedContent = currentContent = content;
+        content = aContent;
     return self;
 }
 
@@ -200,6 +199,7 @@ var bufferSubclasses = {};
 @implementation CodeFileBuffer : FileBuffer
 {
     File file @accessors(readonly);
+    BOOL isModified @accessors;
 }
 
 - (id)initWithFile:(File)aFile // public
@@ -214,11 +214,6 @@ var bufferSubclasses = {};
 - (CPString)name // public
 {
     return file.name;
-}
-
-- (BOOL)isModified // public
-{
-    return file.currentContent != file.savedContent;
 }
 
 - (BOOL)isEqualToSameClassBuffer:(CodeFileBuffer)other // protected
