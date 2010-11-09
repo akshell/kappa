@@ -244,7 +244,7 @@ var entryNameIsCorrect = function (name) {
 
 - (void)createItem:(Entry)entry withName:(CPString)name // protected
 {
-    if (name != entry.name && entryNameIsCorrect(name) && ![entry.parentFolder hasChildWithName:name])
+    if (name && name != entry.name && entryNameIsCorrect(name) && ![entry.parentFolder hasChildWithName:name])
         [self changeNameOfItem:entry to:name];
     if ([entry isKindOfClass:File])
         [self createItem:entry byRequestWithMethod:"PUT" URL:[self URL] + [entry path] data:""];
