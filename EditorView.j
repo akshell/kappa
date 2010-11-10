@@ -43,6 +43,13 @@
                     function () {
                         [self textDidChange:[CPNotification notificationWithName:CPControlTextDidChangeNotification object:self]];
                     });
+                doc.body.onclick = function () {
+                    iframe.focus();
+                    editor.focus = YES;
+                };
+                doc.body.onblur = function () {
+                    editor.focus = NO;
+                };
             }
         };
         _DOMElement.appendChild(iframe);
@@ -88,8 +95,16 @@
 
 - (BOOL)becomeFirstResponder // public
 {
+    iframe.focus();
     if (editor)
         editor.focus = YES;
+    return YES;
+}
+
+- (BOOL)resignFirstResponder // public
+{
+    if (editor)
+        editor.focus = NO;
     return YES;
 }
 

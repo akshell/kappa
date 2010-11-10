@@ -31,4 +31,15 @@
     [self createEditorView];
 }
 
+- (void)controlTextDidChange:(id)sender // private
+{
+    [buffer setModified:YES];
+}
+
+- (void)save // public
+{
+    [app saveFile:buffer.file content:[editorView stringValue]];
+    [buffer setModified:NO];
+}
+
 @end

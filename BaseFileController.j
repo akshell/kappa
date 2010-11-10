@@ -39,6 +39,7 @@
     var dotIndex = fileName.lastIndexOf(".");
     var syntax = dotIndex == -1 ? "plain" : fileName.substring(dotIndex + 1);
     editorView = [[EditorView alloc] initWithFrame:[view bounds] syntax:syntax readOnly:[self isReadOnly]];
+    [editorView setDelegate:self];
     [editorView setStringValue:[self fileContent]];
     [editorView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
     [view addSubview:editorView];

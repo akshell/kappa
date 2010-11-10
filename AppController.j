@@ -124,6 +124,7 @@
     @outlet Multiview presentationMultiview;
     Proxy navigatorControllerProxy;
     Proxy workspaceControllerProxy;
+    Proxy presentationControllerProxy;
     AboutPanelController aboutPanelController;
     KeyPanelController keyPanelController;
     ChangePasswordPanelController changePasswordPanelController;
@@ -139,6 +140,7 @@
     CPMenuItem newFileMenuItem;
     CPMenuItem newFolderMenuItem;
     CPMenuItem closeMenuItem;
+    CPMenuItem saveMenuItem;
     CPMenuItem actionsMenuItem;
     CPMenuItem newEnvMenuItem;
     CPMenuItem useLibMenuItem;
@@ -157,6 +159,7 @@
 
     navigatorControllerProxy = [[Proxy alloc] initWithObject:DATA keyPath:"app.navigatorController"];
     workspaceControllerProxy = [[Proxy alloc] initWithObject:DATA keyPath:"app.workspaceController"];
+    presentationControllerProxy = [[Proxy alloc] initWithObject:DATA keyPath:"app.buffer.presentationController"];
     aboutPanelController = [AboutPanelController new];
     keyPanelController = [KeyPanelController new];
     changePasswordPanelController = [ChangePasswordPanelController new];
@@ -190,7 +193,7 @@
     [appsMenuItem setSubmenu:appsMenu];
     [fileMenu addItem:[CPMenuItem separatorItem]];
     closeMenuItem = [fileMenu addItemWithTitle:"Close" target:workspaceControllerProxy action:@selector(closeCurrentBuffer)];
-    [fileMenu addItemWithTitle:"Save"];
+    saveMenuItem = [fileMenu addItemWithTitle:"Save" target:presentationControllerProxy action:@selector(save)];
     [fileMenu addItemWithTitle:"Save All"];
     actionsMenuItem = [fileMenu addItemWithTitle:"Actions"];
     [actionsMenuItem setSubmenu:[CPMenu new]];
@@ -243,7 +246,11 @@
     [toolbar setDelegate:self];
     [mainWindow setToolbar:toolbar];
 
-    ["username", "apps", "app", "app.code", "app.envs", "app.libs", "app.buffers", "app.buffer", "app.buffer.name"].forEach(
+    [
+        "username", "apps", "app",
+        "app.code", "app.envs", "app.libs", "app.buffers", "app.buffer",
+        "app.buffer.name", "app.buffer.isModified"
+    ].forEach(
         function (keyPath) {
             [DATA addObserver:self forKeyPath:keyPath options:CPKeyValueObservingOptionInitial context:keyPath];
         });
@@ -349,6 +356,11 @@
         [CPMenu setMenuBarTitle:title];
         document.title = "Akshell";
         break;
+    case "app.buffer.isModified":
+        var isEnabled = DATA.app && DATA.app.buffer && DATA.app.buffer.isModified;
+        [toolbarItems["Save"] setEnabled:isEnabled];
+        [saveMenuItem doSetEnabled:isEnabled];
+        break;
     }
 }
 
@@ -400,6 +412,7 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
         [item setMinSize:CGSizeMake(32, 32)];
         var pair = {
             New: [navigatorControllerProxy, @selector(showNewFile)],
+            Save: [presentationControllerProxy, @selector(save)],
             Edit: [workspaceControllerProxy, @selector(openEdit)],
             Eval: [workspaceControllerProxy, @selector(openEval)],
             Preview: [workspaceControllerProxy, @selector(openPreview)],

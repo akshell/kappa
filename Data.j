@@ -198,8 +198,8 @@ var bufferSubclasses = {};
 
 @implementation CodeFileBuffer : FileBuffer
 {
-    File file @accessors(readonly);
-    BOOL isModified @accessors;
+    File file;
+    BOOL isModified;
 }
 
 - (id)initWithFile:(File)aFile // public
@@ -209,6 +209,14 @@ var bufferSubclasses = {};
         [file addObserver:self forKeyPath:"name"];
     }
     return self;
+}
+
+- (void)setModified:(BOOL)flag // public
+{
+    if (isModified == flag)
+        return;
+    isModified = flag;
+    [self didChangeValueForKey:"isModified"];
 }
 
 - (CPString)name // public
