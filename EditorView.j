@@ -44,17 +44,36 @@
                         [self textDidChange:[CPNotification notificationWithName:CPControlTextDidChangeNotification object:self]];
                     });
                 doc.body.onclick = function () {
-                    iframe.focus();
-                    editor.focus = YES;
+                    var window = [self window];
+                    [window makeKeyWindow];
+                    [window makeFirstResponder:self];
                 };
-                doc.body.onblur = function () {
-                    editor.focus = NO;
-                };
+                doc.body.onblur = function () { [self refocus]; };
             }
         };
         _DOMElement.appendChild(iframe);
+        [[CPNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(refocus)
+                                                     name:CPMenuDidEndTrackingNotification
+                                                   object:[CPApp mainMenu]];
     }
     return self;
+}
+
+- (void)refocus // private
+{
+    var window = [self window];
+    if ([window firstResponder] === self) {
+        editor.focus = YES;
+        setTimeout(
+            function () {
+                if ([window isKeyWindow])
+                    iframe.focus();
+                else
+                    editor.focus = NO;
+            },
+            0);
+    }
 }
 
 - (CPString)stringValue // public
@@ -106,6 +125,11 @@
     if (editor)
         editor.focus = NO;
     return YES;
+}
+
+- (void)becomeKeyWindow // public
+{
+    [self becomeFirstResponder];
 }
 
 @end

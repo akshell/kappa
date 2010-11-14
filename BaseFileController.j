@@ -43,6 +43,7 @@
     [editorView setStringValue:[self fileContent]];
     [editorView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
     [view addSubview:editorView];
+    [self focus];
 }
 
 @end
