@@ -145,9 +145,15 @@
 - (void)setObjectValue:(Buffer)buffer // public
 {
     [[self closeButton] setTarget:buffer];
-    [[self closeButton] setModified:[buffer isModified]];
     [[self subviews][2] setImage:[CPImage imageFromPath:[buffer imageName] + "16.png"]];
     [[self subviews][3] setStringValue:[buffer name]];
+    [buffer addObserver:self forKeyPath:"isModified" options:CPKeyValueObservingOptionInitial];
+}
+
+- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
+{
+    [[self closeButton] setModified:object.isModified];
+    [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];
 }
 
 - (BOOL)setThemeState:(CPThemeState)state // protected

@@ -199,13 +199,14 @@ var bufferSubclasses = {};
 @implementation CodeFileBuffer : FileBuffer
 {
     File file;
-    BOOL isModified;
+    BOOL isModified @accessors(readonly);
 }
 
 - (id)initWithFile:(File)aFile // public
 {
     if (self = [super init]) {
         file = aFile;
+        isModified = NO;
         [file addObserver:self forKeyPath:"name"];
     }
     return self;
@@ -213,9 +214,9 @@ var bufferSubclasses = {};
 
 - (void)setModified:(BOOL)flag // public
 {
-    if (isModified == flag)
+    if (isModified == !!flag)
         return;
-    isModified = flag;
+    isModified = !!flag;
     [self didChangeValueForKey:"isModified"];
 }
 
@@ -457,6 +458,7 @@ var bufferSubclasses = {};
     CPArray buffers @accessors; // private setter
     unsigned bufferIndex;
     Buffer buffer @accessors; // private setter
+    unsigned numberOfModifiedBuffers @accessors;
 }
 
 - (id)initWithName:(CPString)aName archive:(JSObject)archive // public
@@ -514,6 +516,7 @@ var bufferSubclasses = {};
     }
     [self setBuffers:restoredBuffers];
     [self setBufferIndex:oldArchive.bufferIndex ? MIN(oldArchive.bufferIndex, buffers.length - 1) : 0];
+    numberOfModifiedBuffers = 0;
 }
 
 - (void)setBufferIndex:(unsigned)aBufferIndex // public

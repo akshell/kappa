@@ -18,4 +18,8 @@
     return self;
 }
 
+- (void)save // public
+{
+}
+
 @end

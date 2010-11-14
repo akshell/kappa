@@ -71,6 +71,7 @@
 {
     buffer.manager = self;
     [buffer addObserver:self forKeyPath:"name"];
+    [buffer addObserver:self forKeyPath:"isModified"];
     [[buffer entity] addDeleteObserver:buffer selector:@selector(close)];
 }
 
@@ -79,6 +80,9 @@
     switch (keyPath) {
     case "name":
         [self notify];
+        break;
+    case "isModified":
+        [app setNumberOfModifiedBuffers:app.numberOfModifiedBuffers + (object.isModified ? +1 : -1)];
         break;
     case "buffers":
         for (var i = 0; i < app.buffers.length; ++i) {
@@ -145,6 +149,8 @@
     [self notify];
     if (index < app.bufferIndex || app.bufferIndex == app.buffers.length)
         [app setBufferIndex:app.bufferIndex - 1];
+    if ([buffer isModified])
+        [app setNumberOfModifiedBuffers:app.numberOfModifiedBuffers - 1];
 }
 
 - (void)moveBufferWithIndex:(unsigned)srcIndex to:(unsigned)dstIndex // public

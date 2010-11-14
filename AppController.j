@@ -141,6 +141,7 @@
     CPMenuItem newFolderMenuItem;
     CPMenuItem closeMenuItem;
     CPMenuItem saveMenuItem;
+    CPMenuItem saveAllMenuItem;
     CPMenuItem actionsMenuItem;
     CPMenuItem newEnvMenuItem;
     CPMenuItem useLibMenuItem;
@@ -194,7 +195,7 @@
     [fileMenu addItem:[CPMenuItem separatorItem]];
     closeMenuItem = [fileMenu addItemWithTitle:"Close" target:workspaceControllerProxy action:@selector(closeCurrentBuffer)];
     saveMenuItem = [fileMenu addItemWithTitle:"Save" target:presentationControllerProxy action:@selector(save)];
-    [fileMenu addItemWithTitle:"Save All"];
+    saveAllMenuItem = [fileMenu addItemWithTitle:"Save All" target:self action:@selector(saveAll)];
     actionsMenuItem = [fileMenu addItemWithTitle:"Actions"];
     [actionsMenuItem setSubmenu:[CPMenu new]];
     appMenuItems.push(appsMenuItem, actionsMenuItem);
@@ -249,7 +250,8 @@
     [
         "username", "apps", "app",
         "app.code", "app.envs", "app.libs", "app.buffers", "app.buffer",
-        "app.buffer.name", "app.buffer.isModified"
+        "app.buffer.name", "app.buffer.isModified",
+        "app.numberOfModifiedBuffers"
     ].forEach(
         function (keyPath) {
             [DATA addObserver:self forKeyPath:keyPath options:CPKeyValueObservingOptionInitial context:keyPath];
@@ -338,6 +340,7 @@
                 buffer.presentationController = [[[buffer presentationControllerClass] alloc] initWithApp:DATA.app buffer:buffer];
             [presentationMultiview showView:[buffer.presentationController view]];
             [buffer.presentationController focus];
+            [toolbarItems["Save All"] setEnabled:DATA.app.numberOfModifiedBuffers];
         } else {
             [presentationMultiview showView:nil];
         }
@@ -360,6 +363,11 @@
         var isEnabled = DATA.app && DATA.app.buffer && DATA.app.buffer.isModified;
         [toolbarItems["Save"] setEnabled:isEnabled];
         [saveMenuItem doSetEnabled:isEnabled];
+        break;
+    case "app.numberOfModifiedBuffers":
+        var isEnabled = DATA.app && DATA.app.numberOfModifiedBuffers;
+        [toolbarItems["Save All"] setEnabled:isEnabled];
+        [saveAllMenuItem doSetEnabled:isEnabled];
         break;
     }
 }
@@ -411,13 +419,14 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
         [item setImage:image];
         [item setMinSize:CGSizeMake(32, 32)];
         var pair = {
-            New: [navigatorControllerProxy, @selector(showNewFile)],
-            Save: [presentationControllerProxy, @selector(save)],
-            Edit: [workspaceControllerProxy, @selector(openEdit)],
-            Eval: [workspaceControllerProxy, @selector(openEval)],
-            Preview: [workspaceControllerProxy, @selector(openPreview)],
-            Git: [workspaceControllerProxy, @selector(openGit)],
-            Help: [workspaceControllerProxy, @selector(openHelp)]
+            "New": [navigatorControllerProxy, @selector(showNewFile)],
+            "Save": [presentationControllerProxy, @selector(save)],
+            "Save All": [self, @selector(saveAll)],
+            "Edit": [workspaceControllerProxy, @selector(openEdit)],
+            "Eval": [workspaceControllerProxy, @selector(openEval)],
+            "Preview": [workspaceControllerProxy, @selector(openPreview)],
+            "Git": [workspaceControllerProxy, @selector(openGit)],
+            "Help": [workspaceControllerProxy, @selector(openHelp)]
         }[itemIdentifier];
         if (pair) {
             [item setTarget:pair[0]];
@@ -503,6 +512,11 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
             [[appPopUpButton itemAtIndex:0] setState:CPOnState];
     }
     [DATA setAppIndex:0];
+}
+
+- (void)saveAll // private
+{
+    DATA.app.buffers.forEach(function (buffer) { [buffer.presentationController save]; });
 }
 
 @end

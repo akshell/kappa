@@ -12,4 +12,9 @@
     [self addObserver:observer forKeyPath:keyPath options:0 context:context];
 }
 
+- (void)addObserver:(id)observer forKeyPath:(CPString)keyPath options:(unsigned)options // public
+{
+    [self addObserver:observer forKeyPath:keyPath options:options context:nil];
+}
+
 @end
