@@ -44,9 +44,13 @@
                         [self textDidChange:[CPNotification notificationWithName:CPControlTextDidChangeNotification object:self]];
                     });
                 doc.body.onclick = function () {
-                    var window = [self window];
-                    [window makeKeyWindow];
-                    [window makeFirstResponder:self];
+                    if ([CPApp modalWindow]) {
+                        editor.focus = NO;
+                    } else {
+                        var window = [self window];
+                        [window makeKeyWindow];
+                        [window makeFirstResponder:self];
+                    }
                 };
                 doc.body.onblur = function () { [self refocus]; };
             }
