@@ -153,6 +153,24 @@
 var bufferSubclasses = {};
 
 @implementation Buffer : CPObject
+{
+    BOOL isProcessing;
+}
+
+- (id)init // public
+{
+    if (self = [super init])
+        isProcessing = NO;
+    return self;
+}
+
+- (void)setProcessing:(BOOL)flag // public
+{
+    if (isProcessing == !!flag)
+        return;
+    isProcessing = !!flag;
+    [self didChangeValueForKey:"isProcessing"];
+}
 
 - (BOOL)isModified // public
 {

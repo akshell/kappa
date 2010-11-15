@@ -37,6 +37,7 @@ var fileContents = {};
 
 - (void)didLoadContent:(CPString)content // private
 {
+    [buffer setProcessing:NO];
     fileContents[url] = content;
     [self createEditorView];
 }

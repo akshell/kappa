@@ -19,6 +19,7 @@
             [spinnerImageView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
             [spinnerImageView setImageScaling:CPScaleNone];
             [view addSubview:spinnerImageView];
+            [buffer setProcessing:YES];
             [self load];
         } else {
             [self createEditorView];

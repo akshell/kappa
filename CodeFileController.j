@@ -27,8 +27,9 @@
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
-    [buffer.file removeObserver:self forKeyPath:"content"];
-    [self createEditorView];
+    [buffer setProcessing:NO];
+    if (!editorView)
+        [self createEditorView];
 }
 
 - (void)controlTextDidChange:(id)sender // private
@@ -38,8 +39,11 @@
 
 - (void)save // public
 {
-    [app saveFile:buffer.file content:[editorView stringValue]];
+    if (!buffer.isModified)
+        return;
     [buffer setModified:NO];
+    [buffer setProcessing:YES];
+    [app saveFile:buffer.file content:[editorView stringValue]];
 }
 
 @end

@@ -1,5 +1,7 @@
 // (c) 2010 by Anton Korenyushkin
 
+@import "Data.j"
+
 @implementation FileBuffer (WorkspaceItemView)
 
 - (CPString)imageName // public
@@ -120,7 +122,19 @@
 
 @end
 
+var WhiteSpinnerImage;
+var BlueSpinnerImage;
+
 @implementation WorkspaceItemView : CPView
+{
+    Buffer buffer;
+}
+
++ (void)initialize // private
+{
+    WhiteSpinnerImage = [CPImage imageFromPath:"WhiteSpinner16.gif"];
+    BlueSpinnerImage = [CPImage imageFromPath:"BlueSpinner16.gif"];
+}
 
 - (id)init // public
 {
@@ -142,31 +156,54 @@
     return [self subviews][1];
 }
 
-- (void)setObjectValue:(Buffer)buffer // public
+- (CPImageView)imageView // private
 {
+    return [self subviews][2];
+}
+
+- (void)setObjectValue:(Buffer)aBuffer // public
+{
+    [buffer removeObserver:self forKeyPath:"isModified"];
+    [buffer removeObserver:self forKeyPath:"isProcessing"];
+    buffer = aBuffer;
     [[self closeButton] setTarget:buffer];
-    [[self subviews][2] setImage:[CPImage imageFromPath:[buffer imageName] + "16.png"]];
     [[self subviews][3] setStringValue:[buffer name]];
     [buffer addObserver:self forKeyPath:"isModified" options:CPKeyValueObservingOptionInitial];
+    [buffer addObserver:self forKeyPath:"isProcessing" options:CPKeyValueObservingOptionInitial];
 }
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
-    [[self closeButton] setModified:object.isModified];
+    switch (keyPath) {
+    case "isModified":
+        [[self closeButton] setModified:buffer.isModified];
+        break;
+    case "isProcessing":
+        [[self imageView] setImage:(buffer.isProcessing
+                                    ? ([self hasThemeState:CPThemeStateSelectedDataView] ? BlueSpinnerImage : WhiteSpinnerImage)
+                                    : [CPImage imageFromPath:[buffer imageName] + "16.png"])];
+        break;
+    }
     [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];
 }
 
 - (BOOL)setThemeState:(CPThemeState)state // protected
 {
-    if (state == CPThemeStateSelectedDataView)
+    if (state == CPThemeStateSelectedDataView) {
         [[self closeButton] setSelected:YES];
+        if (buffer.isProcessing)
+            [[self imageView] setImage:BlueSpinnerImage];
+    }
     return [super setThemeState:state];
 }
 
 - (BOOL)unsetThemeState:(CPThemeState)state // protected
 {
-    if (state == CPThemeStateSelectedDataView)
+    if (state == CPThemeStateSelectedDataView) {
         [[self closeButton] setSelected:NO];
+        if (buffer.isProcessing)
+            [[self imageView] setImage:WhiteSpinnerImage];
+    }
     return [super unsetThemeState:state];
 }
 
