@@ -2,6 +2,7 @@
 
 @import "BaseManager.j"
 @import "EntityDeleting.j"
+@import "SavePanelController.j"
 
 @implementation Buffer (BufferManager)
 
@@ -56,12 +57,17 @@
 @implementation BufferManager : BaseManager
 {
     unsigned lastVisitTag;
+    unsigned closeBufferIndex;
+    SavePanelController savePanelController;
 }
 
 - (id)initWithApp:(App)anApp // public
 {
     if (self = [super initWithApp:anApp]) {
         lastVisitTag = 0;
+        savePanelController = [[SavePanelController alloc] initWithTarget:self
+                                                               saveAction:@selector(saveAndCloseBuffer)
+                                                           dontSaveAction:@selector(doCloseBuffer)];
         ["code", "envs", "libs", "buffers", "buffer"].forEach(function (keyPath) { [app addObserver:self forKeyPath:keyPath]; });
     }
     return self;
@@ -140,17 +146,32 @@
 
 - (void)closeBuffer:(Buffer)buffer // public
 {
-    var index = app.buffers.indexOf(buffer);
-    if (index == -1)
+    var closeBufferIndex = app.buffers.indexOf(buffer);
+    if (closeBufferIndex == -1)
         return;
+    if (buffer.isModified)
+        [savePanelController showWindowWithFileName:buffer.file.name];
+    else
+        [self doCloseBuffer];
+}
+
+- (void)doCloseBuffer // private
+{
+    var buffer = app.buffers[closeBufferIndex];
     [buffer removeObserver:self forKeyPath:"name"];
     [[buffer entity] removeDeleteObserver:buffer];
-    app.buffers.splice(index, 1);
+    app.buffers.splice(closeBufferIndex, 1);
     [self notify];
-    if (index < app.bufferIndex || app.bufferIndex == app.buffers.length)
+    if (closeBufferIndex < app.bufferIndex || app.bufferIndex == app.buffers.length)
         [app setBufferIndex:app.bufferIndex - 1];
     if ([buffer isModified])
         [app setNumberOfModifiedBuffers:app.numberOfModifiedBuffers - 1];
+}
+
+- (void)saveAndCloseBuffer // private
+{
+    [app.buffers[closeBufferIndex].presentationController save];
+    [self doCloseBuffer];
 }
 
 - (void)moveBufferWithIndex:(unsigned)srcIndex to:(unsigned)dstIndex // public
