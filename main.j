@@ -27,23 +27,23 @@ window.onbeforeunload = function () {
     var names = [];
     DATA.apps.forEach(
         function (app) {
-            if (!app.buffers)
-                return;
-            for (var i = 0; i < app.buffers.length; ++i) {
-                if ([app.buffers[i] isModified]) {
-                    names.push(app.name);
-                    break;
-                }
-            }
+            if (app.numberOfModifiedBuffers)
+                names.push(app.name);
         });
-    if (!names.length)
+    var prefix;
+    switch (names.length) {
+    case 0:
         return;
-    return ((names.length == 1
-             ? "The app \"" + names[0] + "\" has"
-             : names.length == 2
-             ? "The apps \"" + names[0] + "\" and \"" + names[1] + "\" have"
-             : "The apps \"" + names.join("\", \"") + "\" have") +
-            " unsaved files. Your changes will be lost if you don't save them.");
+    case 1:
+        prefix = "The app \"" + names[0] + "\" has";
+        break;
+    case 2:
+        prefix = "The apps \"" + names[0] + "\" and \"" + names[1] + "\" have";
+        break;
+    default:
+        prefix = "The apps \"" + names.join("\", \"") + "\" have";
+    }
+    return prefix + " unsaved files. Your changes will be lost if you don't save them.";
 };
 
 function main(args, namedArgs)
