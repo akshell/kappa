@@ -4,6 +4,13 @@
 
 @implementation CodeFileController : BaseFileController
 
+- (id)initWithApp:(App)anApp buffer:(Buffer)aBuffer // public
+{
+    if (self = [super initWithApp:anApp buffer:aBuffer])
+        [buffer.file addObserver:self forKeyPath:"content"];
+    return self;
+}
+
 - (BOOL)isReadOnly // protected
 {
     return NO;
@@ -21,7 +28,6 @@
 
 - (void)load // protected
 {
-    [buffer.file addObserver:self forKeyPath:"content"];
     [app loadFile:buffer.file];
 }
 
