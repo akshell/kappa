@@ -1,6 +1,5 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "BufferManager.j"
 @import "NavigatorItemView.j"
 @import "CodeManager.j"
 @import "EnvManager.j"
@@ -40,7 +39,7 @@ var DragType = "NavigatorDragType";
 
         ["code", "envs", "libs"].forEach(function (keyPath) { [app addObserver:self forKeyPath:keyPath]; });
 
-        codeManager = [[CodeManager alloc] initWithApp:app];
+        codeManager = [[CodeManager alloc] initWithApp:app bufferManager:bufferManager];
         envManager = [[EnvManager alloc] initWithApp:app];
         libManager = [[LibManager alloc] initWithCodeManager:codeManager];
         resourceManagers = [codeManager, envManager, libManager];

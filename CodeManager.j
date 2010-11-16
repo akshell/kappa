@@ -1,6 +1,7 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import "BaseEntityManager.j"
+@import "BufferManager.j"
 @import "MovePanelController.j"
 @import "ReplacePanelController.j"
 
@@ -151,6 +152,7 @@ var entryNameIsCorrect = function (name) {
 
 @implementation CodeManager : BaseEntityManager
 {
+    BufferManager bufferManager;
     MovePanelController movePanelController;
     ReplacePanelController replacePanelController;
     CPArray moveEntries;
@@ -158,9 +160,10 @@ var entryNameIsCorrect = function (name) {
     Folder moveFolder;
 }
 
-- (id)initWithApp:(App)anApp // public
+- (id)initWithApp:(App)anApp bufferManager:(BufferManager)aBufferManager// public
 {
     if (self = [super initWithApp:anApp]) {
+        bufferManager = aBufferManager;
         movePanelController = [[MovePanelController alloc] initWithTarget:self action:@selector(moveToPath:)];
         replacePanelController = [[ReplacePanelController alloc] initWithTarget:self
                                                                   replaceAction:@selector(moveReplacing)
@@ -246,10 +249,12 @@ var entryNameIsCorrect = function (name) {
 {
     if (name && name != entry.name && entryNameIsCorrect(name) && ![entry.parentFolder hasChildWithName:name])
         [self changeNameOfItem:entry to:name];
-    if ([entry isKindOfClass:File])
+    if ([entry isKindOfClass:File]) {
         [self createItem:entry byRequestWithMethod:"PUT" URL:[self URL] + [entry path] data:""];
-    else
+        [bufferManager openBuffer:[[CodeFileBuffer alloc] initWithFile:entry]];
+    } else {
         [self createItem:entry byRequestWithMethod:"POST" URL:[self URL] data:{action: "mkdir", path: [entry path]}];
+    }
 }
 
 - (void)renameItem:(Entry)entry to:(CPString)name // protected
