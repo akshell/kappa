@@ -11,9 +11,9 @@
     return nil;
 }
 
-- (void)close // public
+- (void)didDeleteEntity // public
 {
-    [manager closeBuffer:self];
+    [manager closeBuffer:self askToSave:NO];
 }
 
 @end
@@ -78,7 +78,7 @@
     buffer.manager = self;
     [buffer addObserver:self forKeyPath:"name"];
     [buffer addObserver:self forKeyPath:"isModified"];
-    [[buffer entity] addDeleteObserver:buffer selector:@selector(close)];
+    [[buffer entity] addDeleteObserver:buffer selector:@selector(didDeleteEntity)];
 }
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
@@ -144,12 +144,12 @@
     return YES;
 }
 
-- (void)closeBuffer:(Buffer)buffer // public
+- (void)closeBuffer:(Buffer)buffer askToSave:(BOOL)askToSave // public
 {
     var closeBufferIndex = app.buffers.indexOf(buffer);
     if (closeBufferIndex == -1)
         return;
-    if (buffer.isModified)
+    if (askToSave && [buffer isModified])
         [savePanelController showWindowWithFileName:buffer.file.name];
     else
         [self doCloseBuffer];

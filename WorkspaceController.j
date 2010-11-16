@@ -171,7 +171,7 @@ writeRowsWithIndexes:(CPIndexSet)rowIndexes
 
 - (void)closeCurrentBuffer // public
 {
-    [bufferManager closeBuffer:app.buffer];
+    [bufferManager closeBuffer:app.buffer askToSave:YES];
 }
 
 @end

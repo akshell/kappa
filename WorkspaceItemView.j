@@ -2,6 +2,15 @@
 
 @import "Data.j"
 
+@implementation Buffer (WorkspaceItemView)
+
+- (void)close // public
+{
+    [manager closeBuffer:self askToSave:YES];
+}
+
+@end
+
 @implementation FileBuffer (WorkspaceItemView)
 
 - (CPString)imageName // public
