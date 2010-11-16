@@ -12,7 +12,8 @@
 
 - (BOOL)performKeyEquivalent:(CPEvent)event // public
 {
-    if ([event characters] == CPEscapeFunctionKey) {
+    var characters = [event characters];
+    if (characters == CPEscapeFunctionKey || characters == "w" && [event modifierFlags] == CPPlatformActionKeyMask) {
         [self dismiss];
         return YES;
     }

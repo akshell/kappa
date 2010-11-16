@@ -157,6 +157,7 @@
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification // private
 {
     [mainWindow setAcceptsMouseMovedEvents:YES];
+    [CPPlatformWindow preventCharacterKeysFromPropagating:["n", "s", "w"]];
 
     navigatorControllerProxy = [[Proxy alloc] initWithObject:DATA keyPath:"app.navigatorController"];
     workspaceControllerProxy = [[Proxy alloc] initWithObject:DATA keyPath:"app.workspaceController"];
@@ -187,15 +188,22 @@
 
     fileMenu = [CPMenu new];
     [fileMenu addItemWithTitle:"New App…" target:newAppPanelController action:@selector(showWindow:)];
-    newFileMenuItem = [fileMenu addItemWithTitle:"New File" target:navigatorControllerProxy action:@selector(showNewFile)];
+    newFileMenuItem = [fileMenu addItemWithTitle:"New File"
+                                          target:navigatorControllerProxy
+                                          action:@selector(showNewFile)
+                                   keyEquivalent:"n"];
     newFolderMenuItem = [fileMenu addItemWithTitle:"New Folder" target:navigatorControllerProxy action:@selector(showNewFolder)];
     appsMenu = [CPMenu new];
     var appsMenuItem = [fileMenu addItemWithTitle:"Open App"];
     [appsMenuItem setSubmenu:appsMenu];
     [fileMenu addItem:[CPMenuItem separatorItem]];
-    closeMenuItem = [fileMenu addItemWithTitle:"Close" target:workspaceControllerProxy action:@selector(closeCurrentBuffer)];
-    saveMenuItem = [fileMenu addItemWithTitle:"Save" target:presentationControllerProxy action:@selector(save)];
-    saveAllMenuItem = [fileMenu addItemWithTitle:"Save All" target:self action:@selector(saveAll)];
+    closeMenuItem = [fileMenu addItemWithTitle:"Close"
+                                        target:workspaceControllerProxy
+                                        action:@selector(closeCurrentBuffer)
+                                 keyEquivalent:"w"];
+    saveMenuItem = [fileMenu addItemWithTitle:"Save" target:presentationControllerProxy action:@selector(save) keyEquivalent:"s"];
+    saveAllMenuItem = [fileMenu addItemWithTitle:"Save All" target:self action:@selector(saveAll) keyEquivalent:"s"];
+    [saveAllMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
     actionsMenuItem = [fileMenu addItemWithTitle:"Actions"];
     [actionsMenuItem setSubmenu:[CPMenu new]];
     appMenuItems.push(appsMenuItem, actionsMenuItem);
@@ -343,6 +351,7 @@
             [toolbarItems["Save All"] setEnabled:DATA.app.numberOfModifiedBuffers];
         } else {
             [presentationMultiview showView:nil];
+            window.focus(); // XXX
         }
         // FALL THROUGH
     case "app.buffer.name":
