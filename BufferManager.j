@@ -45,15 +45,6 @@
 
 @end
 
-@implementation PreviewBuffer (BufferManager)
-
-- (Entity)entity // public
-{
-    return env;
-}
-
-@end
-
 @implementation BufferManager : BaseManager
 {
     unsigned lastVisitTag;

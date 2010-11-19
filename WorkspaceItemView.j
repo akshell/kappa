@@ -38,24 +38,6 @@
 
 @end
 
-@implementation HelpBuffer (WorkspaceItemView)
-
-- (CPString)imageName // public
-{
-    return "Help";
-}
-
-@end
-
-@implementation PreviewBuffer (WorkspaceItemView)
-
-- (CPString)imageName // public
-{
-    return "Preview";
-}
-
-@end
-
 @implementation CloseButton : CPControl
 {
     BOOL isModified;

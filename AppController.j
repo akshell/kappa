@@ -16,18 +16,9 @@
 @import "CodeFileController.j"
 @import "LibFileController.j"
 
-@implementation Buffer (AppController)
-
-- (CPArray)toolbarItemIdentifiers // public
-{
-    return [CPToolbarFlexibleSpaceItemIdentifier];
-}
-
-@end
-
 @implementation FileBuffer (AppController)
 
-- (CPString)selectedToolbarItemIdentifier // public
+- (CPString)modeName // public
 {
     return "Edit";
 }
@@ -35,11 +26,6 @@
 @end
 
 @implementation CodeFileBuffer (AppController)
-
-- (CPArray)toolbarItemIdentifiers // public
-{
-    return ["New", "Save", "Save All", CPToolbarSpaceItemIdentifier, "Diff", "Commit", CPToolbarFlexibleSpaceItemIdentifier];
-}
 
 - (Class)presentationControllerClass // public
 {
@@ -59,7 +45,7 @@
 
 @implementation GitBuffer (AppController)
 
-- (CPString)selectedToolbarItemIdentifier // public
+- (CPString)modeName // public
 {
     return "Git";
 }
@@ -73,7 +59,7 @@
 
 @implementation EvalBuffer (AppController)
 
-- (CPString)selectedToolbarItemIdentifier // public
+- (CPString)modeName // public
 {
     return "Eval";
 }
@@ -85,37 +71,11 @@
 
 @end
 
-@implementation WebBuffer (AppController)
+var DocsURL = "/docs/0.3/";
 
-- (CPArray)toolbarItemIdentifiers // public
-{
-    return ["Back", "Forward", "Reload", "URL", CPToolbarSpaceItemIdentifier];
+function setMenuItemsEnabled(menuItems, flag) {
+    menuItems.forEach(function (menuItem) { [menuItem doSetEnabled:flag]; });
 }
-
-- (Class)presentationControllerClass // public
-{
-    return nil;
-}
-
-@end
-
-@implementation PreviewBuffer (AppController)
-
-- (CPString)selectedToolbarItemIdentifier // public
-{
-    return "Preview";
-}
-
-@end
-
-@implementation HelpBuffer (AppController)
-
-- (CPString)selectedToolbarItemIdentifier // public
-{
-    return "Help";
-}
-
-@end
 
 @implementation AppController : CPObject
 {
@@ -133,22 +93,31 @@
     LoginPanelController loginPanelController;
     ContactPanelController contactPanelController;
     NewAppPanelController newAppPanelController;
+    TabOpener helpTabOpener;
     CPMenuItem passwordMenuItem;
     CPMenuItem logOutMenuItem;
     CPMenu fileMenu;
     CPMenu appsMenu;
     CPMenuItem newFileMenuItem;
     CPMenuItem newFolderMenuItem;
+    CPMenuItem openAppMenuItem;
+    CPMenuItem uploadFileMenuItem;
     CPMenuItem closeMenuItem;
     CPMenuItem saveMenuItem;
     CPMenuItem saveAllMenuItem;
     CPMenuItem actionsMenuItem;
+    CPMenuItem modeMenuItem;
+    CPMenuItem editMenuItem;
+    CPMenuItem evalMenuItem;
+    CPMenuItem gitMenuItem;
+    CPMenuItem switchToPreviewMenuItem;
+    CPMenuItem openEvalMenuItem;
+    CPMenuItem openPreviewMenuItem;
     CPMenuItem newEnvMenuItem;
     CPMenuItem useLibMenuItem;
-    CPMenuItem evalMenuItem;
-    CPMenuItem previewMenuItem;
-    CPArray appMenuItems;
-    CPArray bufferMenuItems;
+    CPMenuItem manageDomainsMenuItem;
+    CPMenuItem publishAppMenuItem;
+    CPMenuItem deleteAppMenuItem;
     CPPopUpButton appPopUpButton;
     JSObject toolbarItems;
     CPToolbar toolbar;
@@ -161,6 +130,7 @@
 
     navigatorControllerProxy = [[Proxy alloc] initWithObject:DATA keyPath:"app.navigatorController"];
     workspaceControllerProxy = [[Proxy alloc] initWithObject:DATA keyPath:"app.workspaceController"];
+
     presentationControllerProxy = [[Proxy alloc] initWithObject:DATA keyPath:"app.buffer.presentationController"];
     aboutPanelController = [AboutPanelController new];
     keyPanelController = [KeyPanelController new];
@@ -171,11 +141,10 @@
     contactPanelController = [ContactPanelController new];
     newAppPanelController = [[NewAppPanelController alloc] initWithTarget:self action:@selector(didCreateAppWithName:)];
 
+    helpTabOpener = [TabOpener new];
+
     var mainMenu = [CPApp mainMenu];
     [mainMenu removeAllItems];
-
-    appMenuItems = [];
-    bufferMenuItems = [];
 
     var akshellMenu = [CPMenu new];
     [akshellMenu addItemWithTitle:"About Akshell" target:aboutPanelController action:@selector(showWindow:)];
@@ -194,8 +163,10 @@
                                    keyEquivalent:"n"];
     newFolderMenuItem = [fileMenu addItemWithTitle:"New Folder" target:navigatorControllerProxy action:@selector(showNewFolder)];
     appsMenu = [CPMenu new];
-    var appsMenuItem = [fileMenu addItemWithTitle:"Open App"];
-    [appsMenuItem setSubmenu:appsMenu];
+    openAppMenuItem = [fileMenu addItemWithTitle:"Open App"];
+    [openAppMenuItem setSubmenu:appsMenu];
+    [fileMenu addItem:[CPMenuItem separatorItem]];
+    uploadFileMenuItem = [fileMenu addItemWithTitle:"Upload File…"];
     [fileMenu addItem:[CPMenuItem separatorItem]];
     closeMenuItem = [fileMenu addItemWithTitle:"Close"
                                         target:workspaceControllerProxy
@@ -204,10 +175,41 @@
     saveMenuItem = [fileMenu addItemWithTitle:"Save" target:presentationControllerProxy action:@selector(save) keyEquivalent:"s"];
     saveAllMenuItem = [fileMenu addItemWithTitle:"Save All" target:self action:@selector(saveAll) keyEquivalent:"s"];
     [saveAllMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
+    [fileMenu addItem:[CPMenuItem separatorItem]];
     actionsMenuItem = [fileMenu addItemWithTitle:"Actions"];
     [actionsMenuItem setSubmenu:[CPMenu new]];
-    appMenuItems.push(appsMenuItem, actionsMenuItem);
     [[mainMenu addItemWithTitle:"File"] setSubmenu:fileMenu];
+
+    var editMenu = [CPMenu new];
+    [editMenu addItemWithTitle:"Find…"];
+    [editMenu addItemWithTitle:"Find Next"];
+    [editMenu addItemWithTitle:"Find Previous"];
+    [editMenu addItem:[CPMenuItem separatorItem]];
+    [editMenu addItemWithTitle:"Go to Line…"];
+    [[mainMenu addItemWithTitle:"Edit"] setSubmenu:editMenu];
+
+    var goMenu = [CPMenu new];
+    var modeMenu = [CPMenu new];
+    editMenuItem = [modeMenu addItemWithTitle:"Edit" target:workspaceControllerProxy action:@selector(switchToEdit)];
+    evalMenuItem = [modeMenu addItemWithTitle:"Eval" target:navigatorControllerProxy action:@selector(switchToEval)];
+    gitMenuItem = [modeMenu addItemWithTitle:"Git" target:workspaceControllerProxy action:@selector(switchToGit)];
+    modeMenuItem = [goMenu addItemWithTitle:"Mode"];
+    [modeMenuItem setSubmenu:modeMenu];
+    switchToPreviewMenuItem = [goMenu addItemWithTitle:"Switch to Preview"
+                                                target:navigatorControllerProxy
+                                                action:@selector(switchToPreview)];
+    [goMenu addItemWithTitle:"Switch to Help" target:self action:@selector(switchToHelp)];
+    [goMenu addItem:[CPMenuItem separatorItem]];
+    [goMenu addItemWithTitle:"Back"];
+    [goMenu addItemWithTitle:"Forward"];
+    [goMenu addItemWithTitle:"Previous"];
+    [goMenu addItemWithTitle:"Next"];
+    [goMenu addItem:[CPMenuItem separatorItem]];
+    openEvalMenuItem = [goMenu addItemWithTitle:"Open Eval"];
+    [openEvalMenuItem setSubmenu:[CPMenu new]];
+    openPreviewMenuItem = [goMenu addItemWithTitle:"Open Preview"];
+    [openPreviewMenuItem setSubmenu:[CPMenu new]];
+    [[mainMenu addItemWithTitle:"Go"] setSubmenu:goMenu];
 
     var appMenu = [CPMenu new];
     newEnvMenuItem = [appMenu addItemWithTitle:"New Environment" target:navigatorControllerProxy action:@selector(showNewEnv)];
@@ -216,37 +218,23 @@
     [appMenu addItemWithTitle:"Diff…"];
     [appMenu addItemWithTitle:"Commit…"];
     [appMenu addItem:[CPMenuItem separatorItem]];
-    [appMenu addItemWithTitle:"Manage Domains…"];
-    [appMenu addItemWithTitle:"Publish App…"];
-    appMenuItems.push([appMenu addItemWithTitle:"Delete App…" target:self action:@selector(showDeleteApp)]);
+    manageDomainsMenuItem = [appMenu addItemWithTitle:"Manage Domains…"];
+    publishAppMenuItem = [appMenu addItemWithTitle:"Publish App…"];
+    deleteAppMenuItem = [appMenu addItemWithTitle:"Delete App…" target:self action:@selector(showDeleteApp)];
     [[mainMenu addItemWithTitle:"App"] setSubmenu:appMenu];
 
-    var viewMenu = [CPMenu new];
-    evalMenuItem = [viewMenu addItemWithTitle:"Eval"];
-    [evalMenuItem setSubmenu:[CPMenu new]];
-    previewMenuItem = [viewMenu addItemWithTitle:"Preview"];
-    [previewMenuItem setSubmenu:[CPMenu new]];
-    bufferMenuItems.push(
-        evalMenuItem, previewMenuItem,
-        [viewMenu addItemWithTitle:"Git" target:workspaceControllerProxy action:@selector(openGit)]);
-    [[mainMenu addItemWithTitle:"View"] setSubmenu:viewMenu];
-
     var helpMenu = [CPMenu new];
-    bufferMenuItems.push(
-        [helpMenu addItemWithTitle:"Getting Started" target:workspaceControllerProxy action:@selector(openGettingStarted)],
-        [helpMenu addItemWithTitle:"User Guide" target:workspaceControllerProxy action:@selector(openUserGuide)],
-        [helpMenu addItemWithTitle:"Reference" target:workspaceControllerProxy action:@selector(openReference)]);
+    [helpMenu addItemWithTitle:"Getting Started" target:self action:@selector(openGettingStarted)];
+    [helpMenu addItemWithTitle:"User Guide" target:self action:@selector(openUserGuide)];
+    [helpMenu addItemWithTitle:"Reference" target:self action:@selector(openReference)];
     [helpMenu addItem:[CPMenuItem separatorItem]];
     [helpMenu addItemWithTitle:"Contact…" target:contactPanelController action:@selector(showWindow:)];
     [helpMenu addItemWithTitle:"Blog"];
     [helpMenu addItemWithTitle:"Twitter"];
     [[mainMenu addItemWithTitle:"Help"] setSubmenu:helpMenu];
 
-    [akshellMenu, fileMenu, appMenu, viewMenu, helpMenu].forEach(
+    [akshellMenu, fileMenu, editMenu, goMenu, appMenu, helpMenu].forEach(
         function (menu) { [menu setAutoenablesItems:NO]; });
-
-    appMenuItems.concat(bufferMenuItems, newFileMenuItem, newFolderMenuItem, newEnvMenuItem, useLibMenuItem).forEach(
-        function (menuItem) { [menuItem setEnabled:NO]; });
 
     [mainMenu addItem:[CPMenuItem separatorItem]];
 
@@ -310,40 +298,46 @@
             [DATA.app.sidebarController show];
             [
                 [actionsMenuItem, @selector(actionsMenu)],
-                [evalMenuItem, @selector(evalMenu)],
-                [previewMenuItem, @selector(previewMenu)]
+                [openEvalMenuItem, @selector(evalMenu)],
+                [openPreviewMenuItem, @selector(previewMenu)]
             ].forEach(
                 function (pair) {
                     [[pair[0] submenu] setSupermenu:nil];
                     [pair[0] setSubmenu:objj_msgSend(navigatorControllerProxy, pair[1])];
                 });
         }
-        appMenuItems.forEach(function (menuItem) { [menuItem doSetEnabled:DATA.app]; });
+        setMenuItemsEnabled(
+            [openAppMenuItem, actionsMenuItem, modeMenuItem, manageDomainsMenuItem, deleteAppMenuItem, publishAppMenuItem],
+            DATA.app);
         [toolbarItems["App"] setEnabled:DATA.app]
         break;
     case "app.code":
-        var isEnabled = DATA.app && DATA.app.code;
-        [newFileMenuItem doSetEnabled:isEnabled];
-        [newFolderMenuItem doSetEnabled:isEnabled];
+        var code = DATA.app && DATA.app.code
+        setMenuItemsEnabled([newFileMenuItem, newFolderMenuItem, uploadFileMenuItem], code);
+        [toolbarItems["New"] setEnabled:code];
         break;
     case "app.envs":
-        [newEnvMenuItem doSetEnabled:DATA.app && DATA.app.envs];
+        var envs = DATA.app && DATA.app.envs;
+        setMenuItemsEnabled([switchToPreviewMenuItem, openPreviewMenuItem, newEnvMenuItem], envs);
+        [toolbarItems["Preview"] setEnabled:envs];
         break;
     case "app.libs":
         [useLibMenuItem doSetEnabled:DATA.app && DATA.app.libs];
         break;
     case "app.buffers":
-        var isEnabled = DATA.app && DATA.app.buffers;
-        ["Edit", "Eval", "Preview", "Git", "Help"].forEach(function (name) { [toolbarItems[name] setEnabled:isEnabled]; });
-        bufferMenuItems.forEach(function (menuItem) { [menuItem doSetEnabled:isEnabled]; });
+        var buffers = DATA.app && DATA.app.buffers;
+        ["Edit", "Eval", "Git"].forEach(function (name) { [toolbarItems[name] setEnabled:buffers]; });
+        setMenuItemsEnabled([editMenuItem, evalMenuItem, gitMenuItem, openEvalMenuItem], buffers);
         break;
     case "app.buffer":
         [toolbar reloadChangedToolbarItems];
-        var hasBuffer = DATA.app && DATA.app.buffer;
-        [toolbar setSelectedItemIdentifier:hasBuffer && [DATA.app.buffer selectedToolbarItemIdentifier]];
-        [closeMenuItem doSetEnabled:hasBuffer];
-        if (hasBuffer) {
-            var buffer = DATA.app.buffer;
+        var buffer = DATA.app && DATA.app.buffer;
+        var modeName = [buffer modeName];
+        [toolbar setSelectedItemIdentifier:modeName];
+        [editMenuItem, evalMenuItem, gitMenuItem].forEach(
+            function (menuItem) { [menuItem setState:[menuItem title] == modeName ? CPOnState : CPOffState]; });
+        [closeMenuItem doSetEnabled:buffer];
+        if (buffer) {
             if (!buffer.presentationController)
                 buffer.presentationController = [[[buffer presentationControllerClass] alloc] initWithApp:DATA.app buffer:buffer];
             [presentationMultiview showView:[buffer.presentationController view]];
@@ -369,27 +363,27 @@
         document.title = "Akshell";
         break;
     case "app.buffer.isModified":
-        var isEnabled = DATA.app && DATA.app.buffer && DATA.app.buffer.isModified;
-        [toolbarItems["Save"] setEnabled:isEnabled];
-        [saveMenuItem doSetEnabled:isEnabled];
+        var isModified = DATA.app && DATA.app.buffer && DATA.app.buffer.isModified;
+        [toolbarItems["Save"] setEnabled:isModified];
+        [saveMenuItem doSetEnabled:isModified];
         break;
     case "app.numberOfModifiedBuffers":
-        var isEnabled = DATA.app && DATA.app.numberOfModifiedBuffers;
-        [toolbarItems["Save All"] setEnabled:isEnabled];
-        [saveAllMenuItem doSetEnabled:isEnabled];
+        var numberOfModifiedBuffers = DATA.app && DATA.app.numberOfModifiedBuffers;
+        [toolbarItems["Save All"] setEnabled:numberOfModifiedBuffers];
+        [saveAllMenuItem doSetEnabled:numberOfModifiedBuffers];
         break;
     }
 }
 
 - (CPArray)toolbarDefaultItemIdentifiers:(CPToolbar)aToolbar // private
 {
-    var itemIdentifiers = ["App", CPToolbarSpaceItemIdentifier];
-    if (DATA.app && DATA.app.buffer)
-        itemIdentifiers = itemIdentifiers.concat([DATA.app.buffer toolbarItemIdentifiers]);
-    else
-        itemIdentifiers.push(CPToolbarFlexibleSpaceItemIdentifier);
-    itemIdentifiers.push("Edit", "Eval", "Preview", "Git", "Help");
-    return itemIdentifiers;
+    return [
+        "App", CPToolbarSpaceItemIdentifier,
+        "New", "Save", "Save All", CPToolbarSpaceItemIdentifier,
+        "Diff", "Commit", CPToolbarSpaceItemIdentifier,
+        "Preview", "Help", CPToolbarFlexibleSpaceItemIdentifier,
+        "Edit", "Eval", "Git"
+    ];
 }
 
 - (CPToolbarItem)toolbar:(CPToolbar)aToolbar
@@ -431,11 +425,11 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
             "New": [navigatorControllerProxy, @selector(showNewFile)],
             "Save": [presentationControllerProxy, @selector(save)],
             "Save All": [self, @selector(saveAll)],
-            "Edit": [workspaceControllerProxy, @selector(openEdit)],
-            "Eval": [workspaceControllerProxy, @selector(openEval)],
-            "Preview": [workspaceControllerProxy, @selector(openPreview)],
-            "Git": [workspaceControllerProxy, @selector(openGit)],
-            "Help": [workspaceControllerProxy, @selector(openHelp)]
+            "Preview": [navigatorControllerProxy, @selector(switchToPreview)],
+            "Help": [self, @selector(switchToHelp)],
+            "Edit": [workspaceControllerProxy, @selector(switchToEdit)],
+            "Eval": [navigatorControllerProxy, @selector(switchToEval)],
+            "Git": [workspaceControllerProxy, @selector(switchToGit)],
         }[itemIdentifier];
         if (pair) {
             [item setTarget:pair[0]];
@@ -526,6 +520,27 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
 - (void)saveAll // private
 {
     DATA.app.buffers.forEach(function (buffer) { [buffer.presentationController save]; });
+}
+
+- (void)openGettingStarted // private
+{
+    [helpTabOpener openURL:DocsURL + "intro/"];
+}
+
+- (void)openUserGuide // private
+{
+    [helpTabOpener openURL:DocsURL + "guide/"];
+}
+
+- (void)openReference // private
+{
+    [helpTabOpener openURL:DocsURL + "ref/"];
+}
+
+- (void)switchToHelp // private
+{
+    if (![helpTabOpener switchToLastTab])
+        [self openGettingStarted];
 }
 
 @end

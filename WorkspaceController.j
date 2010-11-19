@@ -3,7 +3,6 @@
 @import "BufferManager.j"
 @import "WorkspaceItemView.j"
 
-var DocsURL = "http://www.akshell.com/docs/0.3/";
 var DragType = "WorkspaceDragType";
 
 @implementation WorkspaceController : CPObject
@@ -117,7 +116,7 @@ writeRowsWithIndexes:(CPIndexSet)rowIndexes
     [tableView reloadData];
 }
 
-- (void)openEdit // public
+- (void)switchToEdit // public
 {
     if ([bufferManager openBufferOfClass:FileBuffer])
         return;
@@ -126,47 +125,9 @@ writeRowsWithIndexes:(CPIndexSet)rowIndexes
         [bufferManager openNewBuffer:[[CodeFileBuffer alloc] initWithFile:entry]];
 }
 
-- (Env)defaultEnv // private
-{
-    return app.envs[app.envs.length > 1 ? 1 : 0];
-}
-
-- (void)openEval // public
-{
-    if (![bufferManager openBufferOfClass:EvalBuffer])
-        [bufferManager openNewBuffer:[[EvalBuffer alloc] initWithEnv:[self defaultEnv]]];
-}
-
-- (void)openPreview // public
-{
-    if (![bufferManager openBufferOfClass:PreviewBuffer])
-        [bufferManager openNewBuffer:[[PreviewBuffer alloc] initWithApp:app env:[self defaultEnv]]];
-}
-
-- (void)openGit // public
+- (void)switchToGit // public
 {
     [bufferManager openBuffer:[GitBuffer new]];
-}
-
-- (void)openHelp // public
-{
-    if (![bufferManager openBufferOfClass:HelpBuffer])
-        [self openGettingStarted];
-}
-
-- (void)openGettingStarted // public
-{
-    [bufferManager openBuffer:[[HelpBuffer alloc] initWithURL:DocsURL + "intro/" title:"Getting Started"]];
-}
-
-- (void)openUserGuide // public
-{
-    [bufferManager openBuffer:[[HelpBuffer alloc] initWithURL:DocsURL + "guide/" title:"User Guide"]];
-}
-
-- (void)openReference // public
-{
-    [bufferManager openBuffer:[[HelpBuffer alloc] initWithURL:DocsURL + "ref/" title:"Reference"]];
 }
 
 - (void)closeCurrentBuffer // public

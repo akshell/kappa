@@ -79,12 +79,13 @@
 {
     var window = [self window];
     if ([window firstResponder] === self) {
-        editor.focus = YES;
+        if (editor)
+            editor.focus = YES;
         setTimeout(
             function () {
                 if ([window isKeyWindow])
                     iframe.focus();
-                else
+                else if (editor)
                     editor.focus = NO;
             },
             0);

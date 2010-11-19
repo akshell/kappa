@@ -4,6 +4,16 @@
 @import "CodeManager.j"
 @import "EnvManager.j"
 @import "LibManager.j"
+@import "TabOpener.j"
+
+@implementation App (NavigatorController)
+
+- (Env)defaultEnv // public
+{
+    return envs[envs.length > 1 ? 1 : 0];
+}
+
+@end
 
 var DragType = "NavigatorDragType";
 
@@ -15,6 +25,7 @@ var DragType = "NavigatorDragType";
     EnvManager envManager;
     LibManager libManager;
     CPArray resourceManagers;
+    TabOpener previewTabOpener;
     CPOutlineView outlineView;
     CPButton plusButton;
     CPButton minusButton;
@@ -50,6 +61,8 @@ var DragType = "NavigatorDragType";
                 [manager setRevealAction:@selector(revealItems:)];
             });
 
+        previewTabOpener = [TabOpener new];
+
         plusButton = [CPButtonBar plusButton];
         [plusButton setTarget:self];
         [plusButton setAction:@selector(showAdd)];
@@ -60,6 +73,7 @@ var DragType = "NavigatorDragType";
         var actionButtonMenu = [actionButton menu];
         newFileMenuItem = [actionButtonMenu addItemWithTitle:"New File" target:self action:@selector(showNewFile)];
         newFolderMenuItem = [actionButtonMenu addItemWithTitle:"New Folder" target:self action:@selector(showNewFolder)];
+        [actionButtonMenu addItemWithTitle:"Upload File…"];
         newEnvMenuItem = [actionButtonMenu addItemWithTitle:"New Environment" target:self action:@selector(showNewEnv)];
         useLibMenuItem = [actionButtonMenu addItemWithTitle:"Use Library…" target:self action:@selector(showUseLib)];
         [actionButtonMenu addItem:[CPMenuItem separatorItem]];
@@ -215,9 +229,7 @@ var DragType = "NavigatorDragType";
                                    ? [[CodeFileBuffer alloc] initWithFile:item]
                                    : [[LibFileBuffer alloc] initWithLib:baseItem path:[item path]])];
     } else if ([item isKindOfClass:Env]) {
-        [bufferManager openBuffer:([outlineView mouseDownFlags] & CPAlternateKeyMask
-                                   ? [[EvalBuffer alloc] initWithEnv:item]
-                                   : [[PreviewBuffer alloc] initWithApp:app env:item])];
+        [bufferManager openBuffer:[[EvalBuffer alloc] initWithEnv:item]];
     }
 }
 
@@ -385,9 +397,21 @@ var DragType = "NavigatorDragType";
     [bufferManager openBuffer:[[EvalBuffer alloc] initWithEnv:[sender tag]]];
 }
 
+- (void)switchToEval // public
+{
+    if (![bufferManager openBufferOfClass:EvalBuffer])
+        [bufferManager openBuffer:[[EvalBuffer alloc] initWithEnv:[app defaultEnv]]];
+}
+
 - (void)openPreview:(CPMenuItem)sender // private
 {
-    [bufferManager openBuffer:[[PreviewBuffer alloc] initWithApp:app env:[sender tag]]];
+    [previewTabOpener openURL:[app URLOfEnv:[sender tag]]];
+}
+
+- (void)switchToPreview // public
+{
+    if (![previewTabOpener switchToLastTab])
+        [previewTabOpener openURL:[app URLOfEnv:[app defaultEnv]]];
 }
 
 @end

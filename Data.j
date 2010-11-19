@@ -376,97 +376,6 @@ var bufferSubclasses = {};
 
 [Buffer registerSubclass:EvalBuffer withTypeName:"eval"];
 
-@implementation WebBuffer : Buffer
-{
-    CPString url @accessors(property=URL);
-    CPString title @accessors(readonly);
-}
-
-- (id)initWithURL:(CPString)anURL title:(CPString)aTitle // public
-{
-    if (self = [super init]) {
-        url = anURL;
-        title = aTitle;
-    }
-    return self;
-}
-
-- (void)setTitle:(CPString)aTitle // public
-{
-    title = aTitle;
-    [self didChangeValueForKey:"name"];
-}
-
-- (BOOL)isEqualToSameClassBuffer:(WebBuffer)other // protected
-{
-    return url == other.url;
-}
-
-- (void)archiveTo:(JSObject)archive // protected
-{
-    archive.url = url;
-    archive.title = title;
-}
-
-- (id)initWithApp:(App)app archive:(JSObject)archive // protected
-{
-    return [self initWithURL:archive.url title:archive.title];
-}
-
-@end
-
-@implementation HelpBuffer : WebBuffer
-
-- (id)initWithURL:(CPString)anURL // public
-{
-    return [super initWithURL:anURL title:"Help"];
-}
-
-- (CPString)name // public
-{
-    return title;
-}
-
-@end
-
-[Buffer registerSubclass:HelpBuffer withTypeName:"help"];
-
-@implementation PreviewBuffer : WebBuffer
-{
-    Env env;
-}
-
-- (id)initWithApp:(App)app env:(Env)anEnv // public
-{
-    if (self = [super initWithURL:[app URLofEnv:anEnv] title:"Preview"]) {
-        env = anEnv;
-        [env addObserver:self forKeyPath:"name"];
-    }
-    return self;
-}
-
-- (CPString)name // public
-{
-    return title + " – " + env.name; // EN DASH
-}
-
-- (void)archiveTo:(JSObject)archive // protected
-{
-    archive.env = env.name;
-    [super archiveTo:archive];
-}
-
-- (id)initWithApp:(App)app archive:(JSObject)archive // protected
-{
-    env = [app envWithName:archive.env];
-    [env addObserver:self forKeyPath:"name"];
-    return env ? [super initWithApp:app archive:archive] : nil;
-}
-
-@end
-
-[Buffer registerSubclass:PreviewBuffer withTypeName:"preview"];
-
 @implementation App : Entity
 {
     JSObject oldArchive;
@@ -496,9 +405,9 @@ var bufferSubclasses = {};
     return "/apps/" + name + "/";
 }
 
-- (CPString)URLofEnv:(Env)env // public
+- (CPString)URLOfEnv:(Env)env // public
 {
-    return env.name + ".TODO";
+    return "http://" + env.name + "." + DATA.username + "." + name + location.host.substring(3);
 }
 
 - (Env)envWithName:(CPString)aName // public
