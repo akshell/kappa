@@ -71,6 +71,7 @@
 
 @end
 
+BoundKeys = ["[", "]", "n", "s", "w"];
 var DocsURL = "/docs/0.3/";
 
 function setMenuItemsEnabled(menuItems, flag) {
@@ -126,7 +127,7 @@ function setMenuItemsEnabled(menuItems, flag) {
 - (void)applicationDidFinishLaunching:(CPNotification)aNotification // private
 {
     [mainWindow setAcceptsMouseMovedEvents:YES];
-    [CPPlatformWindow preventCharacterKeysFromPropagating:["n", "s", "w"]];
+    [CPPlatformWindow preventCharacterKeysFromPropagating:BoundKeys];
 
     navigatorControllerProxy = [[Proxy alloc] initWithObject:DATA keyPath:"app.navigatorController"];
     workspaceControllerProxy = [[Proxy alloc] initWithObject:DATA keyPath:"app.workspaceController"];
@@ -156,11 +157,9 @@ function setMenuItemsEnabled(menuItems, flag) {
     [[mainMenu addItemWithTitle:"Akshell"] setSubmenu:akshellMenu];
 
     fileMenu = [CPMenu new];
-    [fileMenu addItemWithTitle:"New App…" target:newAppPanelController action:@selector(showWindow:)];
-    newFileMenuItem = [fileMenu addItemWithTitle:"New File"
-                                          target:navigatorControllerProxy
-                                          action:@selector(showNewFile)
-                                   keyEquivalent:"n"];
+    [[fileMenu addItemWithTitle:"New App…" target:newAppPanelController action:@selector(showWindow:) keyEquivalent:"n"]
+        setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
+    newFileMenuItem = [fileMenu addItemWithTitle:"New File" target:navigatorControllerProxy action:@selector(showNewFile)];
     newFolderMenuItem = [fileMenu addItemWithTitle:"New Folder" target:navigatorControllerProxy action:@selector(showNewFolder)];
     appsMenu = [CPMenu new];
     openAppMenuItem = [fileMenu addItemWithTitle:"Open App"];
@@ -180,12 +179,19 @@ function setMenuItemsEnabled(menuItems, flag) {
     [actionsMenuItem setSubmenu:[CPMenu new]];
     [[mainMenu addItemWithTitle:"File"] setSubmenu:fileMenu];
 
+    if (navigator.userAgent.indexOf("Chrome") == -1) {
+        [newFileMenuItem setKeyEquivalent:"n"];
+        [newFolderMenuItem setKeyEquivalent:"N"];
+    } else {
+        [closeMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
+    }
+
     var editMenu = [CPMenu new];
-    [editMenu addItemWithTitle:"Find…"];
-    [editMenu addItemWithTitle:"Find Next"];
-    [editMenu addItemWithTitle:"Find Previous"];
+    [editMenu addItemWithTitle:"Find…" target:nil action:nil keyEquivalent:"f"];
+    [editMenu addItemWithTitle:"Find Next" target:nil action:nil keyEquivalent:"g"];
+    [editMenu addItemWithTitle:"Find Previous" target:nil action:nil keyEquivalent:"G"];
     [editMenu addItem:[CPMenuItem separatorItem]];
-    [editMenu addItemWithTitle:"Go to Line…"];
+    [editMenu addItemWithTitle:"Go to Line…" target:nil action:nil keyEquivalent:"L"];
     [[mainMenu addItemWithTitle:"Edit"] setSubmenu:editMenu];
 
     var goMenu = [CPMenu new];
@@ -200,10 +206,12 @@ function setMenuItemsEnabled(menuItems, flag) {
                                                 action:@selector(switchToPreview)];
     [goMenu addItemWithTitle:"Switch to Help" target:self action:@selector(switchToHelp)];
     [goMenu addItem:[CPMenuItem separatorItem]];
-    [goMenu addItemWithTitle:"Back"];
-    [goMenu addItemWithTitle:"Forward"];
-    [goMenu addItemWithTitle:"Previous"];
-    [goMenu addItemWithTitle:"Next"];
+    [goMenu addItemWithTitle:"Back" target:nil action:nil keyEquivalent:"["];
+    [goMenu addItemWithTitle:"Forward" target:nil action:nil keyEquivalent:"]"];
+    [[goMenu addItemWithTitle:"Previous" target:nil action:nil keyEquivalent:"["]
+        setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
+    [[goMenu addItemWithTitle:"Next" target:nil action:nil keyEquivalent:"]"]
+        setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
     [goMenu addItem:[CPMenuItem separatorItem]];
     openEvalMenuItem = [goMenu addItemWithTitle:"Open Eval"];
     [openEvalMenuItem setSubmenu:[CPMenu new]];
@@ -215,8 +223,8 @@ function setMenuItemsEnabled(menuItems, flag) {
     newEnvMenuItem = [appMenu addItemWithTitle:"New Environment" target:navigatorControllerProxy action:@selector(showNewEnv)];
     useLibMenuItem = [appMenu addItemWithTitle:"Use Library…" target:navigatorControllerProxy action:@selector(showUseLib)];
     [appMenu addItem:[CPMenuItem separatorItem]];
-    [appMenu addItemWithTitle:"Diff…"];
-    [appMenu addItemWithTitle:"Commit…"];
+    [appMenu addItemWithTitle:"Diff…" target:nil action:nil keyEquivalent:"D"];
+    [appMenu addItemWithTitle:"Commit…" target:nil action:nil keyEquivalent:"C"];
     [appMenu addItem:[CPMenuItem separatorItem]];
     manageDomainsMenuItem = [appMenu addItemWithTitle:"Manage Domains…"];
     publishAppMenuItem = [appMenu addItemWithTitle:"Publish App…"];
@@ -340,12 +348,18 @@ function setMenuItemsEnabled(menuItems, flag) {
         if (buffer) {
             if (!buffer.presentationController)
                 buffer.presentationController = [[[buffer presentationControllerClass] alloc] initWithApp:DATA.app buffer:buffer];
-            [presentationMultiview showView:[buffer.presentationController view]];
-            [buffer.presentationController focus];
-            [toolbarItems["Save All"] setEnabled:DATA.app.numberOfModifiedBuffers];
+            // TODO: When all presentation controllers are implemented, this condition should be removed
+            if (buffer.presentationController) {
+                [presentationMultiview showView:[buffer.presentationController view]];
+                [buffer.presentationController focus];
+                [toolbarItems["Save All"] setEnabled:DATA.app.numberOfModifiedBuffers];
+            } else {
+                [presentationMultiview showView:nil];
+                window.focus();
+            }
         } else {
             [presentationMultiview showView:nil];
-            window.focus(); // XXX
+            window.focus();
         }
         // FALL THROUGH
     case "app.buffer.name":

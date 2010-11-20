@@ -58,7 +58,7 @@
                 doc.onkeydown = function (event) {
                     if (CPPlatformActionKeyMask == CPCommandKeyMask ? event.metaKey : event.ctrlKey) {
                         [[[self window] platformWindow] keyEvent:event];
-                        if (["n", "s", "w"].indexOf(String.fromCharCode(event.keyCode).toLowerCase()) != -1) {
+                        if (BoundKeys.indexOf(String.fromCharCode(event.keyCode).toLowerCase()) != -1) {
                             event.preventDefault();
                             event.stopPropagation();
                         }

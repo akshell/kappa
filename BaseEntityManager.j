@@ -117,7 +117,7 @@ var NotificationName = "ManagerNotification";
                        args:[item]];
 }
 
-- (void)didCreateItem:(id)item // private
+- (void)didCreateItem:(id)item // protected
 {
     delete item.isLoading;
     [self notify];

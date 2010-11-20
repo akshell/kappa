@@ -249,12 +249,17 @@ var entryNameIsCorrect = function (name) {
 {
     if (name && name != entry.name && entryNameIsCorrect(name) && ![entry.parentFolder hasChildWithName:name])
         [self changeNameOfItem:entry to:name];
-    if ([entry isKindOfClass:File]) {
+    if ([entry isKindOfClass:File])
         [self createItem:entry byRequestWithMethod:"PUT" URL:[self URL] + [entry path] data:""];
-        [bufferManager openBuffer:[[CodeFileBuffer alloc] initWithFile:entry]];
-    } else {
+    else
         [self createItem:entry byRequestWithMethod:"POST" URL:[self URL] data:{action: "mkdir", path: [entry path]}];
-    }
+}
+
+- (void)didCreateItem:(Entry)entry // protected
+{
+    [super didCreateItem:entry];
+    if ([entry isKindOfClass:File])
+        [bufferManager openBuffer:[[CodeFileBuffer alloc] initWithFile:entry]];
 }
 
 - (void)renameItem:(Entry)entry to:(CPString)name // protected
