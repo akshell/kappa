@@ -33,6 +33,15 @@
                 "<body class='bespin'></body>" +
                 "</html>");
             doc.close();
+            doc.onkeydown = function (event) {
+                if (CPPlatformActionKeyMask == CPCommandKeyMask ? event.metaKey : event.ctrlKey) {
+                    [[[self window] platformWindow] keyEvent:event];
+                    if (BoundKeys.indexOf(String.fromCharCode(event.keyCode).toLowerCase()) != -1) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                }
+            };
             iframe.contentWindow.onBespinLoad = function () {
                 editor = doc.body.bespin.editor;
                 editor.syntax = syntax;
@@ -54,15 +63,6 @@
                 };
                 doc.body.onblur = function () {
                     [self refocus];
-                };
-                doc.onkeydown = function (event) {
-                    if (CPPlatformActionKeyMask == CPCommandKeyMask ? event.metaKey : event.ctrlKey) {
-                        [[[self window] platformWindow] keyEvent:event];
-                        if (BoundKeys.indexOf(String.fromCharCode(event.keyCode).toLowerCase()) != -1) {
-                            event.preventDefault();
-                            event.stopPropagation();
-                        }
-                    }
                 };
             }
         };
