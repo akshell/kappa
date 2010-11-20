@@ -85,8 +85,6 @@
             function () {
                 if ([window isKeyWindow])
                     iframe.focus();
-                else if (editor)
-                    editor.focus = NO;
             },
             0);
     }
@@ -146,6 +144,12 @@
 - (void)becomeKeyWindow // public
 {
     [self becomeFirstResponder];
+}
+
+- (void)resignKeyWindow // public
+{
+    if (editor)
+        editor.focus = NO;
 }
 
 @end
