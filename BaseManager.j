@@ -2,28 +2,24 @@
 
 @import "Data.j"
 
-var NotificationName = "ManagerNotification";
-
 @implementation BaseManager : CPObject
 {
     App app;
+    CPString keyName;
 }
 
-- (id)initWithApp:(App)anApp // public
+- (id)initWithApp:(App)anApp keyName:(CPString)aKeyName // public
 {
-    if (self = [super init])
+    if (self = [super init]) {
         app = anApp;
+        keyName = aKeyName;
+    }
     return self;
-}
-
-- (void)addChangeObserver:(id)observer selector:(SEL)selector // public
-{
-    [[CPNotificationCenter defaultCenter] addObserver:observer selector:selector name:NotificationName object:self];
 }
 
 - (void)notify // protected
 {
-    [[CPNotificationCenter defaultCenter] postNotificationName:NotificationName object:self];
+    [app didChangeValueForKey:keyName];
 }
 
 @end

@@ -32,6 +32,11 @@
 
 @implementation EnvManager : BaseEntityManager
 
+- (id)initWithApp:(App)anApp // public
+{
+    return [super initWithApp:anApp keyName:"envs"];
+}
+
 - (CPString)name // public
 {
     return "Environments";

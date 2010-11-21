@@ -34,6 +34,7 @@ var DragType = "NavigatorDragType";
     CPMenu previewMenu @accessors(readonly);
     CPMenuItem newFileMenuItem;
     CPMenuItem newFolderMenuItem;
+    CPMenuItem uploadFileMenuItem;
     CPMenuItem newEnvMenuItem;
     CPMenuItem useLibMenuItem;
     CPArray deleteMenuItems;
@@ -56,7 +57,6 @@ var DragType = "NavigatorDragType";
         resourceManagers = [codeManager, envManager, libManager];
         resourceManagers.forEach(
             function (manager) {
-                [manager addChangeObserver:self selector:@selector(didManagerChange:)];
                 [manager setRevealTarget:self];
                 [manager setRevealAction:@selector(revealItems:)];
             });
@@ -73,7 +73,7 @@ var DragType = "NavigatorDragType";
         var actionButtonMenu = [actionButton menu];
         newFileMenuItem = [actionButtonMenu addItemWithTitle:"New File" target:self action:@selector(showNewFile)];
         newFolderMenuItem = [actionButtonMenu addItemWithTitle:"New Folder" target:self action:@selector(showNewFolder)];
-        [actionButtonMenu addItemWithTitle:"Upload File…"];
+        uploadFileMenuItem = [actionButtonMenu addItemWithTitle:"Upload File…"];
         newEnvMenuItem = [actionButtonMenu addItemWithTitle:"New Environment" target:self action:@selector(showNewEnv)];
         useLibMenuItem = [actionButtonMenu addItemWithTitle:"Use Library…" target:self action:@selector(showUseLib)];
         [actionButtonMenu addItem:[CPMenuItem separatorItem]];
@@ -92,7 +92,7 @@ var DragType = "NavigatorDragType";
                 duplicateMenuItems.push([menu addItemWithTitle:"Duplicate" target:self action:@selector(duplicate)]);
                 renameMenuItems.push([menu addItemWithTitle:"Rename" target:self action:@selector(showRename)]);
             });
-        [newFileMenuItem, newFolderMenuItem, newEnvMenuItem, useLibMenuItem].forEach(
+        [newFileMenuItem, newFolderMenuItem, uploadFileMenuItem, newEnvMenuItem, useLibMenuItem].forEach(
             function (menuItem) { [menuItem setEnabled:NO]; });
 
         var superviewSize = [superview boundsSize];
@@ -235,37 +235,31 @@ var DragType = "NavigatorDragType";
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
-    [app removeObserver:self forKeyPath:keyPath];
     var manager;
+    var menuItems;
     switch (keyPath) {
     case "code":
-        [newFileMenuItem doSetEnabled:YES];
-        [newFolderMenuItem doSetEnabled:YES];
         manager = codeManager;
+        menuItems = [newFileMenuItem, newFolderMenuItem, uploadFileMenuItem];
         break;
     case "envs":
-        [newEnvMenuItem doSetEnabled:YES];
         manager = envManager;
+        menuItems = [newEnvMenuItem];
         break;
     case "libs":
-        [useLibMenuItem doSetEnabled:YES];
         manager = libManager;
+        menuItems = [useLibMenuItem];
         break;
     }
-    var items = [outlineView selectedItems];
-    for (var i = 0; i < items.length; ++i)
-        if ([outlineView rootForItem:items[i]] !== manager)
-            break;
-    if (i == items.length)
-        [plusButton setEnabled:YES];
-}
-
-- (void)didManagerChange:(CPNotification)notification // private
-{
-    var manager = [notification object];
+    if (![menuItems[0] isEnabled]) {
+        menuItems.forEach(function (menuItem) { [menuItem doSetEnabled:YES]; });
+        var items = [outlineView selectedItems];
+        if (items.length == 1 && items[0] === manager)
+            [plusButton setEnabled:YES];
+    }
     [outlineView reloadItem:manager reloadChildren:YES];
     [outlineView load];
-    if (manager !== envManager)
+    if (keyPath != "envs")
         return;
     [[evalMenu, @selector(openEval:)], [previewMenu, @selector(openPreview:)]].forEach(
         function (pair) {

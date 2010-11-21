@@ -3,9 +3,11 @@
 @implementation CPMenuItem (Utils)
 
 // FIXME: Dirty hack
-- (void)doSetEnabled:(BOOL)isEnabled // public
+- (void)doSetEnabled:(BOOL)flag // public
 {
-    if (isEnabled) {
+    if (_isEnabled == !!flag)
+        return;
+    if (flag) {
         _isEnabled = YES;
         [_menuItemView highlight:YES];
         [_menuItemView highlight:NO];

@@ -20,7 +20,6 @@ var DragType = "WorkspaceDragType";
         bufferManager = aBufferManager;
         [app addObserver:self forKeyPath:"buffers"];
         [app addObserver:self forKeyPath:"bufferIndex"];
-        [bufferManager addChangeObserver:self selector:@selector(didBuffersChange)];
         var scrollView = [[CPScrollView alloc] initWithFrame:[superview bounds]];
         [scrollView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
         [scrollView setHasHorizontalScroller:NO];
@@ -56,11 +55,14 @@ var DragType = "WorkspaceDragType";
 {
     switch (keyPath) {
     case "buffers":
-        [app removeObserver:self forKeyPath:keyPath];
-        [spinnerImageView removeFromSuperview];
-        [tableView setDataSource:self];
-        [tableView setDelegate:self];
-        [tableView setHidden:NO];
+        if ([tableView isHidden]) {
+            [spinnerImageView removeFromSuperview];
+            [tableView setDataSource:self];
+            [tableView setDelegate:self];
+            [tableView setHidden:NO];
+        } else {
+            [tableView reloadData];
+        }
         break;
     case "bufferIndex":
         [tableView scrollRectToVisible:[tableView frameOfDataViewAtColumn:0 row:app.bufferIndex]];
@@ -109,11 +111,6 @@ writeRowsWithIndexes:(CPIndexSet)rowIndexes
 - (void)tableViewSelectionDidChange:(id)sender // private
 {
     [app setBufferIndex:[tableView selectedRow]];
-}
-
-- (void)didBuffersChange // private
-{
-    [tableView reloadData];
 }
 
 - (void)switchToEdit // public

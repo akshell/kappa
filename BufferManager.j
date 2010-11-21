@@ -54,12 +54,12 @@
 
 - (id)initWithApp:(App)anApp // public
 {
-    if (self = [super initWithApp:anApp]) {
+    if (self = [super initWithApp:anApp keyName:"buffers"]) {
         lastVisitTag = 0;
         savePanelController = [[SavePanelController alloc] initWithTarget:self
                                                                saveAction:@selector(saveAndCloseBuffer)
                                                            dontSaveAction:@selector(doCloseBuffer)];
-        ["code", "envs", "libs", "buffers", "buffer"].forEach(function (keyPath) { [app addObserver:self forKeyPath:keyPath]; });
+        ["code", "envs", "libs"].forEach(function (keyPath) { [app addObserver:self forKeyPath:keyPath]; });
     }
     return self;
 }
@@ -75,27 +75,30 @@
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
     switch (keyPath) {
+    case "code":
+    case "envs":
+    case "libs":
+        [app removeObserver:self forKeyPath:keyPath];
+        if (!(app.code && app.envs && app.libs))
+            return;
+        [app setupBuffers];
+        for (var i = 0; i < app.buffers.length; ++i) {
+            var buffer = app.buffers[i];
+            [self observeBuffer:buffer];
+            buffer.visitTag = -i;
+        }
+        [app addObserver:self forKeyPath:"buffer"];
+        // FALL THROUGH
+    case "buffer":
+        if (app.buffer)
+            app.buffer.visitTag = ++lastVisitTag;
+        break;
     case "name":
         [self notify];
         break;
     case "isModified":
         [app setNumberOfModifiedBuffers:app.numberOfModifiedBuffers + (object.isModified ? +1 : -1)];
         break;
-    case "buffers":
-        for (var i = 0; i < app.buffers.length; ++i) {
-            var buffer = app.buffers[i];
-            [self observeBuffer:buffer];
-            buffer.visitTag = -i;
-        }
-        break;
-    case "buffer":
-        if (app.buffer)
-            app.buffer.visitTag = ++lastVisitTag;
-        break;
-    default:
-        [app removeObserver:self forKeyPath:keyPath];
-        if (app.code && app.envs && app.libs)
-            [app setupBuffers];
     }
 }
 

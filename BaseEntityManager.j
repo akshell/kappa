@@ -4,8 +4,6 @@
 @import "HTTPRequest.j"
 @import "EntityDeleting.j"
 
-var NotificationName = "ManagerNotification";
-
 @implementation BaseEntityManager : BaseManager
 {
     BOOL isLoading;
@@ -13,9 +11,9 @@ var NotificationName = "ManagerNotification";
     SEL revealAction @accessors;
 }
 
-- (id)initWithApp:(App)anApp // public
+- (id)initWithApp:(App)anApp keyName:(CPString)aKeyName // public
 {
-    if (self = [super initWithApp:anApp]) {
+    if (self = [super initWithApp:anApp keyName:aKeyName]) {
         isLoading = YES;
         if ([self respondsToSelector:@selector(URL)]) {
             var request = [[HTTPRequest alloc] initWithMethod:"GET" URL:[self URL] target:self action:@selector(didReceiveRepr:)];
@@ -38,9 +36,8 @@ var NotificationName = "ManagerNotification";
 
 - (void)didReceiveRepr:(JSObject)repr // private
 {
-    [self processRepr:repr];
     isLoading = NO;
-    [self notify];
+    [self processRepr:repr];
 }
 
 - (void)didFailToReceiveRepr // private

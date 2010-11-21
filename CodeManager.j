@@ -162,7 +162,7 @@ var entryNameIsCorrect = function (name) {
 
 - (id)initWithApp:(App)anApp bufferManager:(BufferManager)aBufferManager// public
 {
-    if (self = [super initWithApp:anApp]) {
+    if (self = [super initWithApp:anApp keyName:"code"]) {
         bufferManager = aBufferManager;
         movePanelController = [[MovePanelController alloc] initWithTarget:self action:@selector(moveToPath:)];
         replacePanelController = [[ReplacePanelController alloc] initWithTarget:self

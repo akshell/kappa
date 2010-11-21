@@ -74,11 +74,10 @@ var libCode = {};
 
 - (id)initWithCodeManager:(CodeManager)aCodeManager // public
 {
-    if (self = [super initWithApp:aCodeManager.app]) {
+    if (self = [super initWithApp:aCodeManager.app keyName:"libs"]) {
         codeManager = aCodeManager;
-        useLibPanelController =
-            [[UseLibPanelController alloc] initWithTarget:self action:@selector(useLib:)];
-        [codeManager addChangeObserver:self selector:@selector(codeDidChange)];
+        useLibPanelController = [[UseLibPanelController alloc] initWithTarget:self action:@selector(useLib:)];
+        [app addObserver:self forKeyPath:"code"];
     }
     return self;
 }
@@ -108,35 +107,12 @@ var libCode = {};
     return !!app.libs;
 }
 
-- (void)codeDidChange // private
-{
-    var entry = [app.code childWithName:"manifest.json"];
-    if (entry === manifestFile && app.libs)
-        return;
-    [manifestFile removeObserver:self forKeyPath:"content"];
-    if ([entry isKindOfClass:File]) {
-        manifestFile = entry;
-        [manifestFile addObserver:self forKeyPath:"content"];
-        if (manifestFile.content === nil) {
-            [app loadFile:manifestFile];
-            isLoading = YES;
-            [self notify];
-        } else {
-            [self readManifest];
-        }
-    } else {
-        manifestFile = nil;
-        [self setLibs:[]];
-    }
-}
-
 - (void)setLibs:(CPArray)libs // private
 {
     isLoading = NO;
     if (app.libs)
         app.libs.forEach(function (lib) { [lib noteDeleted]; });
     [app setLibs:libs];
-    [self notify];
 }
 
 - (BOOL)manifestIsCorrect // private
@@ -151,8 +127,34 @@ var libCode = {};
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
-    if (keyPath == "content")
+    switch (keyPath) {
+    case "code":
+        var entry = [app.code childWithName:"manifest.json"];
+        if (entry === manifestFile && app.libs)
+            return;
+        [manifestFile removeObserver:self forKeyPath:"content"];
+        if ([entry isKindOfClass:File]) {
+            manifestFile = entry;
+            [manifestFile addObserver:self forKeyPath:"content"];
+            if (manifestFile.content === nil) {
+                // FIXME: Race! A request getting the content is sent before receiving a response to a request changing the code.
+                [app loadFile:manifestFile];
+                if (!isLoading) {
+                    isLoading = YES;
+                    [self notify];
+                }
+            } else {
+                [self readManifest];
+            }
+        } else {
+            manifestFile = nil;
+            [self setLibs:[]];
+        }
+        break;
+    case "content":
         [self readManifest];
+        break;
+    }
 }
 
 - (void)readManifest // private
