@@ -237,8 +237,8 @@ function setMenuItemsEnabled(menuItems, flag) {
     [helpMenu addItemWithTitle:"Reference" target:self action:@selector(openReference)];
     [helpMenu addItem:[CPMenuItem separatorItem]];
     [helpMenu addItemWithTitle:"Contact…" target:contactPanelController action:@selector(showWindow:)];
-    [helpMenu addItemWithTitle:"Blog"];
-    [helpMenu addItemWithTitle:"Twitter"];
+    [helpMenu addItemWithTitle:"Blog" target:self action:@selector(openBlog)];
+    [helpMenu addItemWithTitle:"Twitter" target:self action:@selector(openTwitter)];
     [[mainMenu addItemWithTitle:"Help"] setSubmenu:helpMenu];
 
     [akshellMenu, fileMenu, editMenu, goMenu, appMenu, helpMenu].forEach(
@@ -555,6 +555,16 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
 {
     if (![helpTabOpener switchToLastTab])
         [self openGettingStarted];
+}
+
+- (void)openBlog // private
+{
+    window.open("http://blog.akshell.com/");
+}
+
+- (void)openTwitter // private
+{
+    window.open("http://twitter.com/akshell_com/");
 }
 
 @end
