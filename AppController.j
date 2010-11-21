@@ -107,6 +107,10 @@ function setMenuItemsEnabled(menuItems, flag) {
     CPMenuItem saveMenuItem;
     CPMenuItem saveAllMenuItem;
     CPMenuItem actionsMenuItem;
+    CPMenuItem findMenuItem;
+    CPMenuItem findNextMenuItem;
+    CPMenuItem findPreviousMenuItem;
+    CPMenuItem goToLineMenuItem;
     CPMenuItem modeMenuItem;
     CPMenuItem editMenuItem;
     CPMenuItem evalMenuItem;
@@ -187,11 +191,14 @@ function setMenuItemsEnabled(menuItems, flag) {
     }
 
     var editMenu = [CPMenu new];
-    [editMenu addItemWithTitle:"Find…" target:nil action:nil keyEquivalent:"f"];
-    [editMenu addItemWithTitle:"Find Next" target:nil action:nil keyEquivalent:"g"];
-    [editMenu addItemWithTitle:"Find Previous" target:nil action:nil keyEquivalent:"G"];
+    findMenuItem = [editMenu addItemWithTitle:"Find…" target:nil action:nil keyEquivalent:"f"];
+    findNextMenuItem = [editMenu addItemWithTitle:"Find Next" target:nil action:nil keyEquivalent:"g"];
+    findPreviousMenuItem = [editMenu addItemWithTitle:"Find Previous" target:nil action:nil keyEquivalent:"G"];
     [editMenu addItem:[CPMenuItem separatorItem]];
-    [editMenu addItemWithTitle:"Go to Line…" target:nil action:nil keyEquivalent:"L"];
+    goToLineMenuItem = [editMenu addItemWithTitle:"Go to Line…"
+                                           target:presentationControllerProxy
+                                           action:@selector(showGoToLine)
+                                    keyEquivalent:"L"];
     [[mainMenu addItemWithTitle:"Edit"] setSubmenu:editMenu];
 
     var goMenu = [CPMenu new];
@@ -258,7 +265,7 @@ function setMenuItemsEnabled(menuItems, flag) {
     [
         "username", "apps", "app",
         "app.code", "app.envs", "app.libs", "app.buffers", "app.bufferIndex", "app.buffer",
-        "app.buffer.name", "app.buffer.isModified",
+        "app.buffer.name", "app.buffer.isModified", "app.buffer.isEditable",
         "app.numberOfModifiedBuffers"
     ].forEach(
         function (keyPath) {
@@ -389,6 +396,10 @@ function setMenuItemsEnabled(menuItems, flag) {
         var isModified = DATA.app && DATA.app.buffer && DATA.app.buffer.isModified;
         [toolbarItems["Save"] setEnabled:isModified];
         [saveMenuItem doSetEnabled:isModified];
+        break;
+    case "app.buffer.isEditable":
+        setMenuItemsEnabled([findMenuItem, findNextMenuItem, findPreviousMenuItem, goToLineMenuItem],
+                            DATA.app && DATA.app.buffer && DATA.app.buffer.isEditable);
         break;
     case "app.numberOfModifiedBuffers":
         var numberOfModifiedBuffers = DATA.app && DATA.app.numberOfModifiedBuffers;

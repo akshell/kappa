@@ -2,11 +2,13 @@
 
 @import "BasePresentationController.j"
 @import "EditorView.j"
+@import "GoToLinePanelController.j"
 
 @implementation BaseFileController : BasePresentationController
 {
     CPImageView spinnerImageView;
     EditorView editorView;
+    GoToLinePanelController goToLinePanelController;
 }
 
 - (id)initWithApp:(App)anApp buffer:(Buffer)aBuffer // public
@@ -45,6 +47,13 @@
     [editorView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
     [view addSubview:editorView];
     [self focus];
+    goToLinePanelController = [[GoToLinePanelController alloc] initWithTarget:editorView action:@selector(goToLine:)];
+    [buffer setEditable:YES];
+}
+
+- (void)showGoToLine // public
+{
+    [goToLinePanelController showWindow:nil];
 }
 
 @end

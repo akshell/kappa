@@ -177,6 +177,11 @@ var bufferSubclasses = {};
     return NO;
 }
 
+- (BOOL)isEditable // public
+{
+    return NO;
+}
+
 - (BOOL)isEqual:(id)other // public
 {
     if (self === other)
@@ -212,6 +217,25 @@ var bufferSubclasses = {};
 @end
 
 @implementation FileBuffer : Buffer
+{
+    BOOL isEditable @accessors(readonly);
+}
+
+- (id)init // public
+{
+    if (self = [super init])
+        isEditable = NO;
+    return self;
+}
+
+- (void)setEditable:(BOOL)flag // public
+{
+    if (isEditable == !!flag)
+        return;
+    isEditable = !!flag;
+    [self didChangeValueForKey:"isEditable"];
+}
+
 @end
 
 @implementation CodeFileBuffer : FileBuffer

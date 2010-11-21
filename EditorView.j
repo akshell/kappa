@@ -109,6 +109,11 @@
     editor.readOnly = wasReadOnly;
 }
 
+- (void)goToLine:(unsigned)lineNumber // public
+{
+    editor.setLineNumber(lineNumber);
+}
+
 - (void)setDelegate:(id)aDelegate // public
 {
     var defaultCenter = [CPNotificationCenter defaultCenter];
