@@ -132,4 +132,14 @@ writeRowsWithIndexes:(CPIndexSet)rowIndexes
     [bufferManager closeBuffer:app.buffer askToSave:YES];
 }
 
+- (void)switchToPreviousBuffer // public
+{
+    [app setBufferIndex:app.bufferIndex - 1];
+}
+
+- (void)switchToNextBuffer // public
+{
+    [app setBufferIndex:app.bufferIndex + 1];
+}
+
 @end

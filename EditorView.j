@@ -36,10 +36,11 @@
             doc.onkeydown = function (event) {
                 if (CPPlatformActionKeyMask == CPCommandKeyMask ? event.metaKey : event.ctrlKey) {
                     [[[self window] platformWindow] keyEvent:event];
-                    if (BoundKeys.indexOf(String.fromCharCode(event.keyCode).toLowerCase()) != -1) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
+                    if (BoundKeys.indexOf(String.fromCharCode(event.keyCode).toLowerCase()) != -1)
+                        return false;
+                } else if (event.altKey && (event.keyCode == 38 || event.keyCode == 40)) { // ↑ and ↓
+                    [[[self window] platformWindow] keyEvent:event];
+                    return false;
                 }
             };
             iframe.contentWindow.onBespinLoad = function () {

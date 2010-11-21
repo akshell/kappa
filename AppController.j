@@ -206,12 +206,16 @@ function setMenuItemsEnabled(menuItems, flag) {
                                                 action:@selector(switchToPreview)];
     [goMenu addItemWithTitle:"Switch to Help" target:self action:@selector(switchToHelp)];
     [goMenu addItem:[CPMenuItem separatorItem]];
-    [goMenu addItemWithTitle:"Back" target:nil action:nil keyEquivalent:"["];
-    [goMenu addItemWithTitle:"Forward" target:nil action:nil keyEquivalent:"]"];
-    [[goMenu addItemWithTitle:"Previous" target:nil action:nil keyEquivalent:"["]
-        setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
-    [[goMenu addItemWithTitle:"Next" target:nil action:nil keyEquivalent:"]"]
-        setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
+    previousMenuItem = [goMenu addItemWithTitle:"Previous"
+                                         target:workspaceControllerProxy
+                                         action:@selector(switchToPreviousBuffer)
+                                  keyEquivalent:"↑"];
+    [previousMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask];
+    nextMenuItem = [goMenu addItemWithTitle:"Next"
+                                     target:workspaceControllerProxy
+                                     action:@selector(switchToNextBuffer)
+                              keyEquivalent:"↓"];
+    [nextMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask];
     [goMenu addItem:[CPMenuItem separatorItem]];
     openEvalMenuItem = [goMenu addItemWithTitle:"Open Eval"];
     [openEvalMenuItem setSubmenu:[CPMenu new]];
@@ -253,7 +257,7 @@ function setMenuItemsEnabled(menuItems, flag) {
 
     [
         "username", "apps", "app",
-        "app.code", "app.envs", "app.libs", "app.buffers", "app.buffer",
+        "app.code", "app.envs", "app.libs", "app.buffers", "app.bufferIndex", "app.buffer",
         "app.buffer.name", "app.buffer.isModified",
         "app.numberOfModifiedBuffers"
     ].forEach(
@@ -336,6 +340,11 @@ function setMenuItemsEnabled(menuItems, flag) {
         var buffers = DATA.app && DATA.app.buffers;
         ["Edit", "Eval", "Git"].forEach(function (name) { [toolbarItems[name] setEnabled:buffers]; });
         setMenuItemsEnabled([editMenuItem, evalMenuItem, gitMenuItem, openEvalMenuItem], buffers);
+        // FALL THROUGH
+    case "app.bufferIndex":
+        var bufferIndex = DATA.app && DATA.app.bufferIndex;
+        [previousMenuItem doSetEnabled:bufferIndex];
+        [nextMenuItem doSetEnabled:bufferIndex !== nil && bufferIndex < DATA.app.buffers.length - 1];
         break;
     case "app.buffer":
         [toolbar reloadChangedToolbarItems];
