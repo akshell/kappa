@@ -6,7 +6,6 @@
 {
     App app;
     Buffer buffer;
-    CPView view @accessors(readonly);
 }
 
 - (id)initWithApp:(App)anApp buffer:(Buffer)aBuffer // public

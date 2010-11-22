@@ -39,7 +39,7 @@ var fileContents = {};
 {
     [buffer setProcessing:NO];
     fileContents[url] = content;
-    [self createEditorView];
+    [self setupEditor];
 }
 
 @end

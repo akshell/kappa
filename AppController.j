@@ -71,7 +71,7 @@
 
 @end
 
-BoundKeys = ["[", "]", "n", "s", "w"];
+BoundKeys = ["[", "]", "f", "g", "n", "s", "w"];
 var DocsURL = "/docs/0.3/";
 
 function setMenuItemsEnabled(menuItems, flag) {
@@ -191,9 +191,18 @@ function setMenuItemsEnabled(menuItems, flag) {
     }
 
     var editMenu = [CPMenu new];
-    findMenuItem = [editMenu addItemWithTitle:"Find…" target:nil action:nil keyEquivalent:"f"];
-    findNextMenuItem = [editMenu addItemWithTitle:"Find Next" target:nil action:nil keyEquivalent:"g"];
-    findPreviousMenuItem = [editMenu addItemWithTitle:"Find Previous" target:nil action:nil keyEquivalent:"G"];
+    findMenuItem = [editMenu addItemWithTitle:"Find…"
+                                       target:presentationControllerProxy
+                                       action:@selector(showFind)
+                                keyEquivalent:"f"];
+    findNextMenuItem = [editMenu addItemWithTitle:"Find Next"
+                                           target:presentationControllerProxy
+                                           action:@selector(findNext)
+                                    keyEquivalent:"g"];
+    findPreviousMenuItem = [editMenu addItemWithTitle:"Find Previous"
+                                               target:presentationControllerProxy
+                                               action:@selector(findPrevious)
+                                        keyEquivalent:"G"];
     [editMenu addItem:[CPMenuItem separatorItem]];
     goToLineMenuItem = [editMenu addItemWithTitle:"Go to Line…"
                                            target:presentationControllerProxy

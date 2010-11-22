@@ -38,7 +38,8 @@
                     [[[self window] platformWindow] keyEvent:event];
                     if (BoundKeys.indexOf(String.fromCharCode(event.keyCode).toLowerCase()) != -1)
                         return false;
-                } else if (event.altKey && (event.keyCode == 38 || event.keyCode == 40)) { // ↑ and ↓
+                } else if (event.keyCode == 27 || (event.altKey && (event.keyCode == 38 || event.keyCode == 40))) {
+                    // Esc, Alt-↑, and Alt-↓
                     [[[self window] platformWindow] keyEvent:event];
                     return false;
                 }
@@ -109,9 +110,30 @@
     editor.readOnly = wasReadOnly;
 }
 
-- (void)goToLine:(unsigned)lineNumber // public
+- (void)setLineNumber:(unsigned)lineNumber // public
 {
     editor.setLineNumber(lineNumber);
+}
+
+- (void)setSearchString:(CPString)searchString // public
+{
+    editor.searchController.setSearchText(searchString, NO);
+}
+
+- (void)selectRange:(JSObject)range // private
+{
+    if (range)
+        editor.textView.setSelection(range, YES);
+}
+
+- (void)findNext // public
+{
+    [self selectRange:editor.searchController.findNext(editor.selection.end, YES)];
+}
+
+- (void)findPrevious // public
+{
+    [self selectRange:editor.searchController.findPrevious(editor.selection.start, YES)];
 }
 
 - (void)setDelegate:(id)aDelegate // public

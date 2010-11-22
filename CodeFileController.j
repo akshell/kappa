@@ -34,8 +34,8 @@
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
     [buffer setProcessing:NO];
-    if (!editorView)
-        [self createEditorView];
+    if (!buffer.isEditable)
+        [self setupEditor];
 }
 
 - (void)controlTextDidChange:(id)sender // private
