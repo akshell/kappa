@@ -6,12 +6,12 @@ var fileContents = {};
 
 @implementation LibFileController : BaseFileController
 {
-    CPString url;
+    CPString fileURL @accessors(readonly);
 }
 
 - (id)initWithApp:(App)anApp buffer:(Buffer)aBuffer // public
 {
-    url = [aBuffer.lib URL] + aBuffer.path;
+    fileURL = [aBuffer.lib URL] + aBuffer.path;
     return [super initWithApp:anApp buffer:aBuffer];
 }
 
@@ -27,18 +27,18 @@ var fileContents = {};
 
 - (CPString)fileContent // protected
 {
-    return fileContents.hasOwnProperty(url) ? fileContents[url] : nil;
+    return fileContents.hasOwnProperty(fileURL) ? fileContents[fileURL] : nil;
 }
 
 - (void)load // protected
 {
-    [[[HTTPRequest alloc] initWithMethod:"GET" URL:url target:self action:@selector(didLoadContent:)] send];
+    [[[HTTPRequest alloc] initWithMethod:"GET" URL:fileURL target:self action:@selector(didLoadContent:)] send];
 }
 
 - (void)didLoadContent:(CPString)content // private
 {
     [buffer setProcessing:NO];
-    fileContents[url] = content;
+    fileContents[fileURL] = content;
     [self setupEditor];
 }
 

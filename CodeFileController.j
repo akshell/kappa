@@ -21,6 +21,11 @@
     return buffer.file.name;
 }
 
+- (CPString)fileURL // protected
+{
+    return [app URL] + "code/" + [buffer.file path];
+}
+
 - (CPString)fileContent // protected
 {
     return buffer.file.content;

@@ -12,15 +12,27 @@
     CPSearchField searchField;
     CPSegmentedControl segmentedControl;
     EditorView editorView;
+    CPScrollView scrollView;
+    CPImageView imageView;
+    CPImage image;
     CPImageView spinnerImageView;
 }
 
 - (id)initWithApp:(App)anApp buffer:(Buffer)aBuffer // public
 {
-    if (self = [super initWithApp:anApp buffer:aBuffer]) {
-        goToLinePanelController = [[GoToLinePanelController alloc] initWithTarget:self action:@selector(goToLine:)];
+    self = [super initWithApp:anApp buffer:aBuffer];
 
-        view = [CPView new];
+    if (!self)
+        return self;
+
+    view = [CPView new];
+
+    var fileName = [self fileName];
+    var dotIndex = fileName.lastIndexOf(".");
+    var extension = dotIndex == -1 ? "" : fileName.substring(dotIndex + 1).toLowerCase();
+
+    if (["jpg", "jpeg", "gif", "png", "bmp"].indexOf(extension) == -1) {
+        goToLinePanelController = [[GoToLinePanelController alloc] initWithTarget:self action:@selector(goToLine:)];
 
         searchView = [CPView new];
         [searchView setAutoresizingMask:CPViewWidthSizable];
@@ -50,25 +62,40 @@
         [segmentedControl setWidth:31 forSegment:1];
         [searchView addSubview:segmentedControl];
 
-        var fileName = [self fileName];
-        var dotIndex = fileName.lastIndexOf(".");
-        var syntax = dotIndex == -1 ? "plain" : fileName.substring(dotIndex + 1);
-        editorView = [[EditorView alloc] initWithFrame:CGRectMakeZero() syntax:syntax readOnly:[self isReadOnly]];
+        editorView = [[EditorView alloc] initWithFrame:CGRectMakeZero() syntax:extension readOnly:[self isReadOnly]];
         [editorView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
         [editorView setDelegate:self];
 
-        if ([self fileContent] === nil) {
-            spinnerImageView = [[CPImageView alloc] initWithFrame:[view bounds]];
-            [spinnerImageView setImage:[CPImage imageFromPath:"WhiteSpinner32.gif"]];
-            [spinnerImageView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
-            [spinnerImageView setImageScaling:CPScaleNone];
-            [view addSubview:spinnerImageView];
-            [buffer setProcessing:YES];
-            [self load];
-        } else {
+        if ([self fileContent] !== nil) {
             [self setupEditor];
+            return self;
         }
+
+        [self load];
+    } else {
+        scrollView = [[CPScrollView alloc] initWithFrame:CGRectMakeZero()];
+        [scrollView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
+        [scrollView setAutohidesScrollers:YES];
+        [scrollView setPostsFrameChangedNotifications:YES];
+        [[CPNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(resizeImageView)
+                                                     name:CPViewFrameDidChangeNotification
+                                                   object:scrollView];
+        imageView = [[CPImageView alloc] initWithFrame:CGRectMakeZero()];
+        [imageView setImageScaling:CPScaleNone];
+        image = [[CPImage alloc] initWithContentsOfFile:[self fileURL]];
+        [image setDelegate:self];
+        [imageView setImage:image];
+        [scrollView setDocumentView:imageView];
     }
+
+    spinnerImageView = [[CPImageView alloc] initWithFrame:[view bounds]];
+    [spinnerImageView setImage:[CPImage imageFromPath:"WhiteSpinner32.gif"]];
+    [spinnerImageView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
+    [spinnerImageView setImageScaling:CPScaleNone];
+    [view addSubview:spinnerImageView];
+    [buffer setProcessing:YES];
+
     return self;
 }
 
@@ -139,6 +166,23 @@
 - (void)findPrevious // public
 {
     [editorView findPrevious];
+}
+
+- (void)imageDidLoad:(CPImage)anImage // private
+{
+    [buffer setProcessing:NO];
+    [spinnerImageView removeFromSuperview];
+    [scrollView setFrame:[view bounds]];
+    [view addSubview:scrollView];
+}
+
+- (void)resizeImageView // private
+{
+    var imageSize = [image size];
+    var boundsSize = [scrollView boundsSize];
+    var scrollerWidth = [CPScroller scrollerWidth];
+    [imageView setFrameSize:CGSizeMake(MAX(imageSize.width, boundsSize.width - scrollerWidth),
+                                       MAX(imageSize.height, boundsSize.height - scrollerWidth))];
 }
 
 @end
