@@ -4,6 +4,7 @@
 @import "BufferManager.j"
 @import "MovePanelController.j"
 @import "ReplacePanelController.j"
+@import "Alert.j"
 
 var getDuplicatePrefix = function (base) {
     if (base.substring(base.length - 5) == " copy")
@@ -258,7 +259,7 @@ var entryNameIsCorrect = function (name) {
 - (void)didCreateItem:(Entry)entry // protected
 {
     [super didCreateItem:entry];
-    if ([entry isKindOfClass:File])
+    if ([entry isKindOfClass:File] && entry.content !== nil)
         [bufferManager openBuffer:[[CodeFileBuffer alloc] initWithFile:entry]];
 }
 
@@ -441,6 +442,31 @@ var entryNameIsCorrect = function (name) {
 {
     entries.forEach(function (entry) { delete entry.isLoading; });
     [self notify];
+}
+
+- (void)uploadDOMFile:(DOMFile)domFile toFolder:(Folder)folder // public
+{
+    for (var i = 0; i < folder.files.length; ++i) {
+        var neighbour = folder.files[i];
+        if (neighbour.name > domFile.name)
+            break;
+        if (neighbour.name == domFile.name) {
+            [[[Alert alloc] initWithMessage:"The entry \"" + domFile.name + "\" already exists."
+                                    comment:"Please rename or delete it before upload."]
+                showPanel];
+            return;
+        }
+    }
+    var file = [[File alloc] initWithName:domFile.name parentFolder:folder];
+    folder.files.splice(i, 0, file);
+    file.isLoading = YES;
+    [self notify];
+    [self requestWithMethod:"PUT"
+                        URL:[self URL] + [file path]
+                       data:domFile
+                   selector:@selector(didCreateItem:)
+              errorSelector:@selector(didFailToCreateItem:)
+                       args:[file]];
 }
 
 @end

@@ -36,6 +36,8 @@
 
 @end
 
+DOMFile = File;
+
 @implementation File : Entry
 {
     CPString content @accessors;

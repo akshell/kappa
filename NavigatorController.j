@@ -74,6 +74,7 @@ var DragType = "NavigatorDragType";
         newFileMenuItem = [actionButtonMenu addItemWithTitle:"New File" target:self action:@selector(showNewFile)];
         newFolderMenuItem = [actionButtonMenu addItemWithTitle:"New Folder" target:self action:@selector(showNewFolder)];
         uploadFileMenuItem = [actionButtonMenu addItemWithTitle:"Upload File…"];
+        [uploadFileMenuItem setUploadTarget:self action:@selector(uploadDOMFile:)];
         newEnvMenuItem = [actionButtonMenu addItemWithTitle:"New Environment" target:self action:@selector(showNewEnv)];
         useLibMenuItem = [actionButtonMenu addItemWithTitle:"Use Library…" target:self action:@selector(showUseLib)];
         [actionButtonMenu addItem:[CPMenuItem separatorItem]];
@@ -320,6 +321,22 @@ var DragType = "NavigatorDragType";
     [outlineView expandItem:parentItem];
     [outlineView load];
     [outlineView expandItem:objj_msgSend(codeManager, selector, parentFolder)];
+}
+
+- (void)uploadDOMFile:(DOMFile)domFile // public
+{
+    var selectedItem = [outlineView selectedItem];
+    var folder;
+    if ([selectedItem isKindOfClass:File]) {
+        folder = selectedItem.parentFolder;
+    } else if ([selectedItem isKindOfClass:Folder]) {
+        folder = selectedItem;
+        [outlineView expandItem:selectedItem];
+    } else {
+        folder = app.code;
+        [outlineView expandItem:codeManager];
+    }
+    [codeManager uploadDOMFile:domFile toFolder:folder];
 }
 
 - (void)showNewEnv // public

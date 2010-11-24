@@ -170,6 +170,7 @@ function setMenuItemsEnabled(menuItems, flag) {
     [openAppMenuItem setSubmenu:appsMenu];
     [fileMenu addItem:[CPMenuItem separatorItem]];
     uploadFileMenuItem = [fileMenu addItemWithTitle:"Upload File…"];
+    [uploadFileMenuItem setUploadTarget:navigatorControllerProxy action:@selector(uploadDOMFile:)];
     [fileMenu addItem:[CPMenuItem separatorItem]];
     closeMenuItem = [fileMenu addItemWithTitle:"Close"
                                         target:workspaceControllerProxy
