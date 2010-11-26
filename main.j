@@ -14,8 +14,6 @@
 @import "CPImage.j"
 @import "CPToolbar.j"
 
-DATA = [Data new];
-
 window.onbeforeunload = function () {
     if (document.cookie) {
         var request = new XMLHttpRequest();

@@ -404,6 +404,7 @@ var bufferSubclasses = {};
 
 @implementation App : Entity
 {
+    BOOL isPublic @accessors;
     JSObject oldArchive;
     Folder code @accessors;
     CPArray envs @accessors;
@@ -414,16 +415,18 @@ var bufferSubclasses = {};
     unsigned numberOfModifiedBuffers @accessors;
 }
 
-- (id)initWithName:(CPString)aName archive:(JSObject)archive // public
+- (id)initWithName:(CPString)aName isPublic:(BOOL)flag archive:(JSObject)archive // public
 {
-    if (self = [super initWithName:aName])
+    if (self = [super initWithName:aName]) {
+        isPublic = flag;
         oldArchive = archive;
+    }
     return self;
 }
 
 - (id)initWithName:(CPString)aName // public
 {
-    return [self initWithName:aName archive:{}];
+    return [self initWithName:aName isPublic:NO archive:{}];
 }
 
 - (CPString)URL // public
@@ -492,28 +495,23 @@ var bufferSubclasses = {};
 {
     CPString username @accessors;
     CPString email @accessors;
-    CPArray apps;
+    CPArray apps @accessors; // private setter
     unsigned appIndex;
     App app @accessors; // private setter
 }
 
-- (id)init // public
+- (void)loadFromBasis:(JSObject)basis // public
 {
-    if (self = [super init]) {
-        username = window.USERNAME;
-        email = window.EMAIL;
-        [self setAppNames:window.APP_NAMES || [] config:window.CONFIG || {}];
-    }
-    return self;
-}
-
-- (void)setAppNames:(CPArray)appNames config:(JSObject)config // public
-{
-    [self willChangeValueForKey:"apps"];
-    var appsArchive = config.apps || {};
-    apps = appNames.map(function (name) { return [[App alloc] initWithName:name archive:appsArchive[name] || {}]; });
-    [self setAppIndex:config.appIndex && apps.length ? MIN(config.appIndex, apps.length - 1) : 0];
-    [self didChangeValueForKey:"apps"];
+    [self setUsername:basis.username];
+    [self setEmail:basis.email];
+    var appsArchive = basis.config.apps || {};
+    [self setApps:basis.appNames.map(
+            function (name) {
+                return [[App alloc] initWithName:name
+                                        isPublic:basis.libNames.indexOf(name) != -1
+                                         archive:appsArchive[name] || {}];
+            })];
+    [self setAppIndex:basis.config.appIndex && apps.length ? MIN(basis.config.appIndex, apps.length - 1) : 0];
 }
 
 - (void)setAppIndex:(unsigned)anAppIndex // public
@@ -531,3 +529,6 @@ var bufferSubclasses = {};
 }
 
 @end
+
+DATA = [Data new];
+[DATA loadFromBasis:window.BASIS];

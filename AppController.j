@@ -501,7 +501,7 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
 {
     [DATA setUsername:""];
     [DATA setEmail:""];
-    [DATA setAppNames:["hello-world"] config:{}];
+    [DATA loadFromBasis:{username: "", email: "", appNames: ["hello-world"], libNames: [], config: {}}];
 }
 
 - (void)switchApp:(CPMenuItem)sender // private

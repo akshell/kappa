@@ -41,14 +41,12 @@
 - (@action)submit:(id)sender // private
 {
     var username = [nameField stringValue];
-    [self requestWithMethod:"POST" URL:"/login" data:{name: username, password: [passwordField stringValue]} context:username];
+    [self requestWithMethod:"POST" URL:"/login" data:{name: username, password: [passwordField stringValue]}];
 }
 
-- (void)didReceiveResponse:(JSObject)data withContext:(CPString)username // protected
+- (void)didReceiveResponse:(JSObject)basis // protected
 {
-    [DATA setUsername:username];
-    [DATA setEmail:data.email];
-    [DATA setAppNames:data.appNames config:data.config];
+    [DATA loadFromBasis:basis];
 }
 
 - (@action)resetPassword:(id)sender // private
