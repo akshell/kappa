@@ -66,16 +66,16 @@
 
 - (void)send:(JSObject)data // public
 {
-    if (data && typeof(data) != "string" && !(data instanceof DOMFile)) {
+    if (data !== nil && typeof(data) != "string" && !(data instanceof DOMFile)) {
         [self setValue:"application/json" forHeader:"Content-Type"];
         data = JSON.stringify(data);
     }
-    request.send(data || null);
+    request.send(data || nil);
 }
 
 - (void)send // public
 {
-    request.send(null);
+    request.send(nil);
 }
 
 @end

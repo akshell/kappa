@@ -429,6 +429,12 @@ var bufferSubclasses = {};
     return [self initWithName:aName isPublic:NO archive:{}];
 }
 
+- (void)setPublic:(BOOL)flag // public
+{
+    isPublic = !!flag;
+    [self didChangeValueForKey:"isPublic"];
+}
+
 - (CPString)URL // public
 {
     return "/apps/" + name + "/";

@@ -246,7 +246,7 @@ function setMenuItemsEnabled(menuItems, flag) {
     [appMenu addItemWithTitle:"Commit…" target:nil action:nil keyEquivalent:"C"];
     [appMenu addItem:[CPMenuItem separatorItem]];
     manageDomainsMenuItem = [appMenu addItemWithTitle:"Manage Domains…"];
-    publishAppMenuItem = [appMenu addItemWithTitle:"Publish App…"];
+    publishAppMenuItem = [appMenu addItemWithTitle:"" target:self action:nil];
     deleteAppMenuItem = [appMenu addItemWithTitle:"Delete App…" target:self action:@selector(showDeleteApp)];
     [[mainMenu addItemWithTitle:"App"] setSubmenu:appMenu];
 
@@ -272,7 +272,7 @@ function setMenuItemsEnabled(menuItems, flag) {
 
     [
         "username", "apps", "app",
-        "app.code", "app.envs", "app.libs", "app.buffers", "app.bufferIndex", "app.buffer",
+        "app.isPublic", "app.code", "app.envs", "app.libs", "app.buffers", "app.bufferIndex", "app.buffer",
         "app.buffer.name", "app.buffer.isModified", "app.buffer.isEditable",
         "app.numberOfModifiedBuffers"
     ].forEach(
@@ -334,6 +334,15 @@ function setMenuItemsEnabled(menuItems, flag) {
             [openAppMenuItem, actionsMenuItem, modeMenuItem, manageDomainsMenuItem, deleteAppMenuItem, publishAppMenuItem],
             DATA.app);
         [toolbarItems["App"] setEnabled:DATA.app]
+        break;
+    case "app.isPublic":
+        if (DATA.app && DATA.app.isPublic) {
+            [publishAppMenuItem setTitle:"Unpublish App…"];
+            [publishAppMenuItem setAction:@selector(showUnpublishApp)];
+        } else {
+            [publishAppMenuItem setTitle:"Publish App…"];
+            [publishAppMenuItem setAction:@selector(showPublishApp)];
+        }
         break;
     case "app.code":
         var code = DATA.app && DATA.app.code
@@ -565,6 +574,51 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
 - (void)saveAll // private
 {
     DATA.app.buffers.forEach(function (buffer) { [buffer.presentationController save]; });
+}
+
+- (void)showPublishApp // private
+{
+    if (DATA.username) {
+        [self doShowPublishApp];
+    } else {
+        [signupPanelController setTarget:self];
+        [signupPanelController setAction:@selector(doShowPublishApp)];
+        [signupPanelController showWindow:nil];
+    }
+}
+
+- (void)doShowPublishApp // private
+{
+    [[[Confirm alloc] initWithMessage:"Are you sure you want to publish the app \"" + DATA.app.name + "\"?"
+                              comment:"Its code will be available to all Akshell developers."
+                               target:self
+                               action:@selector(publishApp)]
+        showPanel];
+}
+
+- (void)publishApp // private
+{
+    [self makeAppPublic:YES];
+}
+
+- (void)showUnpublishApp // private
+{
+    [[[Confirm alloc] initWithMessage:"Are you sure you want to unpublish the app \"" + DATA.app.name + "\"?"
+                              comment:"Other developers will no longer be able to use is as a library."
+                               target:self
+                               action:@selector(unpublishApp)]
+        showPanel];
+}
+
+- (void)unpublishApp // private
+{
+    [self makeAppPublic:NO];
+}
+
+- (void)makeAppPublic:(BOOL)flag // private
+{
+    [DATA.app setPublic:flag];
+    [[[HTTPRequest alloc] initWithMethod:"PUT" URL:[DATA.app URL] + "public"] send:flag];
 }
 
 - (void)openGettingStarted // private

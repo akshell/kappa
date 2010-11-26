@@ -4,6 +4,8 @@
 
 @implementation SignupPanelController : RequestPanelController
 {
+    id target @accessors;
+    SEL action @accessors;
     @outlet CPTextField nameLabel;
     @outlet CPTextField nameField;
     @outlet CPTextField emailLabel;
@@ -68,8 +70,14 @@
 
 - (void)didReceiveResponse:(JSObject)data withContext:context // protected
 {
+    objj_msgSend(target, action);
     [DATA setUsername:context.name];
     [DATA setEmail:context.email];
+}
+
+- (void)windowWillClose:(id)sender // private
+{
+    target = action = nil;
 }
 
 @end
