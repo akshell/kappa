@@ -492,13 +492,16 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
     var image = [CPImage imageFromPath:"GraySpinner16.gif"];
     [image setSize:CGSizeMake(16, 16)];
     [logoutMenuItem setImage:image];
+    [[[HTTPRequest alloc] initWithMethod:"PUT" URL:"/config" target:self action:@selector(doLogOut)] send:[DATA archive]];
+}
+
+- (void)doLogOut // private
+{
     [[[HTTPRequest alloc] initWithMethod:"POST" URL:"/logout" target:self action:@selector(didLogOut)] send];
 }
 
 - (void)didLogOut // private
 {
-    [DATA setUsername:""];
-    [DATA setEmail:""];
     [DATA loadFromBasis:{username: "", email: "", appNames: ["hello-world"], libNames: [], config: {}}];
 }
 
