@@ -96,7 +96,6 @@ function setMenuItemsEnabled(menuItems, flag) {
     NewAppPanelController newAppPanelController;
     TabOpener helpTabOpener;
     CPMenuItem passwordMenuItem;
-    CPMenuItem logOutMenuItem;
     CPMenu fileMenu;
     CPMenu appsMenu;
     CPMenuItem newFileMenuItem;
@@ -123,6 +122,7 @@ function setMenuItemsEnabled(menuItems, flag) {
     CPMenuItem manageDomainsMenuItem;
     CPMenuItem publishAppMenuItem;
     CPMenuItem deleteAppMenuItem;
+    CPMenuItem logoutMenuItem;
     CPPopUpButton appPopUpButton;
     JSObject toolbarItems;
     CPToolbar toolbar;
@@ -156,8 +156,6 @@ function setMenuItemsEnabled(menuItems, flag) {
     [akshellMenu addItem:[CPMenuItem separatorItem]];
     [akshellMenu addItemWithTitle:"SSH Public Key" target:keyPanelController action:@selector(showWindow:)];
     passwordMenuItem = [akshellMenu addItemWithTitle:"" target:nil action:@selector(showWindow:)];
-    [akshellMenu addItem:[CPMenuItem separatorItem]];
-    logOutMenuItem = [akshellMenu addItemWithTitle:"Log Out" target:self action:@selector(logOut)];
     [[mainMenu addItemWithTitle:"Akshell"] setSubmenu:akshellMenu];
 
     fileMenu = [CPMenu new];
@@ -290,13 +288,10 @@ function setMenuItemsEnabled(menuItems, flag) {
         var mainMenu = [CPApp mainMenu];
         for (var index = [mainMenu numberOfItems]; ![[mainMenu itemAtIndex:--index] isSeparatorItem];)
             [mainMenu removeItemAtIndex:index];
-        [logOutMenuItem doSetEnabled:DATA.username];
         if (DATA.username) {
             [passwordMenuItem setTitle:"Change Password…"];
             [passwordMenuItem setTarget:changePasswordPanelController];
-            var image = [CPImage imageFromPath:"User16.png"];
-            [image setSize:CGSizeMake(16, 16)];
-            [[mainMenu addItemWithTitle:DATA.username] setImage:image];
+            logoutMenuItem = [mainMenu addItemWithTitle:"Log Out (" + DATA.username + ")" target:self action:@selector(logOut)];
         } else {
             [passwordMenuItem setTitle:"Reset Password…"];
             [passwordMenuItem setTarget:resetPasswordPanelController];
@@ -494,6 +489,9 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
 
 - (void)logOut // private
 {
+    var image = [CPImage imageFromPath:"GraySpinner16.gif"];
+    [image setSize:CGSizeMake(16, 16)];
+    [logoutMenuItem setImage:image];
     [[[HTTPRequest alloc] initWithMethod:"POST" URL:"/logout" target:self action:@selector(didLogOut)] send];
 }
 
