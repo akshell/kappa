@@ -12,6 +12,7 @@
 @import "ChangePasswordPanelController.j"
 @import "ResetPasswordPanelController.j"
 @import "NewAppPanelController.j"
+@import "ManageDomainsPanelController.j"
 @import "ContactPanelController.j"
 @import "CodeFileController.j"
 @import "LibFileController.j"
@@ -92,8 +93,8 @@ function setMenuItemsEnabled(menuItems, flag) {
     ResetPasswordPanelController resetPasswordPanelController;
     SignupPanelController signupPanelController;
     LoginPanelController loginPanelController;
-    ContactPanelController contactPanelController;
     NewAppPanelController newAppPanelController;
+    ContactPanelController contactPanelController;
     TabOpener helpTabOpener;
     CPMenuItem passwordMenuItem;
     CPMenu fileMenu;
@@ -143,8 +144,8 @@ function setMenuItemsEnabled(menuItems, flag) {
     resetPasswordPanelController = [ResetPasswordPanelController new];
     signupPanelController = [SignupPanelController new];
     loginPanelController = [[LoginPanelController alloc] initWithResetPasswordPanelController:resetPasswordPanelController];
-    contactPanelController = [ContactPanelController new];
     newAppPanelController = [[NewAppPanelController alloc] initWithTarget:self action:@selector(didCreateAppWithName:)];
+    contactPanelController = [ContactPanelController new];
 
     helpTabOpener = [TabOpener new];
 
@@ -245,7 +246,7 @@ function setMenuItemsEnabled(menuItems, flag) {
     [appMenu addItemWithTitle:"Diff…" target:nil action:nil keyEquivalent:"D"];
     [appMenu addItemWithTitle:"Commit…" target:nil action:nil keyEquivalent:"C"];
     [appMenu addItem:[CPMenuItem separatorItem]];
-    manageDomainsMenuItem = [appMenu addItemWithTitle:"Manage Domains…"];
+    manageDomainsMenuItem = [appMenu addItemWithTitle:"Manage Domains…" target:self action:@selector(showManageDomains)];
     publishAppMenuItem = [appMenu addItemWithTitle:"" target:self action:nil];
     deleteAppMenuItem = [appMenu addItemWithTitle:"Delete App…" target:self action:@selector(showDeleteApp)];
     [[mainMenu addItemWithTitle:"App"] setSubmenu:appMenu];
@@ -619,6 +620,14 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
 {
     [DATA.app setPublic:flag];
     [[[HTTPRequest alloc] initWithMethod:"PUT" URL:[DATA.app URL] + "public"] send:flag];
+}
+
+- (void)showManageDomains // private
+{
+    if (!DATA.app.manageDomainsPanelController)
+        DATA.app.manageDomainsPanelController = [[ManageDomainsPanelController alloc] initWithApp:DATA.app
+                                                                            signupPanelController:signupPanelController];
+    return [DATA.app.manageDomainsPanelController showWindow:nil];
 }
 
 - (void)openGettingStarted // private
