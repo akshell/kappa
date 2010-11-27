@@ -42,6 +42,11 @@
     return self
 }
 
+- (CPTextField)textField // private
+{
+    return [self subviews][1];
+}
+
 - (void)setObjectValue:(id)item // public
 {
     if (!item)
@@ -49,7 +54,7 @@
     isLoading = item.isLoading;
     [[self subviews][0] setImage:[CPImage imageFromPath:isLoading ? "WhiteSpinner16.gif" : [item imageName] + "16.png"]];
     if (!item.isEditable) {
-        [[self subviews][1] setStringValue:[item name]];
+        [[self textField] setStringValue:[item name]];
         return;
     }
     // FIXME: There should be a better way of displaying fields in small space
@@ -75,15 +80,21 @@
 
 - (BOOL)setThemeState:(CPThemeState)state // protected
 {
-    if (state == CPThemeStateSelectedDataView && isLoading)
-        [[self subviews][0] setImage:[CPImage imageFromPath:"BlueSpinner16.gif"]];
+    if (state == CPThemeStateSelectedDataView) {
+        [[self textField] setTextColor:[CPColor whiteColor]];
+        if (isLoading)
+            [[self subviews][0] setImage:[CPImage imageFromPath:"BlueSpinner16.gif"]];
+    }
     return [super setThemeState:state];
 }
 
 - (BOOL)unsetThemeState:(CPThemeState)state // protected
 {
-    if (state == CPThemeStateSelectedDataView && isLoading)
-        [[self subviews][0] setImage:[CPImage imageFromPath:"WhiteSpinner16.gif"]];
+    if (state == CPThemeStateSelectedDataView) {
+        [[self textField] setTextColor:[CPColor blackColor]];
+        if (isLoading)
+            [[self subviews][0] setImage:[CPImage imageFromPath:"WhiteSpinner16.gif"]];
+    }
     return [super unsetThemeState:state];
 }
 

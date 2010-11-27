@@ -152,13 +152,18 @@ var BlueSpinnerImage;
     return [self subviews][2];
 }
 
+- (CPTextField)textField // private
+{
+    return [self subviews][3];
+}
+
 - (void)setObjectValue:(Buffer)aBuffer // public
 {
     [buffer removeObserver:self forKeyPath:"isModified"];
     [buffer removeObserver:self forKeyPath:"isProcessing"];
     buffer = aBuffer;
     [[self closeButton] setTarget:buffer];
-    [[self subviews][3] setStringValue:[buffer name]];
+    [[self textField] setStringValue:[buffer name]];
     [buffer addObserver:self forKeyPath:"isModified" options:CPKeyValueObservingOptionInitial];
     [buffer addObserver:self forKeyPath:"isProcessing" options:CPKeyValueObservingOptionInitial];
 }
@@ -182,6 +187,7 @@ var BlueSpinnerImage;
 {
     if (state == CPThemeStateSelectedDataView) {
         [[self closeButton] setSelected:YES];
+        [[self textField] setTextColor:[CPColor whiteColor]];
         if (buffer.isProcessing)
             [[self imageView] setImage:BlueSpinnerImage];
     }
@@ -192,6 +198,7 @@ var BlueSpinnerImage;
 {
     if (state == CPThemeStateSelectedDataView) {
         [[self closeButton] setSelected:NO];
+        [[self textField] setTextColor:[CPColor blackColor]];
         if (buffer.isProcessing)
             [[self imageView] setImage:WhiteSpinnerImage];
     }
