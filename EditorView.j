@@ -80,16 +80,15 @@
 - (void)refocus // private
 {
     var window = [self window];
-    if ([window firstResponder] === self) {
-        if (editor)
-            editor.focus = YES;
-        setTimeout(
-            function () {
-                if ([window isKeyWindow])
-                    iframe.focus();
-            },
-            0);
-    }
+    if (!(editor && [window isKeyWindow] && [window firstResponder] === self))
+        return;
+    editor.focus = YES;
+    setTimeout(
+        function () {
+            if ([window isKeyWindow])
+                iframe.focus();
+        },
+        0);
 }
 
 - (CPString)stringValue // public
