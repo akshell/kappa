@@ -38,8 +38,8 @@
                     [[[self window] platformWindow] keyEvent:event];
                     if (BoundKeys.indexOf(String.fromCharCode(event.keyCode).toLowerCase()) != -1)
                         return false;
-                } else if (event.keyCode == 27 || (event.altKey && (event.keyCode == 38 || event.keyCode == 40))) {
-                    // Esc, Alt-↑, and Alt-↓
+                } else if (event.keyCode == CPEscapeKeyCode ||
+                           (event.altKey && (event.keyCode == CPUpArrowKeyCode || event.keyCode == CPDownArrowKeyCode))) {
                     [[[self window] platformWindow] keyEvent:event];
                     return false;
                 }

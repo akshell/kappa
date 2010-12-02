@@ -16,6 +16,8 @@
 @import "ContactPanelController.j"
 @import "CodeFileController.j"
 @import "LibFileController.j"
+@import "EvalController.j"
+@import "GitController.j"
 
 @implementation FileBuffer (AppController)
 
@@ -53,7 +55,7 @@
 
 - (Class)presentationControllerClass // public
 {
-    return nil;
+    return GitController;
 }
 
 @end
@@ -67,7 +69,7 @@
 
 - (Class)presentationControllerClass // public
 {
-    return nil;
+    return EvalController;
 }
 
 @end
@@ -379,15 +381,9 @@ function setMenuItemsEnabled(menuItems, flag) {
         if (buffer) {
             if (!buffer.presentationController)
                 buffer.presentationController = [[[buffer presentationControllerClass] alloc] initWithApp:DATA.app buffer:buffer];
-            // TODO: When all presentation controllers are implemented, this condition should be removed
-            if (buffer.presentationController) {
-                [presentationMultiview showView:[buffer.presentationController view]];
-                [buffer.presentationController focus];
-                [toolbarItems["Save All"] setEnabled:DATA.app.numberOfModifiedBuffers];
-            } else {
-                [presentationMultiview showView:nil];
-                window.focus();
-            }
+            [presentationMultiview showView:[buffer.presentationController view]];
+            [buffer.presentationController focus];
+            [toolbarItems["Save All"] setEnabled:DATA.app.numberOfModifiedBuffers];
         } else {
             [presentationMultiview showView:nil];
             window.focus();

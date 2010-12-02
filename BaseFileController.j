@@ -1,20 +1,18 @@
 // (c) 2010 by Anton Korenyushkin
 
-@import "BasePresentationController.j"
+@import "SmartScrollView.j"
 @import "EditorView.j"
+@import "BasePresentationController.j"
 @import "GoToLinePanelController.j"
 
 @implementation BaseFileController : BasePresentationController
 {
     GoToLinePanelController goToLinePanelController;
-    CPView view @accessors(readonly);
     CPView searchView;
     CPSearchField searchField;
     CPSegmentedControl segmentedControl;
     EditorView editorView;
-    CPScrollView scrollView;
-    CPImageView imageView;
-    CPImage image;
+    SmartScrollView scrollView;
     CPImageView spinnerImageView;
 }
 
@@ -24,8 +22,6 @@
 
     if (!self)
         return self;
-
-    view = [CPView new];
 
     var fileName = [self fileName];
     var dotIndex = fileName.lastIndexOf(".");
@@ -73,20 +69,16 @@
 
         [self load];
     } else {
-        scrollView = [[CPScrollView alloc] initWithFrame:CGRectMakeZero()];
+        scrollView = [[SmartScrollView alloc] initWithFrame:CGRectMakeZero()];
         [scrollView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
         [scrollView setAutohidesScrollers:YES];
-        [scrollView setPostsFrameChangedNotifications:YES];
-        [[CPNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(resizeImageView)
-                                                     name:CPViewFrameDidChangeNotification
-                                                   object:scrollView];
-        imageView = [[CPImageView alloc] initWithFrame:CGRectMakeZero()];
+        var imageView = [[CPImageView alloc] initWithFrame:CGRectMakeZero()];
         [imageView setImageScaling:CPScaleNone];
-        image = [[CPImage alloc] initWithContentsOfFile:[self fileURL]];
+        var image = [[CPImage alloc] initWithContentsOfFile:[self fileURL]];
         [image setDelegate:self];
         [imageView setImage:image];
         [scrollView setDocumentView:imageView];
+        [view addSubview:scrollView];
     }
 
     spinnerImageView = [[CPImageView alloc] initWithFrame:[view bounds]];
@@ -101,7 +93,10 @@
 
 - (void)focus // public
 {
-    [[view window] makeFirstResponder:editorView];
+    if (editorView)
+        [[view window] makeFirstResponder:editorView];
+    else
+        window.focus();
 }
 
 - (void)setupEditor // private
@@ -168,21 +163,11 @@
     [editorView findPrevious];
 }
 
-- (void)imageDidLoad:(CPImage)anImage // private
+- (void)imageDidLoad:(CPImage)image // private
 {
     [buffer setProcessing:NO];
     [spinnerImageView removeFromSuperview];
-    [scrollView setFrame:[view bounds]];
-    [view addSubview:scrollView];
-}
-
-- (void)resizeImageView // private
-{
-    var imageSize = [image size];
-    var boundsSize = [scrollView boundsSize];
-    var scrollerWidth = [CPScroller scrollerWidth];
-    [imageView setFrameSize:CGSizeMake(MAX(imageSize.width, boundsSize.width - scrollerWidth),
-                                       MAX(imageSize.height, boundsSize.height - scrollerWidth))];
+    [scrollView setBaseSize:[image size]];
 }
 
 @end

@@ -42,7 +42,7 @@
     [contentView addSubview:imageView];
     var label = [[CPTextField alloc] initWithFrame:CGRectMake(80, 16, 222, 48)];
     [label setLineBreakMode:CPLineBreakByWordWrapping];
-    [label setFont:[CPFont boldSystemFontOfSize:12]];
+    [label setFont:BoldSystemFont];
     [label setStringValue:"An email containing confirmation URL has been sent."];
     [contentView addSubview:label];
     var button = [[CPButton alloc] initWithFrame:CGRectMake(234, 64, 64, 24)];

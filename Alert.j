@@ -1,8 +1,7 @@
 // (c) 2010 by Anton Korenyushkin
 
-var createLabel = function (text, y, isBold) {
-    var font = isBold ? [CPFont boldSystemFontOfSize:12] : [CPFont systemFontOfSize:12];
-    var label = [[CPTextField alloc] initWithFrame:CGRectMake(80, y, 190, [text sizeWithFont:font inWidth:188].height + 4)];
+var createLabel = function (text, y, font) {
+    var label = [[CPTextField alloc] initWithFrame:CGRectMake(80, y, 190, [text realSizeWithFont:font inWidth:190].height)];
     [label setFont:font];
     [label setLineBreakMode:CPLineBreakByWordWrapping];
     [label setStringValue:text];
@@ -53,10 +52,10 @@ var createLabel = function (text, y, isBold) {
 
 - (void)createPanelWithStyleMask:(unsigned)styleMask // protected
 {
-    var messageLabel = createLabel(message, 16, YES);
+    var messageLabel = createLabel(message, 16, BoldSystemFont);
     var commentLabel;
     if (comment)
-        commentLabel = createLabel(comment, CGRectGetMaxY([messageLabel frame]) + 8, NO);
+        commentLabel = createLabel(comment, CGRectGetMaxY([messageLabel frame]) + 8, SystemFont);
     var okButtonY = MAX(CGRectGetMaxY([commentLabel || messageLabel frame]), 64) + 16;
     var okButton = [[CPButton alloc] initWithFrame:CGRectMake(206, okButtonY, 60, 24)];
     [okButton setTitle:"OK"];

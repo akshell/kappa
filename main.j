@@ -13,6 +13,7 @@
 @import "CPOutlineView.j"
 @import "CPImage.j"
 @import "CPToolbar.j"
+@import "CPString.j"
 
 window.onbeforeunload = function () {
     if (document.cookie) {

@@ -23,7 +23,7 @@
         [contentView addSubview:imageView];
         messageLabel = [[CPTextField alloc] initWithFrame:CGRectMake(80, 16, 254, 40)];
         [messageLabel setLineBreakMode:CPLineBreakByWordWrapping];
-        [messageLabel setFont:[CPFont boldSystemFontOfSize:12]];
+        [messageLabel setFont:BoldSystemFont];
         [contentView addSubview:messageLabel];
         var commentLabel = [CPTextField labelWithTitle:"Your changes will be lost if you don't save them."];
         [commentLabel setFrameOrigin:CGPointMake(80, 56)];

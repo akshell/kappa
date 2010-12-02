@@ -6,6 +6,7 @@
 {
     App app;
     Buffer buffer;
+    CPView view @accessors(readonly);
 }
 
 - (id)initWithApp:(App)anApp buffer:(Buffer)aBuffer // public
@@ -13,6 +14,7 @@
     if (self = [super init]) {
         app = anApp;
         buffer = aBuffer;
+        view = [CPView new];
     }
     return self;
 }
