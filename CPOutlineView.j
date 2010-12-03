@@ -33,7 +33,7 @@
 
 - (void)showItem:(id)item // public
 {
-    [self scrollRectToVisible:[self frameOfDataViewAtColumn:0 row:[self rowForItem:item]]];
+    [self scrollRowToVisible:[self rowForItem:item]];
 }
 
 // XXX: Monkey patching cappuccino

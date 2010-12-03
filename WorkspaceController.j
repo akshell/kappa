@@ -65,7 +65,7 @@ var DragType = "WorkspaceDragType";
         }
         break;
     case "bufferIndex":
-        [tableView scrollRectToVisible:[tableView frameOfDataViewAtColumn:0 row:app.bufferIndex]];
+        [tableView scrollRowToVisible:app.bufferIndex];
         [tableView selectRowIndexes:[CPIndexSet indexSetWithIndex:app.bufferIndex] byExtendingSelection:NO];
         break;
     }
