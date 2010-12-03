@@ -16,14 +16,17 @@
     CPImageView spinnerImageView;
 }
 
-- (id)initWithApp:(App)anApp buffer:(Buffer)aBuffer // public
+- (id)initWithApp:(App)anApp
+           buffer:(Buffer)aBuffer
+         fileName:(CPString)fileName
+          fileURL:(CPString)fileURL
+         readOnly:(BOOL)readOnly // public
 {
     self = [super initWithApp:anApp buffer:aBuffer];
 
     if (!self)
         return self;
 
-    var fileName = [self fileName];
     var dotIndex = fileName.lastIndexOf(".");
     var extension = dotIndex == -1 ? "" : fileName.substring(dotIndex + 1).toLowerCase();
 
@@ -58,7 +61,7 @@
         [segmentedControl setWidth:31 forSegment:1];
         [searchView addSubview:segmentedControl];
 
-        editorView = [[EditorView alloc] initWithFrame:CGRectMakeZero() syntax:extension readOnly:[self isReadOnly]];
+        editorView = [[EditorView alloc] initWithFrame:CGRectMakeZero() syntax:extension readOnly:readOnly];
         [editorView setAutoresizingMask:CPViewWidthSizable | CPViewHeightSizable];
         [editorView setDelegate:self];
 
@@ -74,7 +77,7 @@
         [scrollView setAutohidesScrollers:YES];
         var imageView = [[CPImageView alloc] initWithFrame:CGRectMakeZero()];
         [imageView setImageScaling:CPScaleNone];
-        var image = [[CPImage alloc] initWithContentsOfFile:[self fileURL]];
+        var image = [[CPImage alloc] initWithContentsOfFile:fileURL];
         [image setDelegate:self];
         [imageView setImage:image];
         [scrollView setDocumentView:imageView];

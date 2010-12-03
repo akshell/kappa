@@ -6,23 +6,17 @@ var fileContents = {};
 
 @implementation LibFileController : BaseFileController
 {
-    CPString fileURL @accessors(readonly);
+    CPString fileURL;
 }
 
 - (id)initWithApp:(App)anApp buffer:(Buffer)aBuffer // public
 {
     fileURL = [aBuffer.lib URL] + aBuffer.path;
-    return [super initWithApp:anApp buffer:aBuffer];
-}
-
-- (BOOL)isReadOnly // protected
-{
-    return YES;
-}
-
-- (CPString)fileName // protected
-{
-    return buffer.path.substring(buffer.path.lastIndexOf("/"));
+    return [super initWithApp:anApp
+                       buffer:aBuffer
+                     fileName:aBuffer.path.substring(aBuffer.path.lastIndexOf("/"))
+                      fileURL:fileURL
+                     readOnly:YES];
 }
 
 - (CPString)fileContent // protected

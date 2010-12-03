@@ -6,24 +6,13 @@
 
 - (id)initWithApp:(App)anApp buffer:(Buffer)aBuffer // public
 {
-    if (self = [super initWithApp:anApp buffer:aBuffer])
+    if (self = [super initWithApp:anApp
+                           buffer:aBuffer
+                         fileName:aBuffer.file.name
+                          fileURL:[anApp URL] + "code/" + [aBuffer.file path]
+                         readOnly:NO])
         [buffer.file addObserver:self forKeyPath:"content"];
     return self;
-}
-
-- (BOOL)isReadOnly // protected
-{
-    return NO;
-}
-
-- (CPString)fileName // protected
-{
-    return buffer.file.name;
-}
-
-- (CPString)fileURL // protected
-{
-    return [app URL] + "code/" + [buffer.file path];
 }
 
 - (CPString)fileContent // protected
