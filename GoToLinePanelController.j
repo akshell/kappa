@@ -15,6 +15,7 @@
     if (self = [super initWithWindowCibName:"GoToLinePanel"]) {
         target = aTarget;
         action = anAction;
+        [DATA addObserver:self forKeyPath:"app.buffer"];
     }
     return self;
 }
@@ -23,6 +24,14 @@
 {
     [goButton setEnabled:NO];
     [goButton setKeyEquivalent:CPCarriageReturnCharacter];
+}
+
+- (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // protected
+{
+    if (keyPath == "app.buffer")
+        [self close];
+    else
+        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
 }
 
 - (void)controlTextDidChange:(id)sender // private

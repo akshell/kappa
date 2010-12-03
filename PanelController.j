@@ -9,6 +9,12 @@
     return self;
 }
 
+- (void)close // public
+{
+    // This function is smarter than the original: _window isn't created if it was nil.
+    [_window close];
+}
+
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // protected
 {
     if (keyPath == "username")
