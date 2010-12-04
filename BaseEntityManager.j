@@ -11,17 +11,16 @@
     SEL revealAction @accessors;
 }
 
-- (id)initWithApp:(App)anApp keyName:(CPString)aKeyName // public
+- (void)load // public
 {
-    if (self = [super initWithApp:anApp keyName:aKeyName]) {
-        isLoading = YES;
-        if ([self respondsToSelector:@selector(URL)]) {
-            var request = [[HTTPRequest alloc] initWithMethod:"GET" URL:[self URL] target:self action:@selector(didReceiveRepr:)];
-            [request setErrorAction:@selector(didFailToReceiveRepr)];
-            [request send];
-        }
-    }
-    return self;
+    isLoading = YES;
+    [[[HTTPRequest alloc] initWithMethod:"GET" URL:[self URL] target:self action:@selector(didReceiveRepr:)] send];
+}
+
+- (void)didReceiveRepr:(JSObject)repr // private
+{
+    isLoading = NO;
+    [self processRepr:repr];
 }
 
 - (BOOL)isExpandable // public
@@ -32,18 +31,6 @@
 - (void)revealItems:(CPArray)items // protected
 {
     objj_msgSend(revealTarget, revealAction, items);
-}
-
-- (void)didReceiveRepr:(JSObject)repr // private
-{
-    isLoading = NO;
-    [self processRepr:repr];
-}
-
-- (void)didFailToReceiveRepr // private
-{
-    isLoading = NO;
-    [self notify];
 }
 
 - (void)insertNewItem:(id)item // protected

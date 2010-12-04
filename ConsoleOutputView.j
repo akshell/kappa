@@ -27,7 +27,7 @@
 - (void)setAnswer:(CPString)answer isPositive:(BOOL)isPositive // public
 {
     [spinnerImageView removeFromSuperview];
-    var answerSize = [answer realSizeWithFont:MonospaceFont];
+    var answerSize = [answer || " " realSizeWithFont:MonospaceFont];
     var frameSize = [self frameSize];
     var answerLabel = [[CPTextField alloc] initWithFrame:CGRectMake(20, frameSize.height - 40,
                                                                     answerSize.width, answerSize.height)];

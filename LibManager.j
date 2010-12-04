@@ -75,6 +75,7 @@ var libCode = {};
 - (id)initWithCodeManager:(CodeManager)aCodeManager // public
 {
     if (self = [super initWithApp:aCodeManager.app keyName:"libs"]) {
+        isLoading = YES;
         codeManager = aCodeManager;
         useLibPanelController = [[UseLibPanelController alloc] initWithTarget:self action:@selector(useLib:)];
         [app addObserver:self forKeyPath:"code"];

@@ -3,6 +3,9 @@
 @import "BaseFileController.j"
 
 @implementation CodeFileController : BaseFileController
+{
+    BOOL isReloading;
+}
 
 - (id)initWithApp:(App)anApp buffer:(Buffer)aBuffer // public
 {
@@ -27,14 +30,26 @@
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
 {
-    [buffer setProcessing:NO];
-    if (!buffer.isEditable)
-        [self setupEditor];
+    if (buffer.file.content === nil) {
+        if (!buffer.isModified) {
+            isReloading = YES;
+            [app loadFile:buffer.file];
+        }
+    } else if (isReloading) {
+        [editorView setStringValue:buffer.file.content];
+    } else {
+        [buffer setProcessing:NO];
+        if (!buffer.isEditable)
+            [self setupEditor];
+    }
 }
 
 - (void)controlTextDidChange:(id)sender // private
 {
-    [buffer setModified:YES];
+    if (isReloading)
+        isReloading = NO;
+    else
+        [buffer setModified:YES];
 }
 
 - (void)save // public

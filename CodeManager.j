@@ -133,6 +133,52 @@ var getDuplicatePrefix = function (base) {
                                                                                          content:file.content]; })];
 }
 
+- (CPArray)entriesFromTree:(JSObject)tree
+                 withNames:(CPArray)names
+                oldEntries:(CPArray)oldEntries
+                entryClass:(Class)entryClass
+              initSelector:(SEL)initSelector
+              syncSelector:(SEL)syncSelector // private
+{
+    names.sort();
+    var newEntries = [];
+    var j = 0;
+    for (var i = 0; i < names.length; ++i) {
+        while (j < oldEntries.length && oldEntries[j].name < names[i])
+            [oldEntries[j++] noteDeleted];
+        var arg = tree[names[i]] || nil;
+        if (j < oldEntries.length && oldEntries[j].name == names[i]) {
+            objj_msgSend(oldEntries[j], syncSelector, arg);
+            newEntries.push(oldEntries[j++]);
+        } else {
+            newEntries.push(objj_msgSend([entryClass alloc], initSelector, names[i], self, arg));
+        }
+    }
+    while (j < oldEntries.length)
+        [oldEntries[j++] noteDeleted];
+    return newEntries;
+};
+
+- (void)syncWithTree:(JSObject)tree // public
+{
+    var folderNames = [];
+    var fileNames = [];
+    for (var childName in tree)
+        (tree[childName] ? folderNames : fileNames).push(childName);
+    folders = [self entriesFromTree:tree
+                          withNames:folderNames
+                         oldEntries:folders
+                         entryClass:Folder
+                       initSelector:@selector(initWithName:parentFolder:tree:)
+                       syncSelector:@selector(syncWithTree:)];
+    files = [self entriesFromTree:tree
+                        withNames:fileNames
+                       oldEntries:files
+                       entryClass:File
+                     initSelector:@selector(initWithName:parentFolder:content:)
+                     syncSelector:@selector(setContent:)];
+}
+
 @end
 
 var entryNameIsCorrect = function (name) {
@@ -169,6 +215,7 @@ var entryNameIsCorrect = function (name) {
         replacePanelController = [[ReplacePanelController alloc] initWithTarget:self
                                                                   replaceAction:@selector(moveReplacing)
                                                                      skipAction:@selector(moveSkipping)];
+        [self load];
     }
     return self;
 }
@@ -205,7 +252,12 @@ var entryNameIsCorrect = function (name) {
 
 - (void)processRepr:(JSObject)tree // protected
 {
-    [app setCode:[[Folder alloc] initWithTree:tree]];
+    if (app.code) {
+        [app.code syncWithTree:tree];
+        [self notify];
+    } else {
+        [app setCode:[[Folder alloc] initWithTree:tree]];
+    }
 }
 
 - (void)insertItem:(Entry)entry // protected

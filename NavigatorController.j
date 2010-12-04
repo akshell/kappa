@@ -425,4 +425,11 @@ var DragType = "NavigatorDragType";
         [previewTabOpener openURL:[app URLOfEnv:[app defaultEnv]]];
 }
 
+- (void)reloadCode // public
+{
+    [codeManager load];
+    [outlineView reloadItem:codeManager reloadChildren:NO];
+    [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];
+}
+
 @end

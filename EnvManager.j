@@ -34,7 +34,9 @@
 
 - (id)initWithApp:(App)anApp // public
 {
-    return [super initWithApp:anApp keyName:"envs"];
+    if (self = [super initWithApp:anApp keyName:"envs"])
+        [self load];
+    return self;
 }
 
 - (CPString)name // public
