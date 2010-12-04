@@ -122,6 +122,11 @@ writeRowsWithIndexes:(CPIndexSet)rowIndexes
         [bufferManager openNewBuffer:[[CodeFileBuffer alloc] initWithFile:entry]];
 }
 
+- (void)switchToCommit // public
+{
+    [bufferManager openBuffer:[CommitBuffer new]];
+}
+
 - (void)switchToGit // public
 {
     [bufferManager openBuffer:[GitBuffer new]];

@@ -193,6 +193,11 @@ var bufferSubclasses = {};
     return [self isEqualToSameClassBuffer:other];
 }
 
+- (BOOL)isEqualToSameClassBuffer:(Buffer)other // protected
+{
+    return YES;
+}
+
 + (void)registerSubclass:(Class)subclass withTypeName:(CPString)typeName // protected
 {
     bufferSubclasses[typeName] = subclass;
@@ -204,6 +209,15 @@ var bufferSubclasses = {};
     var archive = {type: [self class].typeName};
     [self archiveTo:archive];
     return archive;
+}
+
+- (void)archiveTo:(JSObject)archive // protected
+{
+}
+
+- (id)initWithApp:(App)app archive:(JSObject)archive // protected
+{
+    return [self init];
 }
 
 + (Buffer)bufferOfApp:(App)app fromArchive:(JSObject)archive // public
@@ -338,31 +352,6 @@ var bufferSubclasses = {};
 
 [Buffer registerSubclass:LibFileBuffer withTypeName:"lib file"];
 
-@implementation GitBuffer : Buffer
-
-- (CPString)name // public
-{
-    return "Git";
-}
-
-- (BOOL)isEqualToSameClassBuffer:(GitFileBuffer)other // protected
-{
-    return YES;
-}
-
-- (void)archiveTo:(JSObject)archive // protected
-{
-}
-
-- (id)initWithApp:(App)app archive:(JSObject)archive // protected
-{
-    return [super init];
-}
-
-@end
-
-[Buffer registerSubclass:GitBuffer withTypeName:"git"];
-
 @implementation EvalBuffer : Buffer
 {
     Env env;
@@ -401,6 +390,28 @@ var bufferSubclasses = {};
 @end
 
 [Buffer registerSubclass:EvalBuffer withTypeName:"eval"];
+
+@implementation CommitBuffer : Buffer
+
+- (CPString)name // public
+{
+    return "Commit";
+}
+
+@end
+
+[Buffer registerSubclass:CommitBuffer withTypeName:"commit"];
+
+@implementation GitBuffer : Buffer
+
+- (CPString)name // public
+{
+    return "Git";
+}
+
+@end
+
+[Buffer registerSubclass:GitBuffer withTypeName:"git"];
 
 @implementation App : Entity
 {

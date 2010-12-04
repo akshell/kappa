@@ -20,20 +20,29 @@
 
 @end
 
-@implementation GitBuffer (WorkspaceItemView)
-
-- (CPString)imageName // public
-{
-    return "Git";
-}
-
-@end
-
 @implementation EvalBuffer (WorkspaceItemView)
 
 - (CPString)imageName // public
 {
     return "Eval";
+}
+
+@end
+
+@implementation CommitBuffer (WorkspaceItemView)
+
+- (CPString)imageName // public
+{
+    return "Commit";
+}
+
+@end
+
+@implementation GitBuffer (WorkspaceItemView)
+
+- (CPString)imageName // public
+{
+    return "Git";
 }
 
 @end

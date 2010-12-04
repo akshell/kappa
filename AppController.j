@@ -18,6 +18,7 @@
 @import "LibFileController.j"
 @import "EvalController.j"
 @import "GitController.j"
+@import "CommitController.j"
 
 @implementation FileBuffer (AppController)
 
@@ -46,20 +47,6 @@
 
 @end
 
-@implementation GitBuffer (AppController)
-
-- (CPString)modeName // public
-{
-    return "Git";
-}
-
-- (Class)presentationControllerClass // public
-{
-    return GitController;
-}
-
-@end
-
 @implementation EvalBuffer (AppController)
 
 - (CPString)modeName // public
@@ -70,6 +57,34 @@
 - (Class)presentationControllerClass // public
 {
     return EvalController;
+}
+
+@end
+
+@implementation CommitBuffer (AppController)
+
+- (CPString)modeName // public
+{
+    return "Commit";
+}
+
+- (Class)presentationControllerClass // public
+{
+    return CommitController;
+}
+
+@end
+
+@implementation GitBuffer (AppController)
+
+- (CPString)modeName // public
+{
+    return "Git";
+}
+
+- (Class)presentationControllerClass // public
+{
+    return GitController;
 }
 
 @end
@@ -116,6 +131,7 @@ function setMenuItemsEnabled(menuItems, flag) {
     CPMenuItem modeMenuItem;
     CPMenuItem editMenuItem;
     CPMenuItem evalMenuItem;
+    CPMenuItem commitMenuItem;
     CPMenuItem gitMenuItem;
     CPMenuItem switchToPreviewMenuItem;
     CPMenuItem openEvalMenuItem;
@@ -216,6 +232,7 @@ function setMenuItemsEnabled(menuItems, flag) {
     var modeMenu = [CPMenu new];
     editMenuItem = [modeMenu addItemWithTitle:"Edit" target:workspaceControllerProxy action:@selector(switchToEdit)];
     evalMenuItem = [modeMenu addItemWithTitle:"Eval" target:navigatorControllerProxy action:@selector(switchToEval)];
+    commitMenuItem = [modeMenu addItemWithTitle:"Commit" target:workspaceControllerProxy action:@selector(switchToCommit)];
     gitMenuItem = [modeMenu addItemWithTitle:"Git" target:workspaceControllerProxy action:@selector(switchToGit)];
     modeMenuItem = [goMenu addItemWithTitle:"Mode"];
     [modeMenuItem setSubmenu:modeMenu];
@@ -244,9 +261,6 @@ function setMenuItemsEnabled(menuItems, flag) {
     var appMenu = [CPMenu new];
     newEnvMenuItem = [appMenu addItemWithTitle:"New Environment" target:navigatorControllerProxy action:@selector(showNewEnv)];
     useLibMenuItem = [appMenu addItemWithTitle:"Use Library…" target:navigatorControllerProxy action:@selector(showUseLib)];
-    [appMenu addItem:[CPMenuItem separatorItem]];
-    [appMenu addItemWithTitle:"Diff…" target:nil action:nil keyEquivalent:"D"];
-    [appMenu addItemWithTitle:"Commit…" target:nil action:nil keyEquivalent:"C"];
     [appMenu addItem:[CPMenuItem separatorItem]];
     manageDomainsMenuItem = [appMenu addItemWithTitle:"Manage Domains…" target:self action:@selector(showManageDomains)];
     publishAppMenuItem = [appMenu addItemWithTitle:"" target:self action:nil];
@@ -362,8 +376,8 @@ function setMenuItemsEnabled(menuItems, flag) {
         break;
     case "app.buffers":
         var buffers = DATA.app && DATA.app.buffers;
-        ["Edit", "Eval", "Git"].forEach(function (name) { [toolbarItems[name] setEnabled:buffers]; });
-        setMenuItemsEnabled([editMenuItem, evalMenuItem, gitMenuItem, openEvalMenuItem], buffers);
+        ["Edit", "Eval", "Commit", "Git"].forEach(function (name) { [toolbarItems[name] setEnabled:buffers]; });
+        setMenuItemsEnabled([editMenuItem, evalMenuItem, commitMenuItem, gitMenuItem, openEvalMenuItem], buffers);
         // FALL THROUGH
     case "app.bufferIndex":
         var bufferIndex = DATA.app && DATA.app.bufferIndex;
@@ -375,7 +389,7 @@ function setMenuItemsEnabled(menuItems, flag) {
         var buffer = DATA.app && DATA.app.buffer;
         var modeName = [buffer modeName];
         [toolbar setSelectedItemIdentifier:modeName];
-        [editMenuItem, evalMenuItem, gitMenuItem].forEach(
+        [editMenuItem, evalMenuItem, commitMenuItem, gitMenuItem].forEach(
             function (menuItem) { [menuItem setState:[menuItem title] == modeName ? CPOnState : CPOffState]; });
         [closeMenuItem doSetEnabled:buffer];
         if (buffer) {
@@ -425,9 +439,8 @@ function setMenuItemsEnabled(menuItems, flag) {
     return [
         "App", CPToolbarSpaceItemIdentifier,
         "New", "Save", "Save All", CPToolbarSpaceItemIdentifier,
-        "Diff", "Commit", CPToolbarSpaceItemIdentifier,
-        "Preview", "Help", CPToolbarFlexibleSpaceItemIdentifier,
-        "Edit", "Eval", "Git"
+        "Edit", "Eval", "Commit", "Git", CPToolbarSpaceItemIdentifier,
+        "Preview", "Help"
     ];
 }
 
@@ -470,11 +483,12 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
             "New": [navigatorControllerProxy, @selector(showNewFile)],
             "Save": [presentationControllerProxy, @selector(save)],
             "Save All": [self, @selector(saveAll)],
-            "Preview": [navigatorControllerProxy, @selector(switchToPreview)],
-            "Help": [self, @selector(switchToHelp)],
             "Edit": [workspaceControllerProxy, @selector(switchToEdit)],
             "Eval": [navigatorControllerProxy, @selector(switchToEval)],
+            "Commit": [workspaceControllerProxy, @selector(switchToCommit)],
             "Git": [workspaceControllerProxy, @selector(switchToGit)],
+            "Preview": [navigatorControllerProxy, @selector(switchToPreview)],
+            "Help": [self, @selector(switchToHelp)],
         }[itemIdentifier];
         if (pair) {
             [item setTarget:pair[0]];
