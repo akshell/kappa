@@ -546,6 +546,3 @@ var bufferSubclasses = {};
 }
 
 @end
-
-DATA = [Data new];
-[DATA loadFromBasis:window.BASIS];

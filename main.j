@@ -4,8 +4,8 @@
 @import <AppKit/AppKit.j>
 @import <AppKit/CPScrollView.j>
 
+@import "Globals.j";
 @import "AppController.j"
-@import "Data.j";
 @import "CPObject.j"
 @import "CPPanel.j"
 @import "CPMenu.j"

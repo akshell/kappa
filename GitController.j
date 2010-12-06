@@ -33,14 +33,14 @@ var CommandsChangingWorkTree = ['checkout', 'clean', 'merge', 'mv', 'pull', 'reb
 
 - (void)didReceiveResponse:(CPString)data withContext:(JSObject)context // private
 {
-    [outputView setAnswer:data isPositive:YES forQuestionNumber:context.questionNumber];
+    [outputView setAnswer:data negative:NO forQuestionNumber:context.questionNumber];
     if (context.shouldReloadCode)
         [app.navigatorController reloadCode];
 }
 
 - (BOOL)didReceiveError:(CPString)data withContext:(JSObject)context // private
 {
-    [outputView setAnswer:data.message + "\n\n" + data.comment isPositive:NO forQuestionNumber:context.questionNumber];
+    [outputView setAnswer:data.message + "\n\n" + data.comment negative:YES forQuestionNumber:context.questionNumber];
     return YES;
 }
 

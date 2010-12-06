@@ -32,7 +32,7 @@
 
 - (void)didReceiveResponse:(JSObject)data forQuestionNumber:(unsigned)questionNumber // private
 {
-    [outputView setAnswer:data.result isPositive:data.ok forQuestionNumber:questionNumber];
+    [outputView setAnswer:data.result negative:!data.ok forQuestionNumber:questionNumber];
 }
 
 @end

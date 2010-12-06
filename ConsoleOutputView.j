@@ -24,7 +24,7 @@
     return self;
 }
 
-- (void)setAnswer:(CPString)answer isPositive:(BOOL)isPositive // public
+- (void)setAnswer:(CPString)answer negative:(BOOL)negative // public
 {
     [spinnerImageView removeFromSuperview];
     var answerSize = [answer || " " realSizeWithFont:MonospaceFont];
@@ -33,8 +33,8 @@
                                                                     answerSize.width, answerSize.height)];
     [answerLabel setStringValue:answer];
     [answerLabel setFont:MonospaceFont];
-    if (!isPositive)
-        [answerLabel setTextColor:[CPColor redColor]];
+    if (negative)
+        [answerLabel setTextColor:NegativeColor];
     [answerLabel setSelectable:YES];
     [self addSubview:answerLabel];
     [self setFrameSize:CGSizeMake(MAX(frameSize.width, answerSize.width + 40), frameSize.height + answerSize.height - 20)];
@@ -76,12 +76,12 @@
     return [talkView subviews].length - 1;
 }
 
-- (void)setAnswer:(CPString)answer isPositive:(BOOL)isPositive forQuestionNumber:(unsigned)questionNumber // public
+- (void)setAnswer:(CPString)answer negative:(BOOL)negative forQuestionNumber:(unsigned)questionNumber // public
 {
     var qaViews = [talkView subviews];
     var qaView = qaViews[questionNumber];
     var oldQAViewSize = [qaView frameSize];
-    [qaView setAnswer:answer isPositive:isPositive];
+    [qaView setAnswer:answer negative:negative];
     var newQAViewSize = [qaView frameSize];
     var heightShift = newQAViewSize.height - oldQAViewSize.height;
     var talkViewSize = [talkView frameSize];

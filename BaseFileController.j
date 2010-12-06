@@ -7,6 +7,7 @@
 
 @implementation BaseFileController : BasePresentationController
 {
+    CPView view @accessors(readonly);
     GoToLinePanelController goToLinePanelController;
     CPView searchView;
     CPSearchField searchField;
@@ -26,6 +27,8 @@
 
     if (!self)
         return self;
+
+    view = [CPView new];
 
     var dotIndex = fileName.lastIndexOf(".");
     var extension = dotIndex == -1 ? "" : fileName.substring(dotIndex + 1).toLowerCase();
