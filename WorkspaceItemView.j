@@ -189,7 +189,6 @@ var BlueSpinnerImage;
                                     : [CPImage imageFromPath:[buffer imageName] + "16.png"])];
         break;
     }
-    [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];
 }
 
 - (BOOL)setThemeState:(CPThemeState)state // protected

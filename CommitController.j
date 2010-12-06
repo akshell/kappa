@@ -187,7 +187,6 @@
         newTopView = infoView;
     }
     [self setTopView:newTopView];
-    [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];
 }
 
 - (void)controlTextDidChange:(id)sender // private
@@ -229,7 +228,6 @@
     if (state != currentState)
         return;
     [self setTopView:infoView];
-    [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];
 }
 
 @end

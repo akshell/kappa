@@ -91,7 +91,6 @@
             [qaViews[i] setFrameOrigin:CGPointMake(0, [qaViews[i] frameOrigin].y + heightShift)];
         [self moveByOffset:CGSizeMake(0, heightShift)];
     }
-    [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];
 }
 
 @end

@@ -429,7 +429,6 @@ var DragType = "NavigatorDragType";
 {
     [codeManager load];
     [outlineView reloadItem:codeManager reloadChildren:NO];
-    [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];
 }
 
 @end

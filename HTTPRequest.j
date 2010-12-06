@@ -28,26 +28,25 @@
             if (request.status == 200 || request.status == 201) {
                 if (action)
                     objj_msgSend(target, action, data, context);
-                return;
+            } else if (!errorAction || !objj_msgSend(target, errorAction, data, context)) {
+                var message, comment;
+                if (isJSON) {
+                    message = data.message;
+                    comment = data.comment;
+                } else {
+                    message = data;
+                }
+                var alert = [[Alert alloc] initWithMessage:message comment:comment];
+                if (errorMessageAction) {
+                    [alert setTarget:target];
+                    [alert setAction:errorMessageAction];
+                }
+                if (window)
+                    [alert showSheetForWindow:window];
+                else
+                    [alert showPanel];
             }
-            if (errorAction && objj_msgSend(target, errorAction, data, context))
-                return;
-            var message, comment;
-            if (isJSON) {
-                message = data.message;
-                comment = data.comment;
-            } else {
-                message = data;
-            }
-            var alert = [[Alert alloc] initWithMessage:message comment:comment];
-            if (errorMessageAction) {
-                [alert setTarget:target];
-                [alert setAction:errorMessageAction];
-            }
-            if (window)
-                [alert showSheetForWindow:window];
-            else
-                [alert showPanel];
+            [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];
         };
         [self setValue:"XMLHttpRequest" forHeader:"X-Requested-With"];
     }
