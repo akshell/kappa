@@ -91,7 +91,7 @@
 
 - (BOOL)performKeyEquivalent:(CPEvent)event // public
 {
-    if (![event modifierFlags]) {
+    if ([[self window] firstResponder] === textField && ![event modifierFlags]) {
         var shift;
         switch ([event keyCode]) {
         case CPUpArrowKeyCode:   shift = +1; break;
