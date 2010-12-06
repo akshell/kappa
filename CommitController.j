@@ -135,6 +135,15 @@
     var oldTopView = [splitView subviews][0];
     [newTopView setFrame:[oldTopView frame]];
     [splitView replaceSubview:oldTopView with:newTopView];
+    [self alterStateOfButtons];
+}
+
+- (void)alterStateOfButtons // private
+{
+    var stringValue = [textView stringValue];
+    var topView = [splitView subviews][0];
+    [amendButton setEnabled:stringValue && topView !== spinnerImageView];
+    [commitButton setEnabled:stringValue && topView === scrollView];
 }
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
@@ -191,9 +200,7 @@
 
 - (void)controlTextDidChange:(id)sender // private
 {
-    var stringValue = [textView stringValue];
-    [amendButton setEnabled:stringValue];
-    [commitButton setEnabled:stringValue && [scrollView superview]];
+    [self alterStateOfButtons];
 }
 
 - (unsigned)splitView:(CPSplitView)aSplitView constrainSplitPosition:(unsigned)position ofSubviewAt:(unsigned)index // private
