@@ -154,6 +154,7 @@
     if (![spinnerImageView superview]) {
         [self setTopView:spinnerImageView];
         if (![splitView isHidden]) {
+            [buffer setProcessing:YES];
             var state = currentState;
             setTimeout(
                 function () {
@@ -167,8 +168,10 @@
 
 - (CPView)view // public
 {
-    if ([spinnerImageView superview])
+    if ([spinnerImageView superview]) {
+        [buffer setProcessing:YES];
         [self requestDiff];
+    }
     return splitView;
 }
 
@@ -188,6 +191,7 @@
 {
     if (state != currentState)
         return;
+    [buffer setProcessing:NO];
     var newTopView;
     if (diff) {
         [diffView setStringValue:diff];
