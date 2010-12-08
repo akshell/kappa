@@ -230,7 +230,10 @@ var DragType = "NavigatorDragType";
                                    ? [[CodeFileBuffer alloc] initWithFile:item]
                                    : [[LibFileBuffer alloc] initWithLib:baseItem path:[item path]])];
     } else if ([item isKindOfClass:Env]) {
-        [bufferManager openBuffer:[[EvalBuffer alloc] initWithEnv:item]];
+        if ([outlineView mouseDownFlags] & CPAlternateKeyMask)
+            [previewTabOpener openURL:[app URLOfEnv:item]];
+        else
+            [bufferManager openBuffer:[[EvalBuffer alloc] initWithEnv:item]];
     }
 }
 

@@ -453,7 +453,7 @@ var bufferSubclasses = {};
 
 - (CPString)URLOfEnv:(Env)env // public
 {
-    return "http://" + env.name + "." + DATA.username + "." + name + location.host.substring(3);
+    return "http://" + env.name + "." + name + "." + DATA.username + ".dev" + location.host.substring(3);
 }
 
 - (Env)envWithName:(CPString)aName // public
