@@ -2,7 +2,8 @@
 
 @import "SignupPanelController.j"
 
-var FreeDomainSuffix = location.host.substring(location.host.lastIndexOf(".", location.host.lastIndexOf(".") - 1));
+var host = window.location.host || "www.akshell.com"; // Hack for press
+var FreeDomainSuffix = host.substring(host.indexOf("."));
 
 @implementation ManageDomainsPanelController : RequestPanelController
 {

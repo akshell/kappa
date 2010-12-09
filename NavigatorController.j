@@ -8,6 +8,11 @@
 
 @implementation App (NavigatorController)
 
+- (CPString)URLOfEnv:(Env)env // public
+{
+    return "http://" + env.name + "." + name + "." + DATA.username + ".dev" + location.host.substring(3);
+}
+
 - (Env)defaultEnv // public
 {
     return envs[envs.length > 1 ? 1 : 0];

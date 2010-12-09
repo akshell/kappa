@@ -3,7 +3,7 @@
 @import "Data.j"
 
 DATA = [Data new];
-[DATA loadFromBasis:window.BASIS];
+[DATA loadFromBasis:window.BASIS || {config: {}, appNames: []}]; // Hack for press
 
 SystemFont = [CPFont systemFontOfSize:12];
 BoldSystemFont = [CPFont boldSystemFontOfSize:12];

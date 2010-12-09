@@ -36,7 +36,7 @@
 
 @end
 
-DOMFile = File;
+DOMFile = window.File;
 
 @implementation File : Entry
 {
@@ -449,11 +449,6 @@ var bufferSubclasses = {};
 - (CPString)URL // public
 {
     return "/apps/" + name + "/";
-}
-
-- (CPString)URLOfEnv:(Env)env // public
-{
-    return "http://" + env.name + "." + name + "." + DATA.username + ".dev" + location.host.substring(3);
 }
 
 - (Env)envWithName:(CPString)aName // public
