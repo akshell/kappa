@@ -1,64 +1,37 @@
 // (c) 2010 by Anton Korenyushkin
 
-var ENV = require("system").env,
-    FILE = require("file"),
-    JAKE = require("jake"),
-    task = JAKE.task,
-    FileList = JAKE.FileList,
-    app = require("cappuccino/jake").app,
-    configuration = ENV["CONFIG"] || ENV["CONFIGURATION"] || ENV["c"] || "Debug",
-    OS = require("os");
+var jake = require("jake");
+var task = jake.task;
+var FileList = jake.FileList;
+var app = require("cappuccino/jake").app;
+var system = require("os").system;
+var frameworksPath = "../../../cappuccino/Build/Release";
 
-app ("Akshell", function(task)
-{
-    task.setBuildIntermediatesPath("Build/Intermediate/" + configuration);
-    task.setBuildPath("Build/" + configuration);
-
-    task.setProductName("Akshell");
-    task.setIdentifier("com.akshell");
-    task.setVersion("0.3");
-    task.setAuthor("Anton Korenyushkin");
-    task.setEmail("support @nospam@ akshell.com");
-    task.setSummary("Akshell");
+function build(task, name, compilerFlags) {
+    task.setBuildIntermediatesPath("Build/Intermediate/" + name);
+    task.setBuildPath("Build");
     task.setSources((new FileList("**/*.j")).exclude("Build/**"));
     task.setResources(new FileList("Resources/**"));
     task.setInfoPlistPath("Info.plist");
-
-    if (configuration === "Debug")
-        task.setCompilerFlags("-DDEBUG -g");
-    else
-        task.setCompilerFlags("-O");
-});
-
-function printResults(configuration)
-{
-    print("----------------------------");
-    print(configuration+" app built at path: Build/" + configuration + "/Akshell");
-    print("----------------------------");
+    task.setCompilerFlags(compilerFlags);
 }
 
-task ("default", ["Akshell"], function()
+app("Debug", function (task)
 {
-    printResults(configuration);
+    build(task, "Debug", "-DDEBUG -g");
 });
 
-task ("build", ["default"]);
-
-task ("debug", function()
+app("Release", function (task)
 {
-    ENV["CONFIGURATION"] = "Debug";
-    JAKE.subjake(["."], "build", ENV);
+    build(task, "Release", "-O");
 });
 
-task ("release", function()
+task("Pressed", ["Release"], function ()
 {
-    ENV["CONFIGURATION"] = "Release";
-    JAKE.subjake(["."], "build", ENV);
+    system(["press", "-f", "-F", frameworksPath, "Build/Release", "Build/Pressed"]);
 });
 
-task ("deploy", ["release"], function()
+task("Flattened", ["Pressed"], function ()
 {
-    FILE.mkdirs("Build/Deployment/Akshell");
-    OS.system(["press", "-f", "-F", "../../../../cappuccino/Build/Release", "Build/Release/Akshell", "Build/Deployment/Akshell"]);
-    printResults("Deployment");
+    system(["flatten", "-f", "-s", "4", "-c", "closure-compiler", "-F", frameworksPath, "Build/Pressed", "Build/Flattened"]);
 });
