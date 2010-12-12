@@ -1,8 +1,11 @@
 // (c) 2010 by Anton Korenyushkin
 
 @import <Foundation/Foundation.j>
+@import <Foundation/CPDate.j>
+@import <Foundation/CPTimer.j>
 @import <AppKit/AppKit.j>
 @import <AppKit/CPScrollView.j>
+@import <AppKit/CPSegmentedControl.j>
 
 @import "Globals.j";
 @import "AppController.j"

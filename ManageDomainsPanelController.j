@@ -2,9 +2,6 @@
 
 @import "SignupPanelController.j"
 
-var host = window.location.host || "www.akshell.com"; // Hack for press
-var FreeDomainSuffix = host.substring(host.indexOf("."));
-
 @implementation ManageDomainsPanelController : RequestPanelController
 {
     @outlet CPTextField freeDomainNameField;
@@ -67,8 +64,8 @@ var FreeDomainSuffix = host.substring(host.indexOf("."));
 {
     domains.forEach(
         function (domain) {
-            var index = domain.length - FreeDomainSuffix.length;
-            if (!freeDomainName && domain.substring(index) == FreeDomainSuffix)
+            var index = domain.length - DomainSuffix.length;
+            if (!freeDomainName && domain.substring(index) == DomainSuffix)
                 freeDomainName = domain.substring(0, index);
             else
                 customDomains.push(domain);
@@ -167,7 +164,7 @@ var FreeDomainSuffix = host.substring(host.indexOf("."));
     var newFreeDomainName = [freeDomainNameField stringValue];
     [self requestWithMethod:"PUT"
                         URL:[app URL] + "domains"
-                       data:newFreeDomainName ? newCustomDomains.concat(newFreeDomainName + FreeDomainSuffix) : newCustomDomains
+                       data:newFreeDomainName ? newCustomDomains.concat(newFreeDomainName + DomainSuffix) : newCustomDomains
                     context:{freeDomainName: newFreeDomainName, customDomains: newCustomDomains.slice()}
                    selector:@selector(didPutDomains:withContext:)];
 }

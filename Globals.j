@@ -16,3 +16,6 @@ PanelBackgroundColor = [CPColor colorWithWhite:0.96 alpha:1];
 PositiveColor = [CPColor colorWithHexString:"25bc24"];
 NegativeColor = [CPColor colorWithHexString:"c23621"];
 CommentColor = [CPColor colorWithHexString:"33bbc8"];
+
+var host = window.location.host || "www.akshell.com"; // Hack for press
+DomainSuffix = host.substring(host.indexOf("."));

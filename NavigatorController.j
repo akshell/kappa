@@ -10,7 +10,7 @@
 
 - (CPString)URLOfEnv:(Env)env // public
 {
-    return "http://" + env.name + "." + name + "." + DATA.username + ".dev" + location.host.substring(3);
+    return "http://" + env.name + "." + name + "." + DATA.username + ".dev" + DomainSuffix;
 }
 
 - (Env)defaultEnv // public
