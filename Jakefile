@@ -5,7 +5,6 @@ var task = jake.task;
 var FileList = jake.FileList;
 var app = require("cappuccino/jake").app;
 var system = require("os").system;
-var frameworksPath = "../../../cappuccino/Build/Release";
 
 function build(task, name, compilerFlags) {
     task.setBuildIntermediatesPath("Build/Intermediate/" + name);
@@ -28,10 +27,10 @@ app("Release", function (task)
 
 task("Pressed", ["Release"], function ()
 {
-    system(["press", "-f", "-F", frameworksPath, "Build/Release", "Build/Pressed"]);
+    system(["press", "-f", "Build/Release", "Build/Pressed"]);
 });
 
 task("Flattened", ["Pressed"], function ()
 {
-    system(["flatten", "-f", "-s", "4", "-c", "closure-compiler", "-F", frameworksPath, "Build/Pressed", "Build/Flattened"]);
+    system(["flatten", "-f", "-s", "3", "-c", "closure-compiler", "Build/Pressed", "Build/Flattened"]);
 });
