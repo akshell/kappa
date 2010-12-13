@@ -17,22 +17,9 @@
         iframe.style.height = "100%";
         iframe.style.border = "none";
         iframe.frameBorder = "0";
+        iframe.src = [[CPBundle mainBundle] pathForResource:"Editor.html"];
         iframe.onload = function () {
-            iframe.onload = null;
             var doc = iframe.contentDocument;
-            doc.open();
-            doc.write(
-                "<!DOCTYPE html PUBLIC '-//W3C//DTD HTML 4.01//EN' 'http://www.w3.org/TR/html4/strict.dtd'>" +
-                "<html><head><style>" +
-                "html {margin: 0; padding: 0; width: 100%; height: 100%;} " +
-                "body {margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden} " +
-                "</style>" +
-                "<link id='bespin_base' href='/frontend/Bespin'/>" +
-                "<script src='/frontend/Bespin/BespinEmbedded.js'></script>" +
-                "</head>" +
-                "<body class='bespin'></body>" +
-                "</html>");
-            doc.close();
             doc.onkeydown = function (event) {
                 if (CPPlatformActionKeyMask == CPCommandKeyMask ? event.metaKey : event.ctrlKey) {
                     [[[self window] platformWindow] keyEvent:event];
@@ -44,7 +31,7 @@
                     return false;
                 }
             };
-            iframe.contentWindow.onBespinLoad = function () {
+            var onBespinLoad = function () {
                 editor = doc.body.bespin.editor;
                 editor.syntax = syntax;
                 editor.value = stringValue;
@@ -66,6 +53,12 @@
                 doc.body.onblur = function () {
                     [self refocus];
                 };
+            };
+            if (CPBrowserIsEngine(CPGeckoBrowserEngine)) {
+                doc.body.style.marginTop = "-14px";
+                setTimeout(onBespinLoad, 0);
+            } else {
+                iframe.contentWindow.onBespinLoad = onBespinLoad;
             }
         };
         _DOMElement.appendChild(iframe);
