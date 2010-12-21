@@ -140,7 +140,7 @@
 
 - (void)closeBuffer:(Buffer)buffer askToSave:(BOOL)askToSave // public
 {
-    var closeBufferIndex = app.buffers.indexOf(buffer);
+    closeBufferIndex = app.buffers.indexOf(buffer);
     if (closeBufferIndex == -1)
         return;
     if (askToSave && [buffer isModified])
