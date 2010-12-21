@@ -20,6 +20,8 @@
         iframe.src = [[CPBundle mainBundle] pathForResource:"Editor.html"];
         iframe.onload = function () {
             var doc = iframe.contentDocument;
+            if (CPBrowserIsEngine(CPGeckoBrowserEngine))
+                doc.body.style.marginTop = "-14px";
             doc.onkeydown = function (event) {
                 if (CPPlatformActionKeyMask == CPCommandKeyMask ? event.metaKey : event.ctrlKey) {
                     [[[self window] platformWindow] keyEvent:event];
@@ -31,11 +33,13 @@
                     return false;
                 }
             };
-            var onBespinLoad = function () {
+            function setupBespin() {
                 if (!doc.body || !doc.body.bespin) {
-                    setTimeout(onBespinLoad, 50);
+                    setTimeout(setupBespin, 50);
                     return;
                 }
+                if (editor)
+                    return;
                 editor = doc.body.bespin.editor;
                 editor.syntax = syntax;
                 editor.value = stringValue;
@@ -58,12 +62,8 @@
                     [self refocus];
                 };
             };
-            if (CPBrowserIsEngine(CPGeckoBrowserEngine)) {
-                doc.body.style.marginTop = "-14px";
-                onBespinLoad();
-            } else {
-                iframe.contentWindow.onBespinLoad = onBespinLoad;
-            }
+            iframe.contentWindow.onBespinLoad = setupBespin;
+            setupBespin();
         };
         _DOMElement.appendChild(iframe);
         [[CPNotificationCenter defaultCenter] addObserver:self
