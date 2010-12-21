@@ -32,6 +32,10 @@
                 }
             };
             var onBespinLoad = function () {
+                if (!doc.body || !doc.body.bespin) {
+                    setTimeout(onBespinLoad, 50);
+                    return;
+                }
                 editor = doc.body.bespin.editor;
                 editor.syntax = syntax;
                 editor.value = stringValue;
@@ -56,7 +60,7 @@
             };
             if (CPBrowserIsEngine(CPGeckoBrowserEngine)) {
                 doc.body.style.marginTop = "-14px";
-                setTimeout(onBespinLoad, 0);
+                onBespinLoad();
             } else {
                 iframe.contentWindow.onBespinLoad = onBespinLoad;
             }
