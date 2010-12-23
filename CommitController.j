@@ -35,11 +35,11 @@
                     [label setFont:BoldMonospaceFont];
                 }
             }
-            height += 22;
+            height += 17;
             width = MAX(width, labelSize.width);
             return label;
         });
-    [self setFrameSize:CGSizeMake(width + 40, height - 2)];
+    [self setFrameSize:CGSizeMake(width + 40, height + 3)];
     [self setSubviews:labels];
 }
 
