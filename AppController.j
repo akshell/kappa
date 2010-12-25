@@ -22,9 +22,9 @@
 
 @implementation FileBuffer (AppController)
 
-- (CPString)modeName // public
+- (CPString)modeIndex // public
 {
-    return "Edit";
+    return 0;
 }
 
 @end
@@ -49,9 +49,9 @@
 
 @implementation EvalBuffer (AppController)
 
-- (CPString)modeName // public
+- (CPString)modeIndex // public
 {
-    return "Eval";
+    return 1;
 }
 
 - (Class)presentationControllerClass // public
@@ -63,9 +63,9 @@
 
 @implementation CommitBuffer (AppController)
 
-- (CPString)modeName // public
+- (CPString)modeIndex // public
 {
-    return "Commit";
+    return 2;
 }
 
 - (Class)presentationControllerClass // public
@@ -77,9 +77,9 @@
 
 @implementation GitBuffer (AppController)
 
-- (CPString)modeName // public
+- (CPString)modeIndex // public
 {
-    return "Git";
+    return 3;
 }
 
 - (Class)presentationControllerClass // public
@@ -89,6 +89,7 @@
 
 @end
 
+var ModeNames = ["Edit", "Eval", "Commit", "Git"];
 BoundKeys = ["[", "]", "f", "g", "n", "s", "w"];
 var DocsURL = "/docs/0.3/";
 
@@ -133,6 +134,10 @@ function setMenuItemsEnabled(menuItems, flag) {
     CPMenuItem evalMenuItem;
     CPMenuItem commitMenuItem;
     CPMenuItem gitMenuItem;
+    CPMenuItem selectNextModeMenuItem;
+    CPMenuItem selectPreviousModeMenuItem;
+    CPMenuItem selectNextTabMenuItem;
+    CPMenuItem selectPreviousTabMenuItem;
     CPMenuItem switchToPreviewMenuItem;
     CPMenuItem openEvalMenuItem;
     CPMenuItem openPreviewMenuItem;
@@ -236,21 +241,32 @@ function setMenuItemsEnabled(menuItems, flag) {
     gitMenuItem = [modeMenu addItemWithTitle:"Git" target:workspaceControllerProxy action:@selector(switchToGit)];
     modeMenuItem = [goMenu addItemWithTitle:"Mode"];
     [modeMenuItem setSubmenu:modeMenu];
+    selectNextModeMenuItem = [goMenu addItemWithTitle:"Select Next Mode"
+                                               target:self
+                                               action:@selector(switchToNextMode)
+                                        keyEquivalent:"→"];
+    [selectNextModeMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
+    selectPreviousModeMenuItem = [goMenu addItemWithTitle:"Select Previous Mode"
+                                                   target:self
+                                                   action:@selector(switchToPreviousMode)
+                                            keyEquivalent:"←"];
+    [selectPreviousModeMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
+    [goMenu addItem:[CPMenuItem separatorItem]];
+    selectNextTabMenuItem = [goMenu addItemWithTitle:"Select Next Tab"
+                                              target:workspaceControllerProxy
+                                              action:@selector(switchToNextBuffer)
+                                       keyEquivalent:"↓"];
+    [selectNextTabMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
+    selectPreviousTabMenuItem = [goMenu addItemWithTitle:"Select Previous Tab"
+                                                  target:workspaceControllerProxy
+                                                  action:@selector(switchToPreviousBuffer)
+                                           keyEquivalent:"↑"];
+    [selectPreviousTabMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
+    [goMenu addItem:[CPMenuItem separatorItem]];
     switchToPreviewMenuItem = [goMenu addItemWithTitle:"Switch to Preview"
                                                 target:navigatorControllerProxy
                                                 action:@selector(switchToPreview)];
     [goMenu addItemWithTitle:"Switch to Help" target:self action:@selector(switchToHelp)];
-    [goMenu addItem:[CPMenuItem separatorItem]];
-    previousMenuItem = [goMenu addItemWithTitle:"Previous"
-                                         target:workspaceControllerProxy
-                                         action:@selector(switchToPreviousBuffer)
-                                  keyEquivalent:"↑"];
-    [previousMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask];
-    nextMenuItem = [goMenu addItemWithTitle:"Next"
-                                     target:workspaceControllerProxy
-                                     action:@selector(switchToNextBuffer)
-                              keyEquivalent:"↓"];
-    [nextMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask];
     [goMenu addItem:[CPMenuItem separatorItem]];
     openEvalMenuItem = [goMenu addItemWithTitle:"Open Eval"];
     [openEvalMenuItem setSubmenu:[CPMenu new]];
@@ -378,16 +394,15 @@ function setMenuItemsEnabled(menuItems, flag) {
         var buffers = DATA.app && DATA.app.buffers;
         ["Edit", "Eval", "Commit", "Git"].forEach(function (name) { [toolbarItems[name] setEnabled:buffers]; });
         setMenuItemsEnabled([editMenuItem, evalMenuItem, commitMenuItem, gitMenuItem, openEvalMenuItem], buffers);
-        // FALL THROUGH
-    case "app.bufferIndex":
-        var bufferIndex = DATA.app && DATA.app.bufferIndex;
-        [previousMenuItem doSetEnabled:bufferIndex];
-        [nextMenuItem doSetEnabled:bufferIndex !== nil && bufferIndex < DATA.app.buffers.length - 1];
+        [selectNextModeMenuItem doSetEnabled:buffers && buffers.length];
+        [selectPreviousModeMenuItem doSetEnabled:buffers && buffers.length];
+        [selectNextTabMenuItem doSetEnabled:buffers && buffers.length > 1];
+        [selectPreviousTabMenuItem doSetEnabled:buffers && buffers.length > 1];
         break;
     case "app.buffer":
         [toolbar reloadChangedToolbarItems];
         var buffer = DATA.app && DATA.app.buffer;
-        var modeName = [buffer modeName];
+        var modeName = ModeNames[[buffer modeIndex]];
         [toolbar setSelectedItemIdentifier:modeName];
         [editMenuItem, evalMenuItem, commitMenuItem, gitMenuItem].forEach(
             function (menuItem) { [menuItem setState:[menuItem title] == modeName ? CPOnState : CPOffState]; });
@@ -555,6 +570,26 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
     [appsMenu insertItem:[item copy] atIndex:index];
     DATA.apps.splice(index, 0, [[App alloc] initWithName:appName]);
     [DATA setAppIndex:index];
+}
+
+- (void)switchToNextMode // private
+{
+    [self switchToModeWithIndex:([DATA.app.buffer modeIndex] + 1) % ModeNames.length];
+}
+
+- (void)switchToPreviousMode // private
+{
+    [self switchToModeWithIndex:([DATA.app.buffer modeIndex] || ModeNames.length) - 1];
+}
+
+- (void)switchToModeWithIndex:(unsigned)modeIndex // private
+{
+    switch (modeIndex) {
+    case 0: [workspaceControllerProxy switchToEdit]; break;
+    case 1: [navigatorControllerProxy switchToEval]; break;
+    case 2: [workspaceControllerProxy switchToCommit]; break;
+    case 3: [workspaceControllerProxy switchToGit]; break;
+    }
 }
 
 - (void)showDeleteApp // private

@@ -139,12 +139,12 @@ writeRowsWithIndexes:(CPIndexSet)rowIndexes
 
 - (void)switchToPreviousBuffer // public
 {
-    [app setBufferIndex:app.bufferIndex - 1];
+    [app setBufferIndex:(app.bufferIndex || app.buffers.length) - 1];
 }
 
 - (void)switchToNextBuffer // public
 {
-    [app setBufferIndex:app.bufferIndex + 1];
+    [app setBufferIndex:(app.bufferIndex + 1) % app.buffers.length];
 }
 
 @end
