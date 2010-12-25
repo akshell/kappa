@@ -90,7 +90,7 @@
 @end
 
 var ModeNames = ["Edit", "Eval", "Commit", "Git"];
-BoundKeys = ["[", "]", "f", "g", "n", "s", "w"];
+BoundKeys = ["[", "]", "f", "g", "n", "s", "w", "l"];
 var DocsURL = "/docs/0.3/";
 
 function setMenuItemsEnabled(menuItems, flag) {
@@ -230,7 +230,7 @@ function setMenuItemsEnabled(menuItems, flag) {
     goToLineMenuItem = [editMenu addItemWithTitle:"Go to Line…"
                                            target:presentationControllerProxy
                                            action:@selector(showGoToLine)
-                                    keyEquivalent:"L"];
+                                    keyEquivalent:"l"];
     [[mainMenu addItemWithTitle:"Edit"] setSubmenu:editMenu];
 
     var goMenu = [CPMenu new];
@@ -244,23 +244,23 @@ function setMenuItemsEnabled(menuItems, flag) {
     selectNextModeMenuItem = [goMenu addItemWithTitle:"Select Next Mode"
                                                target:self
                                                action:@selector(switchToNextMode)
-                                        keyEquivalent:"→"];
+                                        keyEquivalent:"]"];
     [selectNextModeMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
     selectPreviousModeMenuItem = [goMenu addItemWithTitle:"Select Previous Mode"
                                                    target:self
                                                    action:@selector(switchToPreviousMode)
-                                            keyEquivalent:"←"];
+                                            keyEquivalent:"["];
     [selectPreviousModeMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
     [goMenu addItem:[CPMenuItem separatorItem]];
     selectNextTabMenuItem = [goMenu addItemWithTitle:"Select Next Tab"
                                               target:workspaceControllerProxy
                                               action:@selector(switchToNextBuffer)
-                                       keyEquivalent:"↓"];
+                                       keyEquivalent:"/"];
     [selectNextTabMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
     selectPreviousTabMenuItem = [goMenu addItemWithTitle:"Select Previous Tab"
                                                   target:workspaceControllerProxy
                                                   action:@selector(switchToPreviousBuffer)
-                                           keyEquivalent:"↑"];
+                                           keyEquivalent:";"];
     [selectPreviousTabMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
     [goMenu addItem:[CPMenuItem separatorItem]];
     switchToPreviewMenuItem = [goMenu addItemWithTitle:"Switch to Preview"
