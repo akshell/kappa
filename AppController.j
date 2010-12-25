@@ -465,8 +465,7 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
 {
     var item = toolbarItems[itemIdentifier] = [[CPToolbarItem alloc] initWithItemIdentifier:itemIdentifier];
     [item setLabel:itemIdentifier];
-    switch (itemIdentifier) {
-    case "App":
+    if (itemIdentifier == "App") {
         appPopUpButton = [[CPPopUpButton alloc] initWithFrame:CGRectMake(4, 8, 202, 24)];
         [appPopUpButton setAutoresizingMask:CPViewWidthSizable];
         if (DATA.apps.length)
@@ -477,20 +476,7 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
         var size = [itemView frameSize];
         [item setMinSize:size];
         [item setMaxSize:size];
-        break;
-    case "URL":
-        var textField = [[CPTextField alloc] initWithFrame:CGRectMake(0, 4, 100, 30)];
-        [textField setBordered:YES];
-        [textField setBezeled:YES];
-        [textField setEditable:YES];
-        [textField setAutoresizingMask:CPViewWidthSizable];
-        var itemView = [[CPView alloc] initWithFrame:CGRectMake(0, 0, 100, 32)];
-        [itemView addSubview:textField];
-        [item setView:itemView];
-        [item setMinSize:[itemView frameSize]];
-        [item setMaxSize:CGSizeMake(10000, 32)];
-        break;
-    default:
+    } else {
         var image = [CPImage imageFromPath:itemIdentifier.replace(" ", "") + "32.png"];
         [item setImage:image];
         [item setMinSize:CGSizeMake(32, 32)];
@@ -505,10 +491,8 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
             "Preview": [navigatorControllerProxy, @selector(switchToPreview)],
             "Help": [self, @selector(switchToHelp)],
         }[itemIdentifier];
-        if (pair) {
-            [item setTarget:pair[0]];
-            [item setAction:pair[1]];
-        }
+        [item setTarget:pair[0]];
+        [item setAction:pair[1]];
     }
     return item;
 }
