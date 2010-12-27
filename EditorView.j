@@ -48,6 +48,7 @@
                 editor.textChanged.add(
                     function () {
                         [self textDidChange:[CPNotification notificationWithName:CPControlTextDidChangeNotification object:self]];
+                        [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];
                     });
                 doc.body.onclick = function () {
                     if ([CPApp modalWindow]) {
