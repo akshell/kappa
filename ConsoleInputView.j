@@ -38,12 +38,24 @@
 
 @end
 
+@implementation ConsoleTextField : CPTextField
+
+- (void)keyDown:(CPEvent)event // public
+{
+    if ([_delegate handleKeyDown:event])
+        [[[self window] platformWindow] _propagateCurrentDOMEvent:NO];
+    else
+        [super keyDown:event];
+}
+
+@end
+
 @implementation ConsoleInputView : CPView
 {
     id target @accessors;
     SEL action @accessors;
     History history;
-    CPTextField textField;
+    ConsoleTextField textField;
 }
 
 - (id)initWithFrame:(CGRect)frame target:(id)aTarget action:(SEL)anAction buttonTitle:(CPString)buttonTitle // public
@@ -54,8 +66,9 @@
         history = [History new];
         var frameWidth = CGRectGetWidth(frame);
         var buttonWidth = [buttonTitle realSizeWithFont:SystemFont].width + 18;
-        textField = [[CPTextField alloc] initWithFrame:CGRectMake(14, 15, frameWidth - buttonWidth - 36, 31)];
+        textField = [[ConsoleTextField alloc] initWithFrame:CGRectMake(14, 15, frameWidth - buttonWidth - 36, 31)];
         [textField setAutoresizingMask:CPViewWidthSizable];
+        [textField setDelegate:self];
         [textField setTarget:self];
         [textField setAction:@selector(submit)];
         [textField setFont:MonospaceFont];
@@ -89,22 +102,21 @@
     [[self window] makeFirstResponder:textField];
 }
 
-- (BOOL)performKeyEquivalent:(CPEvent)event // public
+- (BOOL)handleKeyDown:(CPEvent)event // private
 {
-    if ([[self window] firstResponder] === textField && ![event modifierFlags]) {
-        var shift;
-        switch ([event keyCode]) {
-        case CPUpArrowKeyCode:   shift = +1; break;
-        case CPDownArrowKeyCode: shift = -1; break;
-        }
-        if (shift) {
-            var newStringValue = [history stringValueWithShift:shift currentStringValue:[textField stringValue]];
-            if (newStringValue !== nil)
-                [textField setStringValue:newStringValue];
-            return YES;
-        }
+    var shift;
+    switch ([event keyCode]) {
+    case CPUpArrowKeyCode:   shift = +1; break;
+    case CPDownArrowKeyCode: shift = -1; break;
     }
-    return [super performKeyEquivalent:event];
+    if (!shift && [event modifierFlags] == CPControlKeyMask)
+        shift = {p: +1, n: -1}[[event characters]];
+    if (!shift)
+        return NO;
+    var newStringValue = [history stringValueWithShift:shift currentStringValue:[textField stringValue]];
+    if (newStringValue !== nil)
+        [textField setStringValue:newStringValue];
+    return YES;
 }
 
 @end
