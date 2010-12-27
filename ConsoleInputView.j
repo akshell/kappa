@@ -40,12 +40,16 @@
 
 @implementation ConsoleTextField : CPTextField
 
-- (void)keyDown:(CPEvent)event // public
+- (void)textDidFocus:(CPNotification)note // protected
 {
-    if ([_delegate handleKeyDown:event])
-        [[[self window] platformWindow] _propagateCurrentDOMEvent:NO];
-    else
-        [super keyDown:event];
+    [self _inputElement].onkeydown = function (event) { [_delegate handleKeyDown:event]; };
+    [super textDidFocus:note];
+}
+
+- (void)textDidBlur:(CPNotification)note // protected
+{
+    [self _inputElement].onkeydown = nil;
+    [super textDidBlur:note];
 }
 
 @end
@@ -102,17 +106,22 @@
     [[self window] makeFirstResponder:textField];
 }
 
-- (BOOL)handleKeyDown:(CPEvent)event // private
+- (void)handleKeyDown:(DOMEvent)event // private
 {
     var shift;
-    switch ([event keyCode]) {
+    switch (event.keyCode) {
     case CPUpArrowKeyCode:   shift = +1; break;
     case CPDownArrowKeyCode: shift = -1; break;
+    default:
+        if (!event.ctrlKey)
+            return;
+        switch (event.keyCode) {
+        case "P".charCodeAt(0): shift = +1; break;
+        case "N".charCodeAt(0): shift = -1; break;
+        default:                            return;
+        }
     }
-    if (!shift && [event modifierFlags] == CPControlKeyMask)
-        shift = {p: +1, n: -1}[[event characters]];
-    if (!shift)
-        return NO;
+    event.preventDefault();
     var newStringValue = [history stringValueWithShift:shift currentStringValue:[textField stringValue]];
     if (newStringValue !== nil)
         [textField setStringValue:newStringValue];
