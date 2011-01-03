@@ -1,4 +1,4 @@
-// (c) 2010 by Anton Korenyushkin
+// (c) 2010-2011 by Anton Korenyushkin
 
 @import <Foundation/Foundation.j>
 @import <Foundation/CPDate.j>

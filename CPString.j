@@ -1,4 +1,4 @@
-// (c) 2010 by Anton Korenyushkin
+// (c) 2010-2011 by Anton Korenyushkin
 
 function realSize(size) {
     return CGSizeMake(size.width + 4, size.height + 4);

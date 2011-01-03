@@ -1,4 +1,4 @@
-// (c) 2010 by Anton Korenyushkin
+// (c) 2010-2011 by Anton Korenyushkin
 
 var createLabel = function (text, y, font) {
     var label = [[CPTextField alloc] initWithFrame:CGRectMake(80, y, 190, [text realSizeWithFont:font inWidth:190].height)];
