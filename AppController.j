@@ -260,7 +260,7 @@ function setMenuItemsEnabled(menuItems, flag) {
     selectPreviousTabMenuItem = [goMenu addItemWithTitle:"Select Previous Tab"
                                                   target:workspaceControllerProxy
                                                   action:@selector(switchToPreviousBuffer)
-                                           keyEquivalent:";"];
+                                           keyEquivalent:"'"];
     [selectPreviousTabMenuItem setKeyEquivalentModifierMask:CPAlternateKeyMask | CPPlatformActionKeyMask];
     [goMenu addItem:[CPMenuItem separatorItem]];
     switchToPreviewMenuItem = [goMenu addItemWithTitle:"Switch to Preview"
