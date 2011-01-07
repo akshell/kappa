@@ -288,9 +288,10 @@ function setMenuItemsEnabled(menuItems, flag) {
     [helpMenu addItemWithTitle:"User Guide" target:self action:@selector(openUserGuide)];
     [helpMenu addItemWithTitle:"Reference" target:self action:@selector(openReference)];
     [helpMenu addItem:[CPMenuItem separatorItem]];
-    [helpMenu addItemWithTitle:"Contact…" target:contactPanelController action:@selector(showWindow:)];
     [helpMenu addItemWithTitle:"Blog" target:self action:@selector(openBlog)];
     [helpMenu addItemWithTitle:"Twitter" target:self action:@selector(openTwitter)];
+    [helpMenu addItem:[CPMenuItem separatorItem]];
+    [helpMenu addItemWithTitle:"Contact…" target:contactPanelController action:@selector(showWindow:)];
     [[mainMenu addItemWithTitle:"Help"] setSubmenu:helpMenu];
 
     [akshellMenu, fileMenu, editMenu, goMenu, appMenu, helpMenu].forEach(
