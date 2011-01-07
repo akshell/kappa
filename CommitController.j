@@ -13,13 +13,13 @@
     var height = 20;
     var labels = stringValue.split("\n").map(
         function (line) {
-            var labelSize = [line realSizeWithFont:MonospaceFont];
-            var label = [[CPTextField alloc] initWithFrame:CGRectMake(20, height, labelSize.width, 22)];
+            var label = [CPTextField new];
             [label setStringValue:line + "\n"];
             [label setSelectable:YES];
+            var font;
             var prefix = line.substring(0, 4);
             if (prefix == "+++ " || prefix == "--- ") {
-                [label setFont:BoldMonospaceFont];
+                font = BoldMonospaceFont;
             } else {
                 var color = {
                     " ": [CPColor blackColor],
@@ -30,13 +30,16 @@
                 }[line[0]];
                 if (color) {
                     [label setTextColor:color];
-                    [label setFont:MonospaceFont];
+                    font = MonospaceFont;
                 } else {
-                    [label setFont:BoldMonospaceFont];
+                    font = BoldMonospaceFont;
                 }
             }
+            [label setFont:font];
+            var labelWidth = [line realSizeWithFont:font].width;
+            [label setFrame:CGRectMake(20, height, labelWidth, 22)];
             height += 17;
-            width = MAX(width, labelSize.width);
+            width = MAX(width, labelWidth);
             return label;
         });
     [self setFrameSize:CGSizeMake(width + 40, height + 3)];
