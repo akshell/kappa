@@ -8,7 +8,7 @@ DATA = [Data new];
 SystemFont = [CPFont systemFontOfSize:12];
 BoldSystemFont = [CPFont boldSystemFontOfSize:12];
 
-var MonospaceFontName = "Menlo, Consolas, Lucida Console, monospace";
+var MonospaceFontName = "Menlo, Lucida Console, monospace";
 MonospaceFont = [CPFont fontWithName:MonospaceFontName size:14];
 BoldMonospaceFont = [CPFont boldFontWithName:MonospaceFontName size:14];
 
