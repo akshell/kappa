@@ -21,7 +21,9 @@
         iframe.onload = function () {
             var doc = iframe.contentDocument;
             if (CPBrowserIsEngine(CPGeckoBrowserEngine))
-                doc.body.style.marginTop = "-14px";
+                doc.body.style.marginTop =
+                    CPBrowserIsOperatingSystem(CPMacOperatingSystem) ? "-14px" :
+                    CPBrowserIsOperatingSystem(CPWindowsOperatingSystem) ? "-16px" : "-15px";
             doc.onkeydown = function (event) {
                 if (CPPlatformActionKeyMask == CPCommandKeyMask ? event.metaKey : event.ctrlKey) {
                     [[[self window] platformWindow] keyEvent:event];
