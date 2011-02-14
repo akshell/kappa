@@ -10,7 +10,9 @@
 
 - (CPString)URLOfEnv:(Env)env // public
 {
-    return "http://" + env.name + "." + name + "." + DATA.username + ".dev" + DomainSuffix;
+    return (DATA.username
+            ? "http://" + env.name + "." + name + "." + DATA.username + ".dev" + DomainSuffix
+            : [self URL] + "envs/" + env.name);
 }
 
 - (Env)defaultEnv // public
