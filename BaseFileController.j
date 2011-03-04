@@ -146,8 +146,7 @@
 
 - (void)find // private
 {
-    [editorView setSearchString:[searchField stringValue]];
-    [editorView findNext];
+    [editorView find:[searchField stringValue]];
 }
 
 - (void)didClickOnSegmentedControl // private

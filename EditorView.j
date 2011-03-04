@@ -20,10 +20,6 @@
         iframe.src = [[CPBundle mainBundle] pathForResource:"Editor.html"];
         iframe.onload = function () {
             var doc = iframe.contentDocument;
-            if (CPBrowserIsEngine(CPGeckoBrowserEngine))
-                doc.body.style.marginTop =
-                    CPBrowserIsOperatingSystem(CPMacOperatingSystem) ? "-14px" :
-                    CPBrowserIsOperatingSystem(CPWindowsOperatingSystem) ? "-16px" : "-15px";
             doc.onkeydown = function (event) {
                 if (CPPlatformActionKeyMask == CPCommandKeyMask ? event.metaKey : event.ctrlKey) {
                     [[[self window] platformWindow] keyEvent:event];
@@ -35,38 +31,44 @@
                     return false;
                 }
             };
-            function setupBespin() {
-                if (!doc.body || !doc.body.bespin) {
-                    setTimeout(setupBespin, 50);
-                    return;
-                }
-                if (editor)
-                    return;
-                editor = doc.body.bespin.editor;
-                editor.syntax = syntax;
-                editor.value = stringValue;
-                editor.setLineNumber(1);
-                editor.readOnly = readOnly;
-                editor.textChanged.add(
-                    function () {
-                        [self textDidChange:[CPNotification notificationWithName:CPControlTextDidChangeNotification object:self]];
-                        [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];
-                    });
-                doc.body.onclick = function () {
-                    if ([CPApp modalWindow]) {
-                        editor.focus = NO;
-                    } else {
-                        var window = [self window];
-                        [window makeKeyWindow];
-                        [window makeFirstResponder:self];
-                    }
-                };
-                doc.body.onblur = function () {
+            var win = iframe.contentWindow;
+            editor = win.ace.edit(doc.body);
+            editor.setReadOnly(readOnly);
+            var canon = win.require("pilot/canon");
+            canon.removeCommand("gotoline");
+            canon.removeCommand("find");
+            var session = editor.getSession();
+            session.setTabSize(2);
+            var modeName = {
+                js: "javascript",
+                html: "html",
+                css: "css"
+            }[syntax];
+            if (modeName)
+                session.setMode(new (win.require("ace/mode/" + modeName).Mode)());
+            session.setValue(stringValue);
+            editor.gotoLine(1);
+            session.addEventListener(
+                "change",
+                function (event) {
+                    [self textDidChange:[CPNotification notificationWithName:CPControlTextDidChangeNotification object:self]];
+                    [[CPRunLoop currentRunLoop] limitDateForMode:CPDefaultRunLoopMode];
+                });
+            editor.addEventListener(
+                "blur",
+                function (event) {
                     [self refocus];
-                };
+                });
+            doc.body.onclick = function () {
+                if ([CPApp modalWindow]) {
+                    editor.renderer.hideCursor();
+                } else {
+                    var window = [self window];
+                    [window makeKeyWindow];
+                    [window makeFirstResponder:self];
+                }
             };
-            iframe.contentWindow.onBespinLoad = setupBespin;
-            setupBespin();
+            editor.focus();
         };
         _DOMElement.appendChild(iframe);
         [[CPNotificationCenter defaultCenter] addObserver:self
@@ -82,7 +84,7 @@
     var window = [self window];
     if (!(editor && [window isKeyWindow] && [window firstResponder] === self))
         return;
-    editor.focus = YES;
+    editor.focus();
     setTimeout(
         function () {
             if ([window isKeyWindow])
@@ -93,7 +95,7 @@
 
 - (CPString)stringValue // public
 {
-    return editor ? editor.value : stringValue;
+    return editor ? editor.getSession().getValue() : stringValue;
 }
 
 - (void)setStringValue:(CPString)aStringValue // public
@@ -102,21 +104,18 @@
         stringValue = aStringValue;
         return;
     }
-    var wasReadOnly = editor.readOnly;
-    editor.readOnly = NO;
-    editor.value = aStringValue;
-    editor.setLineNumber(1);
-    editor.readOnly = wasReadOnly;
+    editor.getSession().setValue(aStringValue);
+    editor.gotoLine(1);
 }
 
 - (void)setLineNumber:(unsigned)lineNumber // public
 {
-    editor.setLineNumber(lineNumber);
+    editor.gotoLine(lineNumber);
 }
 
-- (void)setSearchString:(CPString)searchString // public
+- (void)find:(CPString)searchString // public
 {
-    editor.searchController.setSearchText(searchString, NO);
+    editor.find(searchString);
 }
 
 - (void)selectRange:(JSObject)range // private
@@ -127,12 +126,12 @@
 
 - (void)findNext // public
 {
-    [self selectRange:editor.searchController.findNext(editor.selection.end, YES)];
+    editor.findNext();
 }
 
 - (void)findPrevious // public
 {
-    [self selectRange:editor.searchController.findPrevious(editor.selection.start, YES)];
+    editor.findPrevious();
 }
 
 - (void)setDelegate:(id)aDelegate // public
@@ -157,14 +156,14 @@
 {
     iframe.focus();
     if (editor)
-        editor.focus = YES;
+        editor.focus();
     return YES;
 }
 
 - (BOOL)resignFirstResponder // public
 {
     if (editor)
-        editor.focus = NO;
+        editor.renderer.hideCursor();
     return YES;
 }
 
@@ -176,7 +175,7 @@
 - (void)resignKeyWindow // public
 {
     if (editor)
-        editor.focus = NO;
+        editor.renderer.hideCursor();
 }
 
 @end
