@@ -174,8 +174,19 @@
 
 - (void)resignKeyWindow // public
 {
-    if (editor)
+    if (editor) {
         editor.renderer.hideCursor();
+        if (CPBrowserIsEngine(CPGeckoBrowserEngine)) {
+            var callback = function (event) {
+                if (console)
+                    console.log("hack");
+                editor.blur();
+            };
+            editor.addEventListener("focus", callback);
+            setTimeout(function () { editor.removeEventListener("focus", callback); }, 100);
+            iframe.blur();
+        }
+    }
 }
 
 @end
