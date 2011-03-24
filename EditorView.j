@@ -68,7 +68,10 @@
                     [window makeFirstResponder:self];
                 }
             };
-            editor.focus();
+            if ([[self window] isKeyWindow])
+                editor.focus();
+            else
+                [[CPApp keyWindow] makeKeyAndOrderFront:nil];
         };
         _DOMElement.appendChild(iframe);
         [[CPNotificationCenter defaultCenter] addObserver:self
