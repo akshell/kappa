@@ -516,6 +516,14 @@ var bufferSubclasses = {};
 {
     [self setUsername:basis.username];
     [self setEmail:basis.email];
+    var clicky_custom = window.clicky_custom || {}; // hack for press
+    if (basis.username)
+        clicky_custom.session = {
+          username: basis.username,
+          email: basis.email
+        };
+    else
+        delete clicky_custom.session;
     var appsArchive = basis.config.apps || {};
     [self setApps:basis.appNames.map(
             function (name) {
