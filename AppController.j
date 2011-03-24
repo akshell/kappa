@@ -114,6 +114,7 @@ function setMenuItemsEnabled(menuItems, flag) {
     NewAppPanelController newAppPanelController;
     ContactPanelController contactPanelController;
     TabOpener helpTabOpener;
+    TabOpener feedbackTabOpener;
     CPMenuItem passwordMenuItem;
     CPMenu fileMenu;
     CPMenu appsMenu;
@@ -171,6 +172,7 @@ function setMenuItemsEnabled(menuItems, flag) {
     contactPanelController = [ContactPanelController new];
 
     helpTabOpener = [TabOpener new];
+    feedbackTabOpener = [TabOpener new];
 
     var mainMenu = [CPApp mainMenu];
     [mainMenu removeAllItems];
@@ -291,6 +293,7 @@ function setMenuItemsEnabled(menuItems, flag) {
     [helpMenu addItemWithTitle:"Blog" target:self action:@selector(openBlog)];
     [helpMenu addItemWithTitle:"Twitter" target:self action:@selector(openTwitter)];
     [helpMenu addItem:[CPMenuItem separatorItem]];
+    [helpMenu addItemWithTitle:"Feedback" target:self action:@selector(switchToFeedback)];
     [helpMenu addItemWithTitle:"Contact…" target:contactPanelController action:@selector(showWindow:)];
     [[mainMenu addItemWithTitle:"Help"] setSubmenu:helpMenu];
 
@@ -456,7 +459,7 @@ function setMenuItemsEnabled(menuItems, flag) {
         "App", CPToolbarSpaceItemIdentifier,
         "New", "Save", "Save All", CPToolbarSpaceItemIdentifier,
         "Edit", "Eval", "Commit", "Git", CPToolbarSpaceItemIdentifier,
-        "Preview", "Help"
+        "Preview", "Help", "Feedback"
     ];
 }
 
@@ -491,6 +494,7 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
             "Git": [workspaceControllerProxy, @selector(switchToGit)],
             "Preview": [navigatorControllerProxy, @selector(switchToPreview)],
             "Help": [self, @selector(switchToHelp)],
+            "Feedback": [self, @selector(switchToFeedback)]
         }[itemIdentifier];
         [item setTarget:pair[0]];
         [item setAction:pair[1]];
@@ -679,6 +683,12 @@ willBeInsertedIntoToolbar:(BOOL)flag // private
 {
     if (![helpTabOpener switchToLastTab])
         [self openGettingStarted];
+}
+
+- (void)switchToFeedback // private
+{
+    if (![feedbackTabOpener switchToLastTab])
+        [feedbackTabOpener openURL:"http://feedback.akshell.com/"];
 }
 
 - (void)openBlog // private
