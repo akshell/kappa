@@ -316,9 +316,6 @@ function setMenuItemsEnabled(menuItems, flag) {
         function (keyPath) {
             [DATA addObserver:self forKeyPath:keyPath options:CPKeyValueObservingOptionInitial context:keyPath];
         });
-
-    if (!DATA.username)
-        [signupPanelController showWindow:nil];
 }
 
 - (void)observeValueForKeyPath:(CPString)keyPath ofObject:(id)object change:(CPDictionary)change context:(id)context // private
