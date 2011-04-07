@@ -19,8 +19,10 @@
 @import "CPString.j"
 
 window.onbeforeunload = function () {
-    if (!DATA.username)
+    if (!DATA.username) {
+        setTimeout(function () { [[[CPApp delegate] signupPanelController] showWindow:nil]; }, 500);
         return "All your changes will be lost unless you sign up."
+    }
     if (document.cookie) {
         var request = new XMLHttpRequest();
         request.open("PUT", "/config", false);

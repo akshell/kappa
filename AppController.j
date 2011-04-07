@@ -109,7 +109,7 @@ function setMenuItemsEnabled(menuItems, flag) {
     KeyPanelController keyPanelController;
     ChangePasswordPanelController changePasswordPanelController;
     ResetPasswordPanelController resetPasswordPanelController;
-    SignupPanelController signupPanelController;
+    SignupPanelController signupPanelController @accessors(readonly);
     LoginPanelController loginPanelController;
     NewAppPanelController newAppPanelController;
     ContactPanelController contactPanelController;
